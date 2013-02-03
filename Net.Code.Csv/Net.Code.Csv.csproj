@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BufferedCsvLineGenerator.cs" />
+    <Compile Include="CsvBehaviour.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="CsvDataReader.cs" />
     <Compile Include="CsvExtensions.cs" />
