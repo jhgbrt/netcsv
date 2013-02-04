@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Net.Code.Csv
 {
+    /// <summary>
+    /// A CSV line
+    /// </summary>
     public class CsvLine
     {
         private readonly bool _isEmpty;

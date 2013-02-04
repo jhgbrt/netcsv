@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Net.Code.Csv
 {
+    /// <summary>
+    /// A CSV header line
+    /// </summary>
     public class CsvHeader : CsvLine
     {
         private readonly Dictionary<string, int> _fieldHeaderIndexes;

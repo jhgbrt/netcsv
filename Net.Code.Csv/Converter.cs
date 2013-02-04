@@ -2,6 +2,10 @@ using System;
 
 namespace Net.Code.Csv
 {
+    /// <summary>
+    /// String to primitive conversion class. By default, uses the Convert.ToXXX methods or,
+    /// if not available, the [Primitive].Parse method.
+    /// </summary>
     public class Converter
     {
         private Func<string, bool> _toBoolean = Convert.ToBoolean;
