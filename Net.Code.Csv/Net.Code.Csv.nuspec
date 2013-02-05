@@ -6,6 +6,7 @@
     <title>$title$</title>
     <authors>Jeroen Haegebaert. Credit goes also to Sébastien Lorion of LumenWorks.Framework.IO for the inspiration and the test suite.</authors>
     <owners>Jeroen Haegebaert</owners>
+    <licenseUrl>https://raw.github.com/jhgbrt/Net.Code/master/license.txt</licenseUrl>
     <projectUrl>http://github.com/jhgbrt/Net.Code</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>My own CSV parser. The itch was a problem in a CSV I got that contained quotes inside quoted fields. That situation was not handled well by the LumenWorks.Framework.IO parser, and I didn't manage to fix it in the original code, so I refactored and eventually rewrote it completely...This CSV parser now handles that situation, apart from all the LumenWorks specs.</description>
