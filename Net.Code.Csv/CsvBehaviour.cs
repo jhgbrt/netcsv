@@ -6,18 +6,29 @@
     public class CsvBehaviour
     {
         public static CsvBehaviour Default { get { return new CsvBehaviour(); } }
+
         private readonly ValueTrimmingOptions _trimmingOptions;
         private readonly MissingFieldAction _missingFieldAction;
         private readonly bool _skipEmptyLines;
+        private readonly QuotesInsideQuotedFieldAction _quotesInsideQuotedFieldAction;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="trimmingOptions">How should fields be trimmed?</param>
+        /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
+        /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
+        /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
         public CsvBehaviour(
             ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
-            bool skipEmptyLines = true)
+            bool skipEmptyLines = true,
+            QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore)
         {
             _trimmingOptions = trimmingOptions;
             _missingFieldAction = missingFieldAction;
             _skipEmptyLines = skipEmptyLines;
+            _quotesInsideQuotedFieldAction = quotesInsideQuotedFieldAction;
         }
 
         /// <summary>
@@ -44,6 +55,9 @@
         /// <summary>
         /// What should happen when a quote is found inside a quoted field? (e.g. "123","x y "z" u","345")
         /// </summary>
-        public QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction { get; set; }
+        public QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction
+        {
+            get { return _quotesInsideQuotedFieldAction; }
+        }
     }
 }

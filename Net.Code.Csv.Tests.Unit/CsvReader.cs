@@ -348,7 +348,7 @@ namespace Net.Code.Csv
             }
             set
             {
-                _behaviour.QuotesInsideQuotedFieldAction = value;
+                _behaviour = new CsvBehaviour(_behaviour.TrimmingOptions, _behaviour.MissingFieldAction, _behaviour.SkipEmptyLines, value);
             }
         }
 

@@ -185,9 +185,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data), false, ',', '"', '\\', '#', ValueTrimmingOptions.UnquotedOnly))
+				using (CsvReader csv = new CsvReader(new StringReader(Data), 4096, new CsvLayout(escape:'\\'), 
+                    new CsvBehaviour(quotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
 				{
-                    csv.DefaultQuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.ThrowException;
 					while (csv.ReadNextRecord())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
@@ -243,10 +243,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			                    "\"15907\";\"\"BOLT TIL 2-05-405\";\"\";\"42,50\";\"4027816159070\"\n" +
 			                    "\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
 
-			using (var csv = new CsvReader(new System.IO.StringReader(Data), false, ';'))
+			using (var csv = new CsvReader(new System.IO.StringReader(Data), 4096, new CsvLayout(delimiter:';'), new CsvBehaviour(quotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.AdvanceToNextLine)))
 			{
-				csv.DefaultQuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.AdvanceToNextLine;
-
 				Assert.IsTrue(csv.ReadNextRecord());
 
 				Assert.AreEqual("19324", csv[0]);

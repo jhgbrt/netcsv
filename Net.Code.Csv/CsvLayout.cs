@@ -1,5 +1,8 @@
 namespace Net.Code.Csv
 {
+    /// <summary>
+    /// Describes a CSV file layout (quote character, delimiter, escape character, comment marker, does the CSV have headers or not)
+    /// </summary>
     public class CsvLayout
     {
         public static CsvLayout Default { get { return new CsvLayout(); } }
@@ -11,6 +14,14 @@ namespace Net.Code.Csv
         private readonly bool _hasHeaders;
 
 
+        /// <summary>
+        /// Describes a CSV file layout
+        /// </summary>
+        /// <param name="quote">The quote character. Default '"'</param>
+        /// <param name="delimiter">Field delimiter. Default ','</param>
+        /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
+        /// <param name="comment">Comment marker. Default '#'</param>
+        /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
         public CsvLayout(
             char quote = '"',
             char delimiter = ',',
