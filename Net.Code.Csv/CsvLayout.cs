@@ -5,6 +5,10 @@ namespace Net.Code.Csv
     /// </summary>
     public class CsvLayout
     {
+        /// <summary>
+        /// The default CSV layout. Uses double quote, comma as separator,
+        /// backslash as escape character, hash (#) as a comment marker and assumes no header.
+        /// </summary>
         public static CsvLayout Default { get { return new CsvLayout(); } }
 
         private readonly char _quote;
@@ -36,26 +40,41 @@ namespace Net.Code.Csv
             _hasHeaders = hasHeaders;
         }
 
+        /// <summary>
+        /// The character used as a field quote
+        /// </summary>
         public char Quote
         {
             get { return _quote; }
         }
 
+        /// <summary>
+        /// The character that delimits the fields
+        /// </summary>
         public char Delimiter
         {
             get { return _delimiter; }
         }
 
+        /// <summary>
+        /// The character to be used for escaping quotes inside a field
+        /// </summary>
         public char Escape
         {
             get { return _escape; }
         }
 
+        /// <summary>
+        /// The character that marks a line as a comment
+        /// </summary>
         public char Comment
         {
             get { return _comment; }
         }
 
+        /// <summary>
+        /// Indicates whether or not the input file has a header
+        /// </summary>
         public bool HasHeaders
         {
             get { return _hasHeaders; }

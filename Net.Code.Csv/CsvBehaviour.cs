@@ -5,6 +5,11 @@
     /// </summary>
     public class CsvBehaviour
     {
+        /// <summary>
+        /// The default behaviour of the Csv parser: trim unquoted fields,
+        /// throw exception when a line contains too little fields, 
+        /// skip empty lines and ignore quotes inside quoted fields.
+        /// </summary>
         public static CsvBehaviour Default { get { return new CsvBehaviour(); } }
 
         private readonly ValueTrimmingOptions _trimmingOptions;
@@ -13,7 +18,7 @@
         private readonly QuotesInsideQuotedFieldAction _quotesInsideQuotedFieldAction;
 
         /// <summary>
-        /// 
+        /// Constructs a CsvBehaviour instance that can be used to drive the csv parser
         /// </summary>
         /// <param name="trimmingOptions">How should fields be trimmed?</param>
         /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
@@ -47,6 +52,9 @@
             get { return _missingFieldAction; }
         }
 
+        /// <summary>
+        /// Should empty lines be skipped?
+        /// </summary>
         public bool SkipEmptyLines
         {
             get { return _skipEmptyLines; }

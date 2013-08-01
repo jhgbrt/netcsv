@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -34,5 +35,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.2")]
+[assembly: AssemblyInformationalVersion("1.0.3")]
 [assembly: InternalsVisibleTo("Net.Code.Csv.Tests.Unit")]
+[assembly: NeutralResourcesLanguage("en")]

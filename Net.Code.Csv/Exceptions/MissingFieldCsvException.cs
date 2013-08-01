@@ -22,7 +22,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace Net.Code.Csv.Exceptions
+namespace Net.Code.Csv
 {
 	/// <summary>
 	/// Represents the exception that is thrown when a there is a missing field in a record of the CSV file.
@@ -30,18 +30,15 @@ namespace Net.Code.Csv.Exceptions
 	/// <remarks>
 	/// MissingFieldException would have been a better name, but there is already a <see cref="T:System.MissingFieldException"/>.
 	/// </remarks>
-	[Serializable()]
+	[Serializable]
 	public class MissingFieldCsvException
 		: MalformedCsvException
 	{
-		#region Constructors
-
-		/// <summary>
+	    /// <summary>
 		/// Initializes a new instance of the MissingFieldCsvException class.
 		/// </summary>
 		public MissingFieldCsvException()
-			: base()
-		{
+	    {
 		}
 
 		/// <summary>
@@ -91,13 +88,11 @@ namespace Net.Code.Csv.Exceptions
 		/// <summary>
 		/// Initializes a new instance of the MissingFieldCsvException class with serialized data.
 		/// </summary>
-		/// <param name="info">The <see cref="T:SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-		/// <param name="context">The <see cref="T:StreamingContext"/> that contains contextual information about the source or destination.</param>
+		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+		/// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
 		protected MissingFieldCsvException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
 		}
-
-		#endregion
 	}
 }

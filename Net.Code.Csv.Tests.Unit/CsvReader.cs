@@ -32,7 +32,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Globalization;
 using System.IO;
-using Net.Code.Csv.Exceptions;
+using Net.Code.Csv.Impl;
 using Net.Code.Csv.Resources;
 
 namespace Net.Code.Csv
@@ -123,7 +123,6 @@ namespace Net.Code.Csv
         /// <exception cref="ArgumentException">
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
-        [Obsolete]
         public CsvReader(TextReader reader, bool hasHeaders)
             : this(reader, CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders: hasHeaders), CsvBehaviour.Default)
         {
@@ -141,7 +140,6 @@ namespace Net.Code.Csv
         /// <exception cref="ArgumentException">
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
-        [Obsolete]
         public CsvReader(TextReader reader, bool hasHeaders, int bufferSize)
             : this(reader, bufferSize, new CsvLayout(hasHeaders: hasHeaders), CsvBehaviour.Default)
         {
@@ -159,7 +157,6 @@ namespace Net.Code.Csv
         /// <exception cref="ArgumentException">
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
-        [Obsolete]
         public CsvReader(TextReader reader, bool hasHeaders, char delimiter)
             : this(reader, DefaultBufferSize, new CsvLayout(hasHeaders: hasHeaders, delimiter: delimiter), CsvBehaviour.Default)
         {
@@ -178,7 +175,6 @@ namespace Net.Code.Csv
         /// <exception cref="ArgumentException">
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
-        [Obsolete]
         public CsvReader(TextReader reader, bool hasHeaders, char delimiter, int bufferSize)
             : this(reader, bufferSize, new CsvLayout(hasHeaders: hasHeaders, delimiter: delimiter), CsvBehaviour.Default)
         {
@@ -203,7 +199,6 @@ namespace Net.Code.Csv
         /// <exception cref="ArgumentException">
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
-        [Obsolete]
         public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions)
             : this(reader, DefaultBufferSize,
             new CsvLayout(hasHeaders: hasHeaders, delimiter: delimiter, quote: quote, escape: escape, comment: comment), new CsvBehaviour(trimmingOptions: trimmingOptions))

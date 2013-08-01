@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Net.Code.Csv.Impl;
 using NUnit.Framework;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv

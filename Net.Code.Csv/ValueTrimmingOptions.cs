@@ -2,9 +2,15 @@
 
 namespace Net.Code.Csv
 {
+	/// <summary>
+	/// Defines the different possibilities for trimming field values
+	/// </summary>
 	[Flags]
 	public enum ValueTrimmingOptions
 	{
+		/// <summary>
+		/// Do nothing when a field starts or ends with white space
+		/// </summary>
 		None = 0,
         /// <summary>
         /// Only unquoted fields are trimmed

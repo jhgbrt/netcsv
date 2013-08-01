@@ -24,18 +24,16 @@ using System.Globalization;
 using System.Runtime.Serialization;
 using Net.Code.Csv.Resources;
 
-namespace Net.Code.Csv.Exceptions
+namespace Net.Code.Csv
 {
 	/// <summary>
 	/// Represents the exception that is thrown when a CSV file is malformed.
 	/// </summary>
-	[Serializable()]
+	[Serializable]
 	public class MalformedCsvException 
 		: Exception
 	{
-		#region Fields
-
-		/// <summary>
+	    /// <summary>
 		/// Contains the message that describes the error.
 		/// </summary>
 		private string _message;
@@ -60,11 +58,7 @@ namespace Net.Code.Csv.Exceptions
 		/// </summary>
 		private int _columnNumber;
 
-		#endregion
-
-		#region Constructors
-
-		/// <summary>
+	    /// <summary>
 		/// Initializes a new instance of the MalformedCsvException class.
 		/// </summary>
 		public MalformedCsvException()
@@ -131,8 +125,8 @@ namespace Net.Code.Csv.Exceptions
 		/// <summary>
 		/// Initializes a new instance of the MalformedCsvException class with serialized data.
 		/// </summary>
-		/// <param name="info">The <see cref="T:SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-		/// <param name="context">The <see cref="T:StreamingContext"/> that contains contextual information about the source or destination.</param>
+		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+		/// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
 		protected MalformedCsvException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
@@ -144,11 +138,7 @@ namespace Net.Code.Csv.Exceptions
 			_fieldNumber = info.GetInt32("FieldNumber");
 		}
 
-		#endregion
-
-		#region Properties
-
-		/// <summary>
+	    /// <summary>
 		/// Gets the raw data when the error occured.
 		/// </summary>
 		/// <value>The raw data when the error occured.</value>
@@ -184,11 +174,7 @@ namespace Net.Code.Csv.Exceptions
 			get { return _fieldNumber; }
 		}
 
-		#endregion
-
-		#region Overrides
-
-		/// <summary>
+	    /// <summary>
 		/// Gets a message that describes the current exception.
 		/// </summary>
 		/// <value>A message that describes the current exception.</value>
@@ -198,11 +184,12 @@ namespace Net.Code.Csv.Exceptions
 		}
 
 		/// <summary>
-		/// When overridden in a derived class, sets the <see cref="T:SerializationInfo"/> with information about the exception.
+		/// When overridden in a derived class, sets the <see cref="SerializationInfo"/> with information about the exception.
 		/// </summary>
-		/// <param name="info">The <see cref="T:SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-		/// <param name="context">The <see cref="T:StreamingContext"/> that contains contextual information about the source or destination.</param>
-		public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+		/// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
+		public override void GetObjectData(
+            SerializationInfo info, StreamingContext context)
 		{
 			base.GetObjectData(info, context);
 
@@ -213,7 +200,5 @@ namespace Net.Code.Csv.Exceptions
 			info.AddValue("LineNumber", _lineNumber);
 			info.AddValue("FieldNumber", _fieldNumber);
 		}
-
-		#endregion
 	}
 }

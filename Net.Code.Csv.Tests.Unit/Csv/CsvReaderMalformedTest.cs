@@ -25,7 +25,6 @@
 
 using System.IO;
 using NUnit.Framework;
-using Net.Code.Csv.Exceptions;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv
 {
