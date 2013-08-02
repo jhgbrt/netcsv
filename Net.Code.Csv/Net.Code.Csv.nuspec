@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
-    <version>$version$</version>
-    <title>$title$</title>
-    <authors>Jeroen Haegebaert. Credit goes also to Sébastien Lorion of LumenWorks.Framework.IO for the inspiration and the test suite.</authors>
+    <id>Net.Code.Csv</id>
+    <version>1.0.3</version>
+    <title>Net.Code.Csv - robust CSV parser</title>
+    <authors>Jeroen Haegebaert and Sébastien Lorion of LumenWorks.Framework.IO for the inspiration and the test suite.</authors>
     <owners>Jeroen Haegebaert</owners>
     <licenseUrl>https://raw.github.com/jhgbrt/Net.Code/master/license.txt</licenseUrl>
     <projectUrl>http://github.com/jhgbrt/Net.Code</projectUrl>
@@ -18,4 +18,13 @@
     <copyright>Copyright 2013 - Jeroen Haegebaert</copyright>
     <tags>CSV</tags>
   </metadata>
+  <files>
+        <file src="bin\Release\net40\Net.Code.Csv.dll" target="lib\net40\Net.Code.Csv.dll" />
+        <file src="bin\Release\net40\Net.Code.Csv.pdb" target="lib\net40\Net.Code.Csv.pdb" />
+        <file src="bin\Release\net40\Net.Code.Csv.xml" target="lib\net40\Net.Code.Csv.xml" />
+        <file src="bin\Release\net45\Net.Code.Csv.dll" target="lib\net45\Net.Code.Csv.dll" />
+        <file src="bin\Release\net45\Net.Code.Csv.pdb" target="lib\net45\Net.Code.Csv.pdb" />
+        <file src="bin\Release\net45\Net.Code.Csv.xml" target="lib\net45\Net.Code.Csv.xml" />
+        <file src="bin\Release\LICENSE.txt" target="lib\LICENSE.txt" />
+  </files>
 </package>
