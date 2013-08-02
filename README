@@ -34,4 +34,6 @@ If you have a string that actually contains the CSV content already, use this:
  Finally, you can also use the ReadStreamAsCsv() extension method.
  
  The examples assume some common defaults about the actual CSV layout
- and behaviour, but you can 
+ and behaviour, but you can of course change those by using the overloads
+ that accept an instance of the CsvBehaviour and CsvLayout classes.
+ 
