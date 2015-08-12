@@ -1,3 +1,5 @@
+using Net.Code.Csv.Impl;
+
 namespace Net.Code.Csv
 {
     /// <summary>
@@ -9,13 +11,7 @@ namespace Net.Code.Csv
         /// The default CSV layout. Uses double quote, comma as separator,
         /// backslash as escape character, hash (#) as a comment marker and assumes no header.
         /// </summary>
-        public static CsvLayout Default { get { return new CsvLayout(); } }
-
-        private readonly char _quote;
-        private readonly char _delimiter;
-        private readonly char _escape;
-        private readonly char _comment;
-        private readonly bool _hasHeaders;
+        public static CsvLayout Default => new CsvLayout();
 
 
         /// <summary>
@@ -33,51 +29,36 @@ namespace Net.Code.Csv
             char comment = '#',
             bool hasHeaders = false)
         {
-            _quote = quote;
-            _delimiter = delimiter;
-            _escape = escape;
-            _comment = comment;
-            _hasHeaders = hasHeaders;
+            Quote = quote;
+            Delimiter = delimiter;
+            Escape = escape;
+            Comment = comment;
+            HasHeaders = hasHeaders;
         }
 
         /// <summary>
         /// The character used as a field quote
         /// </summary>
-        public char Quote
-        {
-            get { return _quote; }
-        }
+        public char Quote { get; }
 
         /// <summary>
         /// The character that delimits the fields
         /// </summary>
-        public char Delimiter
-        {
-            get { return _delimiter; }
-        }
+        public char Delimiter { get; }
 
         /// <summary>
         /// The character to be used for escaping quotes inside a field
         /// </summary>
-        public char Escape
-        {
-            get { return _escape; }
-        }
+        public char Escape { get; }
 
         /// <summary>
         /// The character that marks a line as a comment
         /// </summary>
-        public char Comment
-        {
-            get { return _comment; }
-        }
+        public char Comment { get; }
 
         /// <summary>
         /// Indicates whether or not the input file has a header
         /// </summary>
-        public bool HasHeaders
-        {
-            get { return _hasHeaders; }
-        }
+        public bool HasHeaders { get; }
     }
 }

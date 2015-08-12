@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,9 +9,6 @@ namespace Net.Code.Csv.Impl
     /// </summary>
     class CsvLine
     {
-        private readonly bool _isEmpty;
-        private readonly string[] _fields;
-
         /// <summary>
         /// Constructs a line from a collection of fields
         /// </summary>
@@ -18,32 +16,39 @@ namespace Net.Code.Csv.Impl
         /// <param name="isEmpty">indicates whether this is an empty line</param>
         public CsvLine(IEnumerable<string> fields, bool isEmpty)
         {
-            _isEmpty = isEmpty;
-            _fields = fields.ToArray();
+            IsEmpty = isEmpty;
+            Fields = fields.ToArray();
         }
 
         /// <summary>
         /// Is this an empty line?
         /// </summary>
-        public bool IsEmpty
-        {
-            get { return _isEmpty; }
-        }
+        public bool IsEmpty { get; }
 
         /// <summary>
         /// The fields for a line
         /// </summary>
-        public string[] Fields
-        {
-            get
-            {
-                return  _fields;
-            }
-        }
+        public string[] Fields { get; }
 
         /// <summary>
         /// An empty CSV line
         /// </summary>
         public static readonly CsvLine Empty = new CsvLine(Enumerable.Empty<string>(), true);
+
+        public override string ToString()
+        {
+            return string.Join(";", Fields);
+        }
+
+        public string this[int field]
+        {
+            get
+            {
+                if (field < Fields.Length)
+                    return Fields[field];
+                if (IsEmpty) return string.Empty;
+                throw new ArgumentOutOfRangeException(nameof(field));
+            }
+        }
     }
 }

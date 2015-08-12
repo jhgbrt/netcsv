@@ -1,5 +1,9 @@
 ﻿namespace Net.Code.Csv
 {
+    public struct CsvOptions
+    {
+    }
+
     /// <summary>
     /// Describes the way the CSV parser should behave
     /// </summary>
@@ -10,12 +14,7 @@
         /// throw exception when a line contains too little fields, 
         /// skip empty lines and ignore quotes inside quoted fields.
         /// </summary>
-        public static CsvBehaviour Default { get { return new CsvBehaviour(); } }
-
-        private readonly ValueTrimmingOptions _trimmingOptions;
-        private readonly MissingFieldAction _missingFieldAction;
-        private readonly bool _skipEmptyLines;
-        private readonly QuotesInsideQuotedFieldAction _quotesInsideQuotedFieldAction;
+        public static CsvBehaviour Default => new CsvBehaviour();
 
         /// <summary>
         /// Constructs a CsvBehaviour instance that can be used to drive the csv parser
@@ -30,42 +29,30 @@
             bool skipEmptyLines = true,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore)
         {
-            _trimmingOptions = trimmingOptions;
-            _missingFieldAction = missingFieldAction;
-            _skipEmptyLines = skipEmptyLines;
-            _quotesInsideQuotedFieldAction = quotesInsideQuotedFieldAction;
+            TrimmingOptions = trimmingOptions;
+            MissingFieldAction = missingFieldAction;
+            SkipEmptyLines = skipEmptyLines;
+            QuotesInsideQuotedFieldAction = quotesInsideQuotedFieldAction;
         }
 
         /// <summary>
         /// How should fields be trimmed?
         /// </summary>
-        public ValueTrimmingOptions TrimmingOptions
-        {
-            get { return _trimmingOptions; }
-        }
+        public ValueTrimmingOptions TrimmingOptions { get; }
 
         /// <summary>
         /// What should happen when a field is missing from a line?
         /// </summary>
-        public MissingFieldAction MissingFieldAction
-        {
-            get { return _missingFieldAction; }
-        }
+        public MissingFieldAction MissingFieldAction { get; }
 
         /// <summary>
         /// Should empty lines be skipped?
         /// </summary>
-        public bool SkipEmptyLines
-        {
-            get { return _skipEmptyLines; }
-        }
+        public bool SkipEmptyLines { get; }
 
         /// <summary>
         /// What should happen when a quote is found inside a quoted field? (e.g. "123","x y "z" u","345")
         /// </summary>
-        public QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction
-        {
-            get { return _quotesInsideQuotedFieldAction; }
-        }
+        public QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction { get; }
     }
 }

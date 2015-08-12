@@ -54,9 +54,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-			    if (ex.LineNumber == 3 && ex.FieldNumber == 2 && ex.ColumnNumber == 5)
-					throw;
-			    Assert.Fail(string.Format("expected failure at Line number 3 (was {0}), field 2 (was {1}), column 5 (was {2})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber));
+                Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+                throw;
 			}
 		}
 
@@ -82,10 +81,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.LineNumber == 3 && ex.FieldNumber == 3 && ex.ColumnNumber == 6)
-					throw ex;
-                Assert.Fail(string.Format("expected failure at Line number 2 (was {0}), field 3 (was {1}), column 6 (was {2})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber));
-
+                Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+                throw;
 			}
 		}
 
@@ -111,11 +108,10 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-				if (ex.LineNumber == 3 && ex.FieldNumber == 2 && ex.ColumnNumber == 5)
-					throw;
-                Assert.Fail(string.Format("expected failure at Line number 3 (was {0}), field 2 (was {1}), column 5 (was {2})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber));
+                Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+                throw;
             }
-		}
+        }
 
 		[Test()]
 		[ExpectedException(typeof(MissingFieldCsvException))]
@@ -139,24 +135,25 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 			catch (MissingFieldCsvException ex)
 			{
-			    if (ex.LineNumber == 3 && ex.FieldNumber == 3 && ex.ColumnNumber == 6)
-					throw;
-			    Assert.Fail(string.Format("expected malformed csv at line 2 (was {0}), field number 2 (was {1}) and column 6 (was {2}) (exception: {3})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber, ex.Message));
-			}
-		}
+                Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+                throw;
+            }
+        }
 
 		[Test]
 		[ExpectedException(typeof(MalformedCsvException))]
-        [Ignore]
+        //[Ignore]
 		public void MissingDelimiterAfterQuotedFieldTest1()
 		{
 			const string Data = "\"111\",\"222\"\"333\"";
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data)))
+				using (CsvReader csv = new CsvReader(
+                    new StringReader(Data),
+                    layout: new CsvLayout(escape:'\\'), 
+                    behaviour: new CsvBehaviour(quotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
 				{
-                    csv.DefaultQuotesInsideQuotedFieldAction  = QuotesInsideQuotedFieldAction.ThrowException;
 					while (csv.ReadNextRecord())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
@@ -166,12 +163,13 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 			catch (MalformedCsvException ex)
 			{
-				if (ex.LineNumber == 0 && ex.FieldNumber == 1 && ex.ColumnNumber == 12)
-					throw ex;
-				else
-				{
-				    Assert.Fail(string.Format("Expected malformed csv at record index 0 (was {0}), field index 1 (was {1}) and position 11 (was {2}) (exception caught: {3})", ex.LineNumber, ex.FieldNumber, ex.ColumnNumber, ex.Message));
-				}
+			    var expectedLineNumber = 1;
+			    var expectedFieldNumber = 1;
+			    var expectedColumn = 13;
+                Assert.AreEqual(new {LineNumber = 1L, FieldNumber = 1, ColumnNumber = 13}, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+
+			    throw;
+
 			}
 		}
 
@@ -196,10 +194,10 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 			catch (MalformedCsvException ex)
 			{
-				if (ex.LineNumber == 1)// && ex.FieldNumber == 1 && ex.ColumnNumber == 29)
-					throw ex;
-			}
-		}
+                Assert.AreEqual(new { LineNumber = 2L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+                throw;
+            }
+        }
 
 		[Test()]
 		public void MoreFieldsTest()

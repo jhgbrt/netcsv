@@ -23,7 +23,7 @@ using System;
 
 namespace Net.Code.Csv
 {
-	public partial class CsvReader
+	public sealed partial class CsvReader
 	{
 		/// <summary>
 		/// Defines the data reader validations.

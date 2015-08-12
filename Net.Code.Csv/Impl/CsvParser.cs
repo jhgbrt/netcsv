@@ -8,25 +8,24 @@ namespace Net.Code.Csv.Impl
 {
     class CsvParser : IEnumerable<CsvLine>, IDisposable
     {
-        private readonly BufferedCsvLineGenerator _bufferedCsvLineGenerator;
+        private readonly CsvStateMachine _csvStateMachine;
         private bool _disposed;
 
-        public CsvParser(TextReader textReader, int bufferSize, CsvLayout layOut, CsvBehaviour behaviour)
+        public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour)
         {
-            _bufferedCsvLineGenerator = new BufferedCsvLineGenerator(textReader, bufferSize, layOut, behaviour);
-            _enumerator = _bufferedCsvLineGenerator.GetEnumerator();
+            _csvStateMachine = new CsvStateMachine(textReader, layOut, behaviour);
+            _enumerator = _csvStateMachine.GetEnumerator();
             Layout = layOut;
         }
 
-        public int LineNumber { get { return _bufferedCsvLineGenerator.LineNumber; }}
+        public int LineNumber => _csvStateMachine.LineNumber;
         public int ColumnNumber { get; set; }
         private CsvLine _cachedLine;
         private bool _initialized;
         private CsvHeader _header;
-        private string _defaultHeaderName = "Column";
-        private IEnumerator<CsvLine> _enumerator;
+        private readonly IEnumerator<CsvLine> _enumerator;
 
-        private CsvLayout Layout { get; set; }
+        private CsvLayout Layout { get; }
 
         public CsvHeader Header
         {
@@ -35,21 +34,14 @@ namespace Net.Code.Csv.Impl
                 Initialize();
                 return _header;
             }
-            set { _header = value; }
+            private set { _header = value; }
         }
 
-        public int FieldCount
-        {
-            get { return _bufferedCsvLineGenerator.FieldCount ?? -1; }
-        }
+        public int FieldCount => _csvStateMachine.FieldCount ?? -1;
 
-        public string DefaultHeaderName
-        {
-            get { return _defaultHeaderName; }
-            set { _defaultHeaderName = value; }
-        }
+        public string DefaultHeaderName { private get; set; } = "Column";
 
-        public IEnumerable<CsvLine> Lines()
+        private IEnumerable<CsvLine> Lines()
         {
             Initialize();
 
@@ -98,7 +90,7 @@ namespace Net.Code.Csv.Impl
         public void Dispose()
         {
             if (_disposed) return;
-            _bufferedCsvLineGenerator.Dispose();
+            _csvStateMachine.Dispose();
             _disposed = true;
         }
 

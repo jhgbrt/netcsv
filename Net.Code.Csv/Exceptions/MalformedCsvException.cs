@@ -34,31 +34,6 @@ namespace Net.Code.Csv
 		: Exception
 	{
 	    /// <summary>
-		/// Contains the message that describes the error.
-		/// </summary>
-		private string _message;
-
-		/// <summary>
-		/// Contains the raw data when the error occured.
-		/// </summary>
-		private string _rawData;
-
-		/// <summary>
-		/// Contains the current field index.
-		/// </summary>
-		private int _fieldNumber;
-
-		/// <summary>
-		/// Contains the current record index.
-		/// </summary>
-		private long _lineNumber;
-
-		/// <summary>
-		/// Contains the current position in the raw data.
-		/// </summary>
-		private int _columnNumber;
-
-	    /// <summary>
 		/// Initializes a new instance of the MalformedCsvException class.
 		/// </summary>
 		public MalformedCsvException()
@@ -83,12 +58,12 @@ namespace Net.Code.Csv
 		public MalformedCsvException(string message, Exception innerException)
 			: base(String.Empty, innerException)
 		{
-			_message = (message == null ? string.Empty : message);
+			Message = (message ?? string.Empty);
 
-			_rawData = string.Empty;
-			_columnNumber = -1;
-			_lineNumber = -1;
-			_fieldNumber = -1;
+			RawData = string.Empty;
+			ColumnNumber = -1;
+			LineNumber = -1;
+			FieldNumber = -1;
 		}
 
 		/// <summary>
@@ -114,12 +89,12 @@ namespace Net.Code.Csv
 		public MalformedCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber, Exception innerException)
 			: base(String.Empty, innerException)
 		{
-			_rawData = (rawData == null ? string.Empty : rawData);
-			_columnNumber = columnNumber;
-			_lineNumber = lineNumber;
-			_fieldNumber = fieldNumber;
+			RawData = (rawData ?? string.Empty);
+			ColumnNumber = columnNumber;
+			LineNumber = lineNumber;
+			FieldNumber = fieldNumber;
 
-			_message = String.Format(CultureInfo.InvariantCulture, ExceptionMessage.MalformedCsvException, _lineNumber, _fieldNumber, _columnNumber, _rawData);
+			Message = String.Format(CultureInfo.InvariantCulture, ExceptionMessage.MalformedCsvException, LineNumber, FieldNumber, ColumnNumber, RawData);
 		}
 
 		/// <summary>
@@ -130,60 +105,45 @@ namespace Net.Code.Csv
 		protected MalformedCsvException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
-			_message = info.GetString("MyMessage");
+			Message = info.GetString("MyMessage");
 
-			_rawData = info.GetString("RawData");
-			_columnNumber = info.GetInt32("ColumnNumber");
-			_lineNumber = info.GetInt64("LineNumber");
-			_fieldNumber = info.GetInt32("FieldNumber");
+			RawData = info.GetString("RawData");
+			ColumnNumber = info.GetInt32("ColumnNumber");
+			LineNumber = info.GetInt64("LineNumber");
+			FieldNumber = info.GetInt32("FieldNumber");
 		}
 
 	    /// <summary>
 		/// Gets the raw data when the error occured.
 		/// </summary>
 		/// <value>The raw data when the error occured.</value>
-		public string RawData
-		{
-			get { return _rawData; }
-		}
+		public string RawData { get; }
 
-		/// <summary>
+	    /// <summary>
 		/// Gets the current position in the raw data.
 		/// </summary>
 		/// <value>The current position in the raw data.</value>
-		public int ColumnNumber
-		{
-			get { return _columnNumber; }
-		}
+		public int ColumnNumber { get; }
 
-		/// <summary>
+	    /// <summary>
 		/// Gets the current record index.
 		/// </summary>
 		/// <value>The current record index.</value>
-		public long LineNumber
-		{
-			get { return _lineNumber; }
-		}
+		public long LineNumber { get; }
 
-		/// <summary>
+	    /// <summary>
 		/// Gets the current field index.
 		/// </summary>
 		/// <value>The current record index.</value>
-		public int FieldNumber
-		{
-			get { return _fieldNumber; }
-		}
+		public int FieldNumber { get; }
 
 	    /// <summary>
 		/// Gets a message that describes the current exception.
 		/// </summary>
 		/// <value>A message that describes the current exception.</value>
-		public override string Message
-		{
-			get { return _message; }
-		}
+		public override string Message { get; }
 
-		/// <summary>
+	    /// <summary>
 		/// When overridden in a derived class, sets the <see cref="SerializationInfo"/> with information about the exception.
 		/// </summary>
 		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
@@ -193,12 +153,12 @@ namespace Net.Code.Csv
 		{
 			base.GetObjectData(info, context);
 
-			info.AddValue("MyMessage", _message);
+			info.AddValue("MyMessage", Message);
 
-			info.AddValue("RawData", _rawData);
-			info.AddValue("ColumnNumber", _columnNumber);
-			info.AddValue("LineNumber", _lineNumber);
-			info.AddValue("FieldNumber", _fieldNumber);
+			info.AddValue("RawData", RawData);
+			info.AddValue("ColumnNumber", ColumnNumber);
+			info.AddValue("LineNumber", LineNumber);
+			info.AddValue("FieldNumber", FieldNumber);
 		}
 	}
 }

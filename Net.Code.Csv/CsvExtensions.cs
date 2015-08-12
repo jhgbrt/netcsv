@@ -121,7 +121,7 @@ namespace Net.Code.Csv
         /// <returns>a datareader instance to read the contents of the CSV file</returns>
         public static IDataReader ReadStreamAsCsv(this TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, Converter converter, int bufferSize = 4096)
         {
-            var parser = new CsvParser(reader, bufferSize, csvLayout, csvBehaviour);
+            var parser = new CsvParser(reader, csvLayout, csvBehaviour);
             return new CsvDataReader(parser, converter);
         }
     }

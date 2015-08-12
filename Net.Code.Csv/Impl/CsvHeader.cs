@@ -22,15 +22,9 @@ namespace Net.Code.Csv.Impl
             return realFields;
         }
 
-        public int this[string headerName]
-        {
-            get { return _fieldHeaderIndexes[headerName]; }
-        }
+        public int this[string headerName] => _fieldHeaderIndexes[headerName];
 
-        public string this[int i]
-        {
-            get { return Fields[i]; }
-        }
+        public string this[int i] => Fields[i];
 
         public bool TryGetIndex(string name, out int index)
         {

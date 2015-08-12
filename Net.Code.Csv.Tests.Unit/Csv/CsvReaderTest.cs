@@ -982,7 +982,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
                 new CsvLayout(), 
                 new CsvBehaviour(
                     missingFieldAction:MissingFieldAction.ReplaceByNull,
-                    trimmingOptions: ValueTrimmingOptions.None,
+                    trimmingOptions: ValueTrimmingOptions.All,
                     skipEmptyLines: false
                 )))
 			{

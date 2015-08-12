@@ -40,7 +40,7 @@ namespace Net.Code.Csv
     /// <summary>
     /// Represents a reader that provides fast, non-cached, forward-only access to CSV data.  
     /// </summary>
-    public partial class CsvReader
+    public sealed partial class CsvReader
         : IDataReader, IEnumerable<string[]>
     {
         /// <summary>
@@ -78,39 +78,14 @@ namespace Net.Code.Csv
         private CsvParser _parser;
 
         /// <summary>
-        /// Contains the buffer size.
-        /// </summary>
-        private int _bufferSize;
-
-        /// <summary>
         /// Indicates if the class is initialized.
         /// </summary>
         private bool _initialized;
 
         /// <summary>
-        /// Contains the current record index in the CSV file.
-        /// A value of <see cref="Int32.MinValue"/> means that the reader has not been initialized yet.
-        /// Otherwise, a negative value means that no record has been read yet.
-        /// </summary>
-        private long _currentRecordIndex;
-
-        /// <summary>
-        /// Contains the array of the field values for the current record.
-        /// A null value indicates that the field have not been parsed.
-        /// </summary>
-        private string[] _fields;
-
-        /// <summary>
         /// Contains the maximum number of fields to retrieve for each record.
         /// </summary>
         private int _fieldCount;
-
-        /// <summary>
-        /// Indicates if the end of the reader has been reached.
-        /// </summary>
-        private bool _eof;
-
-        #region Constructors
 
         /// <summary>
         /// Initializes a new instance of the CsvReader class.
@@ -124,7 +99,7 @@ namespace Net.Code.Csv
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
         public CsvReader(TextReader reader, bool hasHeaders)
-            : this(reader, CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders: hasHeaders), CsvBehaviour.Default)
+            : this(reader, DefaultBufferSize, new CsvLayout(hasHeaders: hasHeaders), CsvBehaviour.Default)
         {
         }
 
@@ -212,124 +187,77 @@ namespace Net.Code.Csv
         {
             if (layout == null) layout = CsvLayout.Default;
             if (behaviour == null) behaviour = CsvBehaviour.Default;
-            _fields = new string[0];
+            _line = CsvLine.Empty;
 
             if (reader == null)
-                throw new ArgumentNullException("reader");
+                throw new ArgumentNullException(nameof(reader));
 
             if (bufferSize <= 0)
-                throw new ArgumentOutOfRangeException("bufferSize", bufferSize, ExceptionMessage.BufferSizeTooSmall);
+                throw new ArgumentOutOfRangeException(nameof(bufferSize), bufferSize, ExceptionMessage.BufferSizeTooSmall);
 
-            _bufferSize = bufferSize;
+            BufferSize = bufferSize;
 
-            if (reader is StreamReader)
+            var streamReader = reader as StreamReader;
+            if (streamReader != null)
             {
-                Stream stream = ((StreamReader)reader).BaseStream;
+                Stream stream = streamReader.BaseStream;
 
                 if (stream.CanSeek)
                 {
                     // Handle bad implementations returning 0 or less
                     if (stream.Length > 0)
-                        _bufferSize = (int)Math.Min(bufferSize, stream.Length);
+                        BufferSize = (int)Math.Min(bufferSize, stream.Length);
                 }
             }
 
-            _currentRecordIndex = -1;
+            CurrentRecordIndex = -1;
 
             _csvLayout = layout;
             _behaviour = behaviour;
-            _parser = new CsvParser(reader, bufferSize, _csvLayout, _behaviour);
+            _parser = new CsvParser(reader, _csvLayout, _behaviour);
             _enumerator = _parser.GetEnumerator();
         }
-
-        #endregion
-
-        #region Properties
-
-        #region Settings
 
         /// <summary>
         /// Gets the comment character indicating that a line is commented out.
         /// </summary>
         /// <value>The comment character indicating that a line is commented out.</value>
-        public char Comment
-        {
-            get
-            {
-                return _csvLayout.Comment;
-            }
-        }
+        public char Comment => _csvLayout.Comment;
 
         /// <summary>
         /// Gets the escape character letting insert quotation characters inside a quoted field.
         /// </summary>
         /// <value>The escape character letting insert quotation characters inside a quoted field.</value>
-        public char Escape
-        {
-            get
-            {
-                return _csvLayout.Escape;
-            }
-        }
+        public char Escape => _csvLayout.Escape;
 
         /// <summary>
         /// Gets the delimiter character separating each field.
         /// </summary>
         /// <value>The delimiter character separating each field.</value>
-        public char Delimiter
-        {
-            get
-            {
-                return _csvLayout.Delimiter;
-            }
-        }
+        public char Delimiter => _csvLayout.Delimiter;
 
         /// <summary>
         /// Gets the quotation character wrapping every field.
         /// </summary>
         /// <value>The quotation character wrapping every field.</value>
-        public char Quote
-        {
-            get
-            {
-                return _csvLayout.Quote;
-            }
-        }
+        public char Quote => _csvLayout.Quote;
 
         /// <summary>
         /// Indicates if field names are located on the first non commented line.
         /// </summary>
         /// <value><see langword="true"/> if field names are located on the first non commented line, otherwise, <see langword="false"/>.</value>
-        public bool HasHeaders
-        {
-            get
-            {
-                return _csvLayout.HasHeaders;
-            }
-        }
+        public bool HasHeaders => _csvLayout.HasHeaders;
 
         /// <summary>
         /// Indicates if spaces at the start and end of a field are trimmed.
         /// </summary>
         /// <value><see langword="true"/> if spaces at the start and end of a field are trimmed, otherwise, <see langword="false"/>.</value>
-        public ValueTrimmingOptions TrimmingOption
-        {
-            get
-            {
-                return _behaviour.TrimmingOptions;
-            }
-        }
+        public ValueTrimmingOptions TrimmingOption => _behaviour.TrimmingOptions;
 
         /// <summary>
         /// Gets the buffer size.
         /// </summary>
-        public int BufferSize
-        {
-            get
-            {
-                return _bufferSize;
-            }
-        }
+        public int BufferSize { get; }
 
         /// <summary>
         /// Gets or sets the default action to take when a parsing error has occured.
@@ -354,10 +282,6 @@ namespace Net.Code.Csv
         /// <value>The default header name when it is an empty string or only whitespaces.</value>
         public string DefaultHeaderName { set { _parser.DefaultHeaderName = value; } }
 
-        #endregion
-
-        #region State
-
         /// <summary>
         /// Gets the maximum number of fields to retrieve for each record.
         /// </summary>
@@ -378,13 +302,7 @@ namespace Net.Code.Csv
         /// Gets a value that indicates whether the current stream position is at the end of the stream.
         /// </summary>
         /// <value><see langword="true"/> if the current stream position is at the end of the stream; otherwise <see langword="false"/>.</value>
-        public virtual bool EndOfStream
-        {
-            get
-            {
-                return _eof;
-            }
-        }
+        public bool EndOfStream { get; private set; }
 
         /// <summary>
         /// Gets the field headers.
@@ -404,19 +322,7 @@ namespace Net.Code.Csv
         /// Gets the current record index in the CSV file.
         /// </summary>
         /// <value>The current record index in the CSV file.</value>
-        public virtual long CurrentRecordIndex
-        {
-            get
-            {
-                return _currentRecordIndex;
-            }
-        }
-
-        #endregion
-
-        #endregion
-
-        #region Indexers
+        public long CurrentRecordIndex { get; private set; }
 
         /// <summary>
         /// Gets the field with the specified name and record position. <see cref="HasHeaders"/> must be <see langword="true"/>.
@@ -551,21 +457,15 @@ namespace Net.Code.Csv
         /// <exception cref="ObjectDisposedException">
         ///	The instance has been disposed of.
         /// </exception>
-        public virtual string this[int field]
+        public string this[int field]
         {
             get
             {
                 if (field < 0 || field >= _fieldCount)
                     throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
-                return _fields[field];
+                return _line[field];
             }
         }
-
-        #endregion
-
-        #region Methods
-
-        #region EnsureInitialize
 
         /// <summary>
         /// Ensures that the reader is initialized.
@@ -575,7 +475,7 @@ namespace Net.Code.Csv
             if (_initialized)
                 return;
 
-            _currentRecordIndex = -1;
+            CurrentRecordIndex = -1;
 
             _parser.Initialize();
 
@@ -584,10 +484,6 @@ namespace Net.Code.Csv
             _initialized = true;
 
         }
-
-        #endregion
-
-        #region GetFieldIndex
 
         /// <summary>
         /// Gets the field index for the provided header.
@@ -608,25 +504,6 @@ namespace Net.Code.Csv
             return -1;
         }
 
-        #endregion
-
-        #region CopyCurrentRecordTo
-
-        /// <summary>
-        /// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
-        /// </summary>
-        /// <param name="array"> The one-dimensional <see cref="Array"/> that is the destination of the fields of the current record.</param>
-        /// <exception cref="ArgumentNullException">
-        ///		<paramref name="array"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///		The number of fields in the record is greater than the available space from <paramref name="index"/> to the end of <paramref name="array"/>.
-        /// </exception>
-        public void CopyCurrentRecordTo(string[] array)
-        {
-            CopyCurrentRecordTo(array, 0);
-        }
-
         /// <summary>
         /// Copies the field array of the current record to a one-dimensional array, starting at the beginning of the target array.
         /// </summary>
@@ -644,29 +521,25 @@ namespace Net.Code.Csv
         /// <exception cref="ArgumentException">
         ///		The number of fields in the record is greater than the available space from <paramref name="index"/> to the end of <paramref name="array"/>.
         /// </exception>
-        public void CopyCurrentRecordTo(string[] array, int index)
+        public void CopyCurrentRecordTo(string[] array, int index = 0)
         {
             if (array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (index < 0 || index >= array.Length)
-                throw new ArgumentOutOfRangeException("index", index, string.Empty);
+                throw new ArgumentOutOfRangeException(nameof(index), index, string.Empty);
 
-            if (_currentRecordIndex < 0 || !_initialized)
+            if (CurrentRecordIndex < 0 || !_initialized)
                 throw new InvalidOperationException(ExceptionMessage.NoCurrentRecord);
 
             if (array.Length - index < _fieldCount)
-                throw new ArgumentException(ExceptionMessage.NotEnoughSpaceInArray, "array");
+                throw new ArgumentException(ExceptionMessage.NotEnoughSpaceInArray, nameof(array));
 
             for (int i = 0; i < _fieldCount; i++)
             {
                 array[index + i] = this[i];
             }
         }
-
-        #endregion
-
-        #region IsWhiteSpace
 
         /// <summary>
         /// Indicates whether the specified Unicode character is categorized as white space.
@@ -678,19 +551,13 @@ namespace Net.Code.Csv
             // Handle cases where the delimiter is a whitespace (e.g. tab)
             if (c == _csvLayout.Delimiter)
                 return false;
-            else
-            {
-                // See char.IsLatin1(char c) in Reflector
-                if (c <= '\x00ff')
-                    return (c == ' ' || c == '\t');
-                else
-                    return (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.SpaceSeparator);
-            }
+            
+            // See char.IsLatin1(char c) in Reflector
+            if (c <= '\x00ff')
+                return (c == ' ' || c == '\t');
+
+            return (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.SpaceSeparator);
         }
-
-        #endregion
-
-        #region MoveTo
 
         /// <summary>
         /// Moves to the specified record index.
@@ -700,14 +567,14 @@ namespace Net.Code.Csv
         /// <exception cref="ObjectDisposedException">
         ///	The instance has been disposed of.
         /// </exception>
-        public virtual bool MoveTo(long record)
+        public bool MoveTo(long record)
         {
-            if (record < _currentRecordIndex)
+            if (record < CurrentRecordIndex)
                 return false;
 
             // Get number of record to read
 
-            long offset = record - _currentRecordIndex;
+            long offset = record - CurrentRecordIndex;
 
             while (offset > 0)
             {
@@ -720,13 +587,6 @@ namespace Net.Code.Csv
             return true;
         }
 
-        #endregion
-
-
-        #endregion
-
-        #region ReadLine
-
         /// <summary>
         /// Fills the buffer with data from the reader.
         /// </summary>
@@ -736,9 +596,9 @@ namespace Net.Code.Csv
         /// </exception>
         private bool ReadLine()
         {
-            if (_eof || !_enumerator.MoveNext())
+            if (EndOfStream || !_enumerator.MoveNext())
             {
-                _eof = true;
+                EndOfStream = true;
                 return false;
             }
 
@@ -746,12 +606,6 @@ namespace Net.Code.Csv
             return true;
         }
 
-        #endregion
-
-
-
-
-        #region ReadNextRecord
         /// <summary>
         /// Reads the next record.
         /// </summary>
@@ -775,7 +629,7 @@ namespace Net.Code.Csv
         /// <exception cref="ObjectDisposedException">
         ///	The instance has been disposed of.
         /// </exception>
-        protected virtual bool ReadNextRecord(bool skipToNextLine)
+        private bool ReadNextRecord(bool skipToNextLine)
         {
             EnsureInitialize();
 
@@ -783,18 +637,12 @@ namespace Net.Code.Csv
 
             if (!ReadLine()) return false;
 
-            _fields = _line.Fields.ToArray();
-            _currentRecordIndex++;
+            Debug.Assert(_line != null, "_line != null");
+
+            CurrentRecordIndex++;
 
             return true;
         }
-
-        #endregion
-
-
-
-
-        #region IDataReader support methods
 
         /// <summary>
         /// Validates the state of the data reader.
@@ -829,20 +677,17 @@ namespace Net.Code.Csv
             EnsureInitialize();
 
             if (field < 0 || field >= _fieldCount)
-                throw new ArgumentOutOfRangeException("field", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
+                throw new ArgumentOutOfRangeException(nameof(field), field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
 
             if (fieldOffset < 0 || fieldOffset >= int.MaxValue)
-                throw new ArgumentOutOfRangeException("fieldOffset");
+                throw new ArgumentOutOfRangeException(nameof(fieldOffset));
 
             // Array.Copy(...) will do the remaining argument checks
 
             if (length == 0)
                 return 0;
 
-            string value = this[field];
-
-            if (value == null)
-                value = string.Empty;
+            string value = this[field] ?? string.Empty;
 
             Debug.Assert(fieldOffset < int.MaxValue);
 
@@ -864,26 +709,9 @@ namespace Net.Code.Csv
             return length;
         }
 
-        #endregion
+        int IDataReader.RecordsAffected => -1;                // For SELECT statements, -1 must be returned.
 
-        #region IDataReader Members
-
-        int IDataReader.RecordsAffected
-        {
-            get
-            {
-                // For SELECT statements, -1 must be returned.
-                return -1;
-            }
-        }
-
-        bool IDataReader.IsClosed
-        {
-            get
-            {
-                return _eof;
-            }
-        }
+        bool IDataReader.IsClosed => EndOfStream;
 
         bool IDataReader.NextResult()
         {
@@ -919,9 +747,11 @@ namespace Net.Code.Csv
             EnsureInitialize();
             ValidateDataReader(DataReaderValidations.IsNotClosed);
 
-            DataTable schema = new DataTable("SchemaTable");
-            schema.Locale = CultureInfo.InvariantCulture;
-            schema.MinimumCapacity = _fieldCount;
+            DataTable schema = new DataTable("SchemaTable")
+            {
+                Locale = CultureInfo.InvariantCulture,
+                MinimumCapacity = _fieldCount
+            };
 
             schema.Columns.Add(SchemaTableColumn.AllowDBNull, typeof(bool)).ReadOnly = true;
             schema.Columns.Add(SchemaTableColumn.BaseColumnName, typeof(string)).ReadOnly = true;
@@ -998,10 +828,6 @@ namespace Net.Code.Csv
             return schema;
         }
 
-        #endregion
-
-        #region IDataRecord Members
-
         int IDataRecord.GetInt32(int i)
         {
             ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
@@ -1064,7 +890,7 @@ namespace Net.Code.Csv
             ValidateDataReader(DataReaderValidations.IsInitialized | DataReaderValidations.IsNotClosed);
 
             if (i < 0 || i >= _fieldCount)
-                throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
+                throw new ArgumentOutOfRangeException(nameof(i), i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
 
             return typeof(string);
         }
@@ -1093,7 +919,7 @@ namespace Net.Code.Csv
             ValidateDataReader(DataReaderValidations.IsNotClosed);
 
             if (i < 0 || i >= _fieldCount)
-                throw new ArgumentOutOfRangeException("i", i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
+                throw new ArgumentOutOfRangeException(nameof(i), i, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, i));
 
             if (_csvLayout.HasHeaders)
                 return _parser.Header.Fields[i];
@@ -1147,7 +973,7 @@ namespace Net.Code.Csv
             int index;
 
             if (!_parser.Header.TryGetIndex(name, out index))
-                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, name), "name");
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, name), nameof(name));
 
             return index;
         }
@@ -1199,10 +1025,6 @@ namespace Net.Code.Csv
             return Int16.Parse(this[i], CultureInfo.CurrentCulture);
         }
 
-        #endregion
-
-        #region IEnumerable<string[]> Members
-
         /// <summary>
         /// Returns an <see cref="RecordEnumerator"/>  that can iterate through CSV records.
         /// </summary>
@@ -1224,12 +1046,8 @@ namespace Net.Code.Csv
         /// </exception>
         IEnumerator<string[]> IEnumerable<string[]>.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
-
-        #endregion
-
-        #region IEnumerable Members
 
         /// <summary>
         /// Returns an <see cref="System.Collections.IEnumerator"/>  that can iterate through CSV records.
@@ -1243,10 +1061,6 @@ namespace Net.Code.Csv
             return GetEnumerator();
         }
 
-        #endregion
-
-        #region IDisposable members
-
         private bool _isDisposed = false;
         private CsvBehaviour _behaviour;
 
@@ -1255,10 +1069,8 @@ namespace Net.Code.Csv
             if (_isDisposed) return;
             _parser.Dispose();
             _parser = null;
-            _eof = true;
+            EndOfStream = true;
             _isDisposed = true;
         }
-
-        #endregion
     }
 }

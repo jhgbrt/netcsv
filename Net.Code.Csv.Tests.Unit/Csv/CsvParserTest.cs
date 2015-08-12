@@ -14,7 +14,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         {
             var data = CsvReaderSampleData.SampleData1;
             var reader = new StringReader(data);
-            var parser = new CsvParser(reader, 4096, new CsvLayout(), new CsvBehaviour());
+            var parser = new CsvParser(reader, new CsvLayout(), new CsvBehaviour());
             foreach (var line in parser)
             {
                 
