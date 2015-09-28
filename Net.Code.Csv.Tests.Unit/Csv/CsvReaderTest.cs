@@ -183,7 +183,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 		[Test]
 		[ExpectedException(typeof(ArgumentNullException))]
-		public void ArgumentTestCopyCurrentRecordTo1()
+		public void CopyCurrentRecordTo_Null_ThrowsArgumentNullException()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
 			{
@@ -193,7 +193,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 		[Test]
 		[ExpectedException(typeof(ArgumentOutOfRangeException))]
-		public void ArgumentTestCopyCurrentRecordTo2()
+		public void CopyCurrentRecordTo_ArrayAtOutOfRangeIndex_ThrowsArgumentOutOfRangeException()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
 			{
@@ -203,9 +203,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 		[Test]
 		[ExpectedException(typeof(ArgumentOutOfRangeException))]
-		public void ArgumentTestCopyCurrentRecordTo3()
-		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+        public void CopyCurrentRecordTo_ArrayBeyondBounds_ThrowsArgumentOutOfRangeException()
+        {
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
 			{
 				csv.CopyCurrentRecordTo(new string[1], 1);
 			}
@@ -213,9 +213,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 		[Test]
 		[ExpectedException(typeof(ArgumentException))]
-		public void ArgumentTestCopyCurrentRecordTo4()
-		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+        public void CopyCurrentRecordTo_ArrayTooSmall_ThrowsArgumentException()
+        {
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
 			{
 				csv.ReadNextRecord();
 				csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount - 1], 0);
@@ -224,9 +224,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 		[Test]
 		[ExpectedException(typeof(ArgumentException))]
-		public void ArgumentTestCopyCurrentRecordTo5()
-		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+        public void CopyCurrentRecordTo_NotEnoughSlotsAfterIndex_ThrowsArgumentOutOfRangeException()
+        {
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
 			{
 				csv.ReadNextRecord();
 				csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount], 1);

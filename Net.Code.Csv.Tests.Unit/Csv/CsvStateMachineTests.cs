@@ -46,7 +46,50 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 			CollectionAssert.AreEqual(new[] { "1", "2", "3 \t" }, result);
 		}
 
-		[Test]
+        [Test]
+	    public void ValueTrimmingOptions_All_TrimsWhiteSpace()
+	    {
+	        var input = "\" x \"";
+            var behaviour = new CsvBehaviour(ValueTrimmingOptions.All);
+	        var result = Split(input, new CsvLayout(), behaviour);
+            Assert.AreEqual("x", result.Single());
+	    }
+
+        [Test]
+        public void ValueTrimmingOptions_QuotedOnly_TrimsWhiteSpaceWhenQuoted()
+        {
+            var input = "\" x \"";
+            var behaviour = new CsvBehaviour(ValueTrimmingOptions.QuotedOnly);
+            var result = Split(input, new CsvLayout(), behaviour);
+            Assert.AreEqual("x", result.Single());
+        }
+        [Test]
+        public void ValueTrimmingOptions_QuotedOnly_DoesNotTrimWhiteSpaceWhenNotQuoted()
+        {
+            var input = " x ";
+            var behaviour = new CsvBehaviour(ValueTrimmingOptions.QuotedOnly);
+            var result = Split(input, new CsvLayout(), behaviour);
+            Assert.AreEqual(" x ", result.Single());
+        }
+
+        [Test]
+        public void ValueTrimmingOptions_UnQuotedOnly_TrimsWhiteSpaceWhenNotQuoted()
+        {
+            var input = " x ";
+            var behaviour = new CsvBehaviour(ValueTrimmingOptions.UnquotedOnly);
+            var result = Split(input, new CsvLayout(), behaviour);
+            Assert.AreEqual("x", result.Single());
+        }
+        [Test]
+        public void ValueTrimmingOptions_UnQuotedOnly_DoesNotTrimWhiteSpaceWhenQuoted()
+        {
+            var input = "\" x \"";
+            var behaviour = new CsvBehaviour(ValueTrimmingOptions.UnquotedOnly);
+            var result = Split(input, new CsvLayout(), behaviour);
+            Assert.AreEqual(" x ", result.Single());
+        }
+
+        [Test]
 		public void StripsQuotes()
 		{
 			const string line = @"""FieldContent""";
@@ -91,6 +134,15 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             CollectionAssert.AreEqual(new[] { "", "x", "", "y" }, result);
 		}
 
+        [Test]
+	    public void EmptyString()
+	    {
+	        const string line = "";
+            var splitter = new CsvStateMachine(new StringReader(line), new CsvLayout(), new CsvBehaviour());
+            var result = splitter.Split();
+            CollectionAssert.IsEmpty(result);
+	    }
+
 		[Test]
 		public void QuotedStringWithDelimiter()
 		{
@@ -103,7 +155,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 		}
 
 		[Test]
-		public void WhenValueTrimmingIsNone_LastFieldWithLeadingAndTrailingWhitespace_WhitespaceIsNotTrimmed()
+		public void WhenValueTrimmingIsNone_LastFieldHasLeadingAndTrailingWhitespace_WhitespaceIsNotTrimmed()
 		{
 			const string line = "x,y, z ";
 			var splitLineParams = new CsvLayout('"', ',', '"');
@@ -124,10 +176,10 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 		[Test]
 		public void EscapeCharacterInsideQuotedStringIsEscaped()
 		{
-			const string line = "\"\\\\\"";
+			const string line = @"""\\""";
 			var splitLineParams = new CsvLayout('"', ',', '\\');
             var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-            Assert.AreEqual("\\", result.Single());
+            Assert.AreEqual(@"\", result.Single());
 		}
 
 		[Test]
