@@ -172,7 +172,6 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void GetSchemaTableReaderClosedTest()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
@@ -181,7 +180,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				csv.ReadNextRecord();
 				reader.Close();
 
-				DataTable result = reader.GetSchemaTable();
+                Assert.Throws<InvalidOperationException>(() => reader.GetSchemaTable());
 			}
 		}
 
@@ -199,7 +198,6 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void NextResultReaderClosedTest()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
@@ -208,7 +206,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				csv.ReadNextRecord();
 				reader.Close();
 
-				bool result = reader.NextResult();
+                Assert.Throws<InvalidOperationException>(() => reader.NextResult());
 			}
 		}
 
@@ -227,7 +225,6 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void ReadReaderClosedTest()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
@@ -236,9 +233,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				csv.ReadNextRecord();
 				reader.Close();
 
-				bool result = reader.Read();
-			}
-		}
+                Assert.Throws<InvalidOperationException>(() => reader.Read());
+            }
+        }
 
 		[Test()]
 		public void DepthTest()
@@ -254,7 +251,6 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void DepthReaderClosedTest()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
@@ -263,9 +259,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				csv.ReadNextRecord();
 				reader.Close();
 
-				int result = reader.Depth;
-			}
-		}
+                Assert.Throws<InvalidOperationException>(() => { var ignored = reader.Depth; });
+            }
+        }
 
 		[Test()]
 		public void IsClosedTest()

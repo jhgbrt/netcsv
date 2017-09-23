@@ -38,30 +38,36 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region Constructors
 
 		[Test]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void ArgumentTestCtor1()
 		{
-			using (CsvReader csv = new CsvReader(null))
-			{
-			}
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(null))
+                {
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		public void ArgumentTestCtor2()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), 0))
-			{
-			}
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), 0))
+                {
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		public void ArgumentTestCtor3()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), -1))
-			{
-			}
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), -1))
+                {
+                }
+            });
 		}
 
 		[Test]
@@ -78,103 +84,123 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region Indexers
 
 		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		public void ArgumentTestIndexer1()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				string s = csv[-1];
-			}
-		}
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    string s = csv[-1];
+                }
+            });
+        }
 
 		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		public void ArgumentTestIndexer2()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				string s = csv[CsvReaderSampleData.SampleData1RecordCount];
-			}
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    string s = csv[CsvReaderSampleData.SampleData1RecordCount];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void ArgumentTestIndexer3()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				string s = csv["asdf"];
-			}
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    string s = csv["asdf"];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void ArgumentTestIndexer4()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				string s = csv[CsvReaderSampleData.SampleData1Header0];
-			}
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    string s = csv[CsvReaderSampleData.SampleData1Header0];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void ArgumentTestIndexer5()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				string s = csv[null];
-			}
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    string s = csv[null];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void ArgumentTestIndexer6()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				string s = csv[string.Empty];
-			}
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    string s = csv[string.Empty];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void ArgumentTestIndexer7()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
-			{
-				string s = csv[null];
-			}
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
+                {
+                    string s = csv[null];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void ArgumentTestIndexer8()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
-			{
-				string s = csv[string.Empty];
-			}
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
+                {
+                    string s = csv[string.Empty];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentException))]
 		public void ArgumentTestIndexer9()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
-			{
-				string s = csv["asdf"];
-			}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
+                {
+                    string s = csv["asdf"];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		public void ArgumentTestIndexer10()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				string s = csv[-1, 0];
-			}
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    string s = csv[-1, 0];
+                }
+            });
 		}
 
 		#endregion
@@ -182,55 +208,65 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region CopyCurrentRecordTo
 
 		[Test]
-		[ExpectedException(typeof(ArgumentNullException))]
 		public void CopyCurrentRecordTo_Null_ThrowsArgumentNullException()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				csv.CopyCurrentRecordTo(null);
-			}
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    csv.CopyCurrentRecordTo(null);
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
 		public void CopyCurrentRecordTo_ArrayAtOutOfRangeIndex_ThrowsArgumentOutOfRangeException()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				csv.CopyCurrentRecordTo(new string[1], -1);
-			}
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    csv.CopyCurrentRecordTo(new string[1], -1);
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void CopyCurrentRecordTo_ArrayBeyondBounds_ThrowsArgumentOutOfRangeException()
         {
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				csv.CopyCurrentRecordTo(new string[1], 1);
-			}
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    csv.CopyCurrentRecordTo(new string[1], 1);
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentException))]
         public void CopyCurrentRecordTo_ArrayTooSmall_ThrowsArgumentException()
         {
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				csv.ReadNextRecord();
-				csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount - 1], 0);
-			}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    csv.ReadNextRecord();
+                    csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount - 1], 0);
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(ArgumentException))]
         public void CopyCurrentRecordTo_NotEnoughSlotsAfterIndex_ThrowsArgumentOutOfRangeException()
         {
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				csv.ReadNextRecord();
-				csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount], 1);
-			}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+                {
+                    csv.ReadNextRecord();
+                    csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount], 1);
+                }
+            });
 		}
 
 		#endregion
@@ -1169,13 +1205,12 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region CopyCurrentRecordTo
 
 		[Test]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void CopyCurrentRecordToTest1()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
 			{
-				csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount]);
-			}
+                Assert.Throws<InvalidOperationException>(() => csv.CopyCurrentRecordTo(new string[CsvReaderSampleData.SampleData1RecordCount]));
+            }
 		}
 
 		#endregion
@@ -1291,24 +1326,29 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void IndexerTest2()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
-			{
-				string s = csv[1, 0];
-				s = csv[0, 0];
-			}
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
+                {
+                    string s = csv[1, 0];
+                    s = csv[0, 0];
+                }
+            });
 		}
 
 		[Test]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void IndexerTest3()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
-			{
-				string s = csv[CsvReaderSampleData.SampleData1RecordCount, 0];
-			}
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
+                {
+                    string s = csv[CsvReaderSampleData.SampleData1RecordCount, 0];
+                }
+            });
 		}
 
 		#endregion

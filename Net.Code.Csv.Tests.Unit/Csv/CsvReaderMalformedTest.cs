@@ -33,7 +33,6 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 	{
 
 		[Test]
-		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest1()
 		{
 			const string Data = "a,b,c,d\n" +
@@ -55,12 +54,10 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			catch (MissingFieldCsvException ex)
 			{
                 Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
-                throw;
-			}
+        	}
 		}
 
 		[Test()]
-		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest2()
 		{
 			const string Data = "a,b,c,d\n" +
@@ -82,12 +79,10 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			catch (MissingFieldCsvException ex)
 			{
                 Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
-                throw;
-			}
+        	}
 		}
 
 		[Test()]
-		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest3()
 		{
 			const string Data = "a,b,c,d\n" +
@@ -109,12 +104,10 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			catch (MissingFieldCsvException ex)
 			{
                 Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
-                throw;
             }
         }
 
 		[Test()]
-		[ExpectedException(typeof(MissingFieldCsvException))]
 		public void MissingFieldQuotedTest4()
 		{
 			const string Data = "a,b,c,d\n" +
@@ -136,13 +129,10 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			catch (MissingFieldCsvException ex)
 			{
                 Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
-                throw;
             }
         }
 
 		[Test]
-		[ExpectedException(typeof(MalformedCsvException))]
-        //[Ignore]
 		public void MissingDelimiterAfterQuotedFieldTest1()
 		{
 			const string Data = "\"111\",\"222\"\"333\"";
@@ -163,18 +153,11 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 			catch (MalformedCsvException ex)
 			{
-			    var expectedLineNumber = 1;
-			    var expectedFieldNumber = 1;
-			    var expectedColumn = 13;
                 Assert.AreEqual(new {LineNumber = 1L, FieldNumber = 1, ColumnNumber = 13}, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
-
-			    throw;
-
 			}
 		}
 
 		[Test]
-		[ExpectedException(typeof(MalformedCsvException))]
 		public void MissingDelimiterAfterQuotedFieldTest2()
 		{
 			const string Data = "\"111\",\"222\",\"333\"\n" +
@@ -195,7 +178,6 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			catch (MalformedCsvException ex)
 			{
                 Assert.AreEqual(new { LineNumber = 2L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
-                throw;
             }
         }
 
