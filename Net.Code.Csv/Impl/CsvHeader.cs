@@ -24,8 +24,6 @@ namespace Net.Code.Csv.Impl
 
         public int this[string headerName] => _fieldHeaderIndexes[headerName];
 
-        public string this[int i] => Fields[i];
-
         public bool TryGetIndex(string name, out int index)
         {
             return _fieldHeaderIndexes.TryGetValue(name, out index);

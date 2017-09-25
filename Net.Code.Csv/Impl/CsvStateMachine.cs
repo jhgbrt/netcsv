@@ -1,6 +1,7 @@
-using System;
+#if DOTNETFRAMEWORK
 using System.CodeDom;
 using System.CodeDom.Compiler;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -78,19 +79,25 @@ namespace Net.Code.Csv.Impl
         {
             return current == '\r' || current == '\n';
         }
-
+#if DOTNETFRAMEWORK
         private static readonly CodeDomProvider Provider = CodeDomProvider.CreateProvider("CSharp");
-
+#endif
         private static readonly IDictionary<string, string> Literals = new Dictionary<string, string>();
         private static string ToLiteral(string input)
         {
             if (!Literals.ContainsKey(input))
             {
+#if DOTNETFRAMEWORK
                 using (var writer = new StringWriter())
                 {
                     Provider.GenerateCodeFromExpression(new CodePrimitiveExpression(input), writer, null);
                     Literals[input] = writer.ToString();
                 }
+
+#else
+                Literals[input] = input;
+                // TODO Literals[input] = Literal(input).ToString();
+#endif
             }
             return Literals[input];
         }

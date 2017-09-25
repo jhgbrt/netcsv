@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.Csv", "Net.Code.Csv\Net.Code.Csv.csproj", "{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.Csv", "Net.Code.Csv\Net.Code.Csv.csproj", "{4D986B15-FED2-43F9-A6B3-77421FE54CFF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.Csv.Tests.Unit", "Net.Code.Csv.Tests.Unit\Net.Code.Csv.Tests.Unit.csproj", "{DBF22390-41BC-4E33-BC9E-F381621EBF01}"
 EndProject
@@ -15,14 +15,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Release 4.0|Any CPU.ActiveCfg = Release 4.0|Any CPU
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Release 4.0|Any CPU.Build.0 = Release 4.0|Any CPU
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Release 4.5|Any CPU.ActiveCfg = Release 4.5|Any CPU
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Release 4.5|Any CPU.Build.0 = Release 4.5|Any CPU
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Release 4.0|Any CPU.ActiveCfg = Release|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Release 4.0|Any CPU.Build.0 = Release|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Release 4.5|Any CPU.ActiveCfg = Release|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Release 4.5|Any CPU.Build.0 = Release|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release 4.0|Any CPU.ActiveCfg = Release 4.0|Any CPU

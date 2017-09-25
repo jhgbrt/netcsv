@@ -197,8 +197,7 @@ namespace Net.Code.Csv
 
             BufferSize = bufferSize;
 
-            var streamReader = reader as StreamReader;
-            if (streamReader != null)
+            if (reader is StreamReader streamReader)
             {
                 Stream stream = streamReader.BaseStream;
 
@@ -497,9 +496,8 @@ namespace Net.Code.Csv
         {
             EnsureInitialize();
 
-            int index;
 
-            if (_parser.Header != null && _parser.Header.TryGetIndex(header, out index))
+            if (_parser.Header != null && _parser.Header.TryGetIndex(header, out int index))
                 return index;
             return -1;
         }
@@ -945,9 +943,7 @@ namespace Net.Code.Csv
 
             string value = this[i];
 
-            int result;
-
-            if (Int32.TryParse(value, out result))
+            if (Int32.TryParse(value, out int result))
                 return (result != 0);
             else
                 return Boolean.Parse(value);
@@ -970,9 +966,7 @@ namespace Net.Code.Csv
             EnsureInitialize();
             ValidateDataReader(DataReaderValidations.IsNotClosed);
 
-            int index;
-
-            if (!_parser.Header.TryGetIndex(name, out index))
+            if (!_parser.Header.TryGetIndex(name, out int index))
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, name), nameof(name));
 
             return index;
