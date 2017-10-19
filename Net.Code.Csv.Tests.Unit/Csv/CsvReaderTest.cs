@@ -38,7 +38,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region Constructors
 
 		[Test]
-		public void ArgumentTestCtor1()
+		public void Constructor_StreamIsNull_Throws()
 		{
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -49,7 +49,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestCtor2()
+		public void Constructor_ZeroBufferSize_Throws()
 		{
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
@@ -60,7 +60,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestCtor3()
+		public void Constructor_NegativeBufferSize_Throws()
 		{
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
@@ -71,7 +71,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestCtor4()
+		public void Constructor_WithBufferSize_SetsCorrectBufferSize()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(""), 123))
 			{
@@ -84,7 +84,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region Indexers
 
 		[Test]
-		public void ArgumentTestIndexer1()
+		public void Indexer_Negative_Throws()
 		{
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
@@ -96,7 +96,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         }
 
 		[Test]
-		public void ArgumentTestIndexer2()
+		public void Indexer_BeyondRecordSize_Throws()
 		{
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
@@ -108,8 +108,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer3()
-		{
+		public void ConstructedWithoutHeaders_IndexerByInvalidHeader_Throws()
+        {
             Assert.Throws<InvalidOperationException>(() =>
             {
                 using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
@@ -120,7 +120,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer4()
+		public void ConstructedWithoutHeaders_IndexerByValidHeader_DataHasHeaders_Throws()
 		{
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -132,7 +132,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer5()
+		public void ConstructedWithoutHeaders_Indexer_Null_Throws()
 		{
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -144,7 +144,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer6()
+		public void ConstructedWithoutHeaders_IndexByEmptyString_Throws()
 		{
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -156,7 +156,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer7()
+		public void ConstructedWithHeaders_IndexByNull_Throws()
 		{
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -168,7 +168,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer8()
+		public void ConstructedWithHeaders_IndexByEmptyString_Throws()
 		{
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -180,7 +180,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer9()
+		public void ConstructedWithHeaders_IndexByNonExistingHeader_Throws()
 		{
             Assert.Throws<ArgumentException>(() =>
             {
@@ -192,7 +192,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void ArgumentTestIndexer10()
+		public void ConstructedWithoutHeaders_IndexNegativeRecord_Throws()
 		{
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
@@ -382,23 +382,16 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = CsvReaderSampleData.SampleData1;
 
-            //try
+			using (CsvReader csv = new CsvReader(new StringReader(data), true, bufferSize))
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(data), true, bufferSize))
-				{
-					CsvReaderSampleData.CheckSampleData1(csv, true);
-				}
-			}
-			//catch (Exception ex)
-			{
-				//throw new Exception(string.Format("BufferSize={0}", bufferSize), ex);
+				CsvReaderSampleData.CheckSampleData1(csv, true);
 			}
 		}
 
 		[Test]
 		public void ParsingTest6()
 		{
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader("1,2"), false))
+			using (CsvReader csv = new CsvReader(new StringReader("1,2"), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -413,7 +406,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test]
 		public void ParsingTest7()
 		{
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader("\r\n1\r\n"), false))
+			using (CsvReader csv = new CsvReader(new StringReader("\r\n1\r\n"), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual(',', csv.Delimiter);
@@ -429,7 +422,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "\"bob said, \"\"Hey!\"\"\",2, 3 ";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.UnquotedOnly))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.UnquotedOnly))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("bob said, \"Hey!\"", csv[0]);
@@ -447,7 +440,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = ",";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual(String.Empty, csv[0]);
@@ -464,7 +457,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r2";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -483,7 +476,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\n2";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -502,7 +495,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r\n2";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -521,7 +514,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -536,7 +529,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\n";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -551,7 +544,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r\n";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -566,7 +559,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r2\n";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, '\r', '"', '\"', '#', ValueTrimmingOptions.UnquotedOnly))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, '\r', '"', '\"', '#', ValueTrimmingOptions.UnquotedOnly))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual(0, csv.CurrentRecordIndex);
@@ -582,7 +575,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "\"July 4th, 2005\"";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("July 4th, 2005", csv[0]);
@@ -612,7 +605,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			string data = String.Empty;
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsFalse(csv.ReadNextRecord());
 			}
@@ -623,7 +616,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "user_id,name\r\n1,Bruce";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), true))
+			using (CsvReader csv = new CsvReader(new StringReader(data), true))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -642,7 +635,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "\"data \r\n here\"";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("data \r\n here", csv[0]);
@@ -685,7 +678,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "\"double\"\"\"\"double quotes\"";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("double\"\"double quotes", csv[0]);
@@ -700,7 +693,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -715,7 +708,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r\n";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -730,7 +723,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\n";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -745,7 +738,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "'bob said, ''Hey!''',2, 3 ";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\'', '\'', '#', ValueTrimmingOptions.UnquotedOnly))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\'', '\'', '#', ValueTrimmingOptions.UnquotedOnly))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("bob said, 'Hey!'", csv[0]);
@@ -763,7 +756,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "\"data \"\" here\"";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\0', '\\', '#', ValueTrimmingOptions.None))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\0', '\\', '#', ValueTrimmingOptions.None))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("\"data \"\" here\"", csv[0]);
@@ -778,7 +771,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			string data = new String('a', 75) + "," + new String('b', 75);
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual(new String('a', 75), csv[0]);
@@ -794,7 +787,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r\n\r\n1";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -813,7 +806,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "1\r\n# bunch of crazy stuff here\r\n1";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -832,7 +825,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "\"1\",Bruce\r\n\"2\n\",Toni\r\n\"3\",Brian\r\n";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.None))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("1", csv[0]);
@@ -858,7 +851,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		{
 			const string data = "\"double\\\\\\\\double backslash\"";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\"', '\\', '#', ValueTrimmingOptions.None))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\"', '\\', '#', ValueTrimmingOptions.None))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("double\\\\double backslash", csv[0]);
@@ -874,7 +867,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			const string data = "\"Chicane\", \"Love on the Run\", \"Knight Rider\", \"This field contains a comma, but it doesn't matter as the field is quoted\"\r\n" +
 					  "\"Samuel Barber\", \"Adagio for Strings\", \"Classical\", \"This field contains a double quote character, \"\", but it doesn't matter as it is escaped\"";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.UnquotedOnly))
+			using (CsvReader csv = new CsvReader(new StringReader(data), false, ',', '\"', '\"', '#', ValueTrimmingOptions.UnquotedOnly))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual("Chicane", csv[0]);
@@ -1184,10 +1177,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			if (defaultHeaderName == null)
 				defaultHeaderName = "Column";
 
-			using (var csv = new CsvReader(new StringReader(",  ,,aaa,\"   \",,,"), true))
+			using (var csv = new CsvReader(new StringReader(",  ,,aaa,\"   \",,,"), layout: new CsvLayout(hasHeaders: true), behaviour: CsvBehaviour.Default, defaultHeaderName: defaultHeaderName))
 			{
-				csv.DefaultHeaderName = defaultHeaderName;
-
 				Assert.IsFalse(csv.ReadNextRecord());
 				Assert.AreEqual(8, csv.FieldCount);
 
@@ -1218,7 +1209,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region MoveTo tests
 
 		[Test]
-		public void MoveToTest1()
+		public void MoveTo_WhenCalled_AdvancesToMatchingRecord()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
@@ -1231,7 +1222,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void MoveToTest2()
+		public void MoveTo_PreviousRecord_ReturnsFalse()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
@@ -1241,7 +1232,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void MoveToTest3()
+		public void MoveTo_BeyondRecordCount_ReturnsFalse()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
@@ -1250,7 +1241,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test]
-		public void MoveToTest4()
+		public void MoveTo_WhenCalled_CurrentRecordIndexMatchesMovedToRecord()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
@@ -1262,22 +1253,21 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 		}
 
-		[Test]
-		public void MoveToTest5()
-		{
-			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
-			{
-				Assert.IsTrue(csv.MoveTo(-1));
-				csv.MoveTo(0);
-				Assert.IsFalse(csv.MoveTo(-1));
-			}
-		}
+        [Test]
+        public void MoveTo_NegativeRecord_ReturnsFalse()
+        {
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), false))
+            {
+                Assert.IsFalse(csv.MoveTo(-1));
+            }
+        }
 
-		#endregion
 
-		#region Iteration tests
+        #endregion
 
-		[Test]
+        #region Iteration tests
+
+        [Test]
 		public void IterationTest1()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))

@@ -10,12 +10,17 @@ namespace CsvTest
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
             ReadFileAsCsvTest();
         }
         static void ReadFileAsCsvTest()
         {
-            var reader = ReadCsv.FromFile("test.csv", Encoding.UTF8, new CsvLayout(delimiter: ';', hasHeaders: true));
+            var reader = ReadCsv.FromFile(
+                "test.csv", 
+                encoding: Encoding.UTF8,
+                delimiter: ';',
+                hasHeaders : true
+                );
+
             using (reader)
             {
                 var table = reader.GetSchemaTable();
@@ -27,12 +32,16 @@ namespace CsvTest
 
                 while (reader.Read())
                 {
-                    var values = (
-                        from header in headerNames
-                        select new { key = header.Trim('"'), value = (string)reader[header] }
-                    );
+                    var item = new
+                    {
+                        First = reader["First"],
+                        Last = reader["Last"],
+                        BirthDate = Convert.ToDateTime(reader["BirthDate"]),
+                        Quantity = Convert.ToInt32(reader["Quantity"]),
+                        Price = Convert.ToDecimal(reader["Price"])
+                    };
 
-                    foreach (var v in values) { Console.WriteLine(v); }
+                    Console.WriteLine(item);
                 }
             }
 

@@ -1,3 +1,4 @@
+using System;
 using Net.Code.Csv.Impl;
 
 namespace Net.Code.Csv
@@ -60,5 +61,10 @@ namespace Net.Code.Csv
         /// Indicates whether or not the input file has a header
         /// </summary>
         public bool HasHeaders { get; }
+
+        internal bool IsEscape(char currentChar, char? nextChar)
+        {
+            return currentChar == Escape && (nextChar == Quote || nextChar == Escape);
+        }
     }
 }

@@ -10,41 +10,41 @@ namespace Net.Code.Csv.Impl
     {
         private readonly CsvStateMachine _csvStateMachine;
         private bool _disposed;
+        private string _defaultHeaderName;
+        IDisposable _textReader;
 
-        public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour)
+        public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour, string defaultHeaderName = "Column")
         {
             _csvStateMachine = new CsvStateMachine(textReader, layOut, behaviour);
-            _enumerator = _csvStateMachine.GetEnumerator();
+            _enumerator = _csvStateMachine.Lines().GetEnumerator();
             Layout = layOut;
+            _defaultHeaderName = defaultHeaderName ?? "Column";
+            _textReader = textReader;
+
+            var firstLine = Lines().FirstOrDefault();
+
+            if (Layout.HasHeaders && firstLine != null)
+            {
+                Header = new CsvHeader(firstLine.Fields, _defaultHeaderName);
+            }
+            else
+            {
+                _cachedLine = firstLine;
+            }
         }
 
-        public int LineNumber => _csvStateMachine.LineNumber;
-        public int ColumnNumber { get; set; }
         private CsvLine _cachedLine;
-        private bool _initialized;
-        private CsvHeader _header;
+
         private readonly IEnumerator<CsvLine> _enumerator;
 
         private CsvLayout Layout { get; }
 
-        public CsvHeader Header
-        {
-            get
-            {
-                Initialize();
-                return _header;
-            }
-            private set { _header = value; }
-        }
+        public CsvHeader Header { get; private set; }
 
         public int FieldCount => _csvStateMachine.FieldCount ?? -1;
 
-        public string DefaultHeaderName { private get; set; } = "Column";
-
         private IEnumerable<CsvLine> Lines()
         {
-            Initialize();
-
             if (_cachedLine != null)
             {
                 yield return _cachedLine;
@@ -60,37 +60,14 @@ namespace Net.Code.Csv.Impl
             }
         }
 
-        public void Initialize()
-        {
-            if (_initialized) return;
-            _initialized = true;
+        public IEnumerator<CsvLine> GetEnumerator() => Lines().GetEnumerator();
 
-            var firstLine = Lines().FirstOrDefault();
-
-            if (Layout.HasHeaders && firstLine != null)
-            {
-                Header = new CsvHeader(firstLine.Fields, DefaultHeaderName);
-            }
-            else
-            {
-                _cachedLine = firstLine;
-            }
-        }
-
-        public IEnumerator<CsvLine> GetEnumerator()
-        {
-            return Lines().GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public void Dispose()
         {
             if (_disposed) return;
-            _csvStateMachine.Dispose();
+            _textReader.Dispose();
             _disposed = true;
         }
 

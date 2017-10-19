@@ -12,12 +12,12 @@ namespace Net.Code.Csv.Impl
         private readonly CsvHeader _header;
         private CsvLine _line;
         private CsvParser _parser;
-        private readonly Converter _converter;
+        private readonly IConverter _converter;
         private bool _isDisposed;
         private readonly IEnumerator<CsvLine> _enumerator;
         private bool _eof;
 
-        public CsvDataReader(CsvParser parser, Converter converter)
+        public CsvDataReader(CsvParser parser, IConverter converter)
         {
             _header = parser.Header;
             _line = null;

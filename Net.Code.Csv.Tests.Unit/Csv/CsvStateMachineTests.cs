@@ -18,7 +18,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         private static IEnumerable<string> Split(string line, CsvLayout splitLineParams, CsvBehaviour behaviour)
         {
             var splitter = new CsvStateMachine(new StringReader(line), splitLineParams, behaviour);
-            var result = splitter.Split();
+            var result = splitter.Lines();
             return result.First().Fields;
         }
         
@@ -139,7 +139,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 	    {
 	        const string line = "";
             var splitter = new CsvStateMachine(new StringReader(line), new CsvLayout(), new CsvBehaviour());
-            var result = splitter.Split();
+            var result = splitter.Lines();
             CollectionAssert.IsEmpty(result);
 	    }
 
@@ -212,7 +212,7 @@ line2" }, result);
 
             var splitter = new CsvStateMachine(new StringReader(data1), csvLayout, new CsvBehaviour());
 
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result[0].Fields);
             CollectionAssert.AreEqual(new[] { "4", "5", "6" }, result[1].Fields);
@@ -228,7 +228,7 @@ line2" }, result);
 
             var splitter = new CsvStateMachine(new StringReader(data1), csvLayout, new CsvBehaviour());
 
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""   ", "3" }, result[0].Fields);
 
@@ -243,7 +243,7 @@ line2" }, result);
 
             var splitter = new CsvStateMachine(new StringReader(data1), csvLayout, new CsvBehaviour());
 
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""  x ", "3" }, result[0].Fields);
 
@@ -259,7 +259,7 @@ side""  x "";3";
 
             var splitter = new CsvStateMachine(new StringReader(data1), csvLayout, new CsvBehaviour());
 
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             CollectionAssert.AreEqual(new[] { "1", @" 2  ""in
 side""  x ", "3" }, result[0].Fields);
@@ -273,7 +273,7 @@ side""  x ", "3" }, result[0].Fields);
             var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(),
                                            new CsvBehaviour(skipEmptyLines: false));
 
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             Assert.IsTrue(result[1].IsEmpty);
         }
@@ -285,7 +285,7 @@ side""  x ", "3" }, result[0].Fields);
             var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(),
                                            new CsvBehaviour(skipEmptyLines: true));
 
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             Assert.AreEqual("1", result[0].Fields[0]);
             Assert.AreEqual("2", result[1].Fields[0]);
@@ -297,7 +297,7 @@ side""  x ", "3" }, result[0].Fields);
             var input = "a,b\n   ";
             var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(skipEmptyLines:false));
             
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             Assert.AreEqual(2, result.Count());
             CollectionAssert.AreEqual(new[] { "a", "b" }, result[0].Fields);
@@ -310,10 +310,20 @@ side""  x ", "3" }, result[0].Fields);
         {
             var input = "00,01,   \n10,11,   ";
             var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour());
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
             Assert.AreEqual(2, result.Count());
             CollectionAssert.AreEqual(new[] { "00", "01", "" }, result[0].Fields);
             CollectionAssert.AreEqual(new[] { "10", "11", "" }, result[1].Fields);
+        }
+
+        [Test]
+        public void Testing()
+        {
+            var input = "00,   ,02\n,,";
+            var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(trimmingOptions:ValueTrimmingOptions.None));
+            var result = splitter.Lines().ToArray();
+            Assert.AreEqual(2, result.Count());
+            CollectionAssert.AreEqual(new[] { "00", "   ", "02" }, result[0].Fields);
         }
 
         [Test]
@@ -324,7 +334,7 @@ side""  x ", "3" }, result[0].Fields);
                         + "\na,b,";
 
             var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(missingFieldAction: MissingFieldAction.ReplaceByNull));
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
             Assert.AreEqual(3, result.Count());
 
             CollectionAssert.AreEqual(new[] { "a", "b", "c", "d", "e"  }, result[0].Fields);
@@ -339,7 +349,7 @@ side""  x ", "3" }, result[0].Fields);
 
             var splitter = new CsvStateMachine(new StringReader(data), new CsvLayout(), new CsvBehaviour());
 
-            var result = splitter.Split().ToArray();
+            var result = splitter.Lines().ToArray();
 
             CsvReaderSampleData.CheckSampleData1(false, 0, result[0].Fields);
 
@@ -352,7 +362,7 @@ side""  x ", "3" }, result[0].Fields);
 
 	        var splitter = new CsvStateMachine(new StringReader(data), new CsvLayout(), new CsvBehaviour(), true);
 
-            var csv = splitter.Split().ToArray().Single().Fields.ToArray();
+            var csv = splitter.Lines().ToArray().Single().Fields.ToArray();
             Assert.AreEqual(4, csv.Count());
 
             Assert.AreEqual("\n\r\n\n\r\r", csv[0]);

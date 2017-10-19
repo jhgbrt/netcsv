@@ -6,7 +6,7 @@ namespace Net.Code.Csv
     /// String to primitive conversion class. By default, uses the Convert.ToXXX methods or,
     /// if not available, the [Primitive].Parse method.
     /// </summary>
-    public class Converter
+    public class Converter : IConverter
     {
         /// <summary>
         /// Conversion function from string to bool. Default = <see cref="Convert.ToBoolean(object)"/>
@@ -41,7 +41,7 @@ namespace Net.Code.Csv
         /// <summary>
         /// Conversion function from string to unsigned long. Default = <see cref="Convert.ToUInt64(object)"/>
         /// </summary>
-        public Func<string, ulong> ToUInt64 { get;  } = Convert.ToUInt64;
+        public Func<string, ulong> ToUInt64 { get; set; } = Convert.ToUInt64;
 
         /// <summary>
         /// Conversion function from string to decimal. Default = <see cref="Convert.ToDecimal(object)"/>
@@ -56,7 +56,7 @@ namespace Net.Code.Csv
         /// <summary>
         /// Conversion function from string to double. Default = <see cref="Convert.ToDouble(object)"/>
         /// </summary>
-        public Func<string, double> ToDouble { get;  } = Convert.ToDouble;
+        public Func<string, double> ToDouble { get; set; } = Convert.ToDouble;
 
         /// <summary>
         /// Conversion function from string to byte. Default = <see cref="Convert.ToByte(object)"/>
@@ -88,5 +88,79 @@ namespace Net.Code.Csv
         /// method otherwise.
         /// </summary>
         public static Converter Default => new Converter();
+
+
+        bool IConverter.ToBoolean(string value)
+        {
+            return ToBoolean(value);
+        }
+
+        byte IConverter.ToByte(string value)
+        {
+            return ToByte(value);
+        }
+
+        char IConverter.ToChar(string value)
+        {
+            return ToChar(value);
+        }
+
+        DateTime IConverter.ToDateTime(string value)
+        {
+            return ToDateTime(value);
+        }
+
+        decimal IConverter.ToDecimal(string value)
+        {
+            return ToDecimal(value);
+        }
+
+        Guid IConverter.ToGuid(string value)
+        {
+            return ToGuid(value);
+        }
+
+        short IConverter.ToInt16(string value)
+        {
+            return ToInt16(value);
+        }
+
+        int IConverter.ToInt32(string value)
+        {
+            return ToInt32(value);
+        }
+
+        long IConverter.ToInt64(string value)
+        {
+            return ToInt64(value);
+        }
+
+        sbyte IConverter.ToSByte(string value)
+        {
+            return ToSByte(value);
+        }
+
+        float IConverter.ToSingle(string value)
+        {
+            return ToSingle(value);
+        }
+        double IConverter.ToDouble(string value)
+        {
+            return ToDouble(value);
+        }
+
+        ushort IConverter.ToUInt16(string value)
+        {
+            return ToUInt16(value);
+        }
+
+        uint IConverter.ToUInt32(string value)
+        {
+            return ToUInt32(value);
+        }
+        ulong IConverter.ToUInt64(string value)
+        {
+            return ToUInt64(value);
+        }
     }
 }

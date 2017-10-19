@@ -183,12 +183,13 @@ namespace Net.Code.Csv
         public CsvReader(TextReader reader,
             int bufferSize = DefaultBufferSize,
             CsvLayout layout = null,
-            CsvBehaviour behaviour = null)
+            CsvBehaviour behaviour = null,
+            string defaultHeaderName = null)
         {
             if (layout == null) layout = CsvLayout.Default;
             if (behaviour == null) behaviour = CsvBehaviour.Default;
             _line = CsvLine.Empty;
-
+            
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
@@ -213,7 +214,7 @@ namespace Net.Code.Csv
 
             _csvLayout = layout;
             _behaviour = behaviour;
-            _parser = new CsvParser(reader, _csvLayout, _behaviour);
+            _parser = new CsvParser(reader, _csvLayout, _behaviour, defaultHeaderName);
             _enumerator = _parser.GetEnumerator();
         }
 
@@ -257,29 +258,6 @@ namespace Net.Code.Csv
         /// Gets the buffer size.
         /// </summary>
         public int BufferSize { get; }
-
-        /// <summary>
-        /// Gets or sets the default action to take when a parsing error has occured.
-        /// </summary>
-        /// <value>The default action to take when a parsing error has occured.</value>
-        public QuotesInsideQuotedFieldAction DefaultQuotesInsideQuotedFieldAction
-        {
-            get
-            {
-                return _behaviour.QuotesInsideQuotedFieldAction;
-            }
-            set
-            {
-                _behaviour = new CsvBehaviour(_behaviour.TrimmingOptions, _behaviour.MissingFieldAction, _behaviour.SkipEmptyLines, value);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default header name when it is an empty string or only whitespaces.
-        /// The header index will be appended to the specified name.
-        /// </summary>
-        /// <value>The default header name when it is an empty string or only whitespaces.</value>
-        public string DefaultHeaderName { set { _parser.DefaultHeaderName = value; } }
 
         /// <summary>
         /// Gets the maximum number of fields to retrieve for each record.
@@ -357,6 +335,9 @@ namespace Net.Code.Csv
         {
             get
             {
+                if (record < 0)
+                    throw new ArgumentOutOfRangeException("record", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
+
                 if (!MoveTo(record))
                     throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.CannotReadRecordAtIndex, record));
 
@@ -393,6 +374,9 @@ namespace Net.Code.Csv
         {
             get
             {
+                if (record < 0)
+                    throw new ArgumentOutOfRangeException("record", field, string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldIndexOutOfRange, field));
+
                 if (!MoveTo(record))
                     throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.CannotReadRecordAtIndex, record));
 
@@ -475,8 +459,6 @@ namespace Net.Code.Csv
                 return;
 
             CurrentRecordIndex = -1;
-
-            _parser.Initialize();
 
             _fieldCount = _parser.FieldCount;
 
@@ -567,6 +549,9 @@ namespace Net.Code.Csv
         /// </exception>
         public bool MoveTo(long record)
         {
+            if (record < 0)
+                return false;
+
             if (record < CurrentRecordIndex)
                 return false;
 
