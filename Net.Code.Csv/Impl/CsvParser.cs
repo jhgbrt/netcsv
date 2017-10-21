@@ -11,19 +11,20 @@ namespace Net.Code.Csv.Impl
         private readonly CsvStateMachine _csvStateMachine;
         private bool _disposed;
         private string _defaultHeaderName;
+        private CsvLayout _layout;
         IDisposable _textReader;
 
         public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour, string defaultHeaderName = "Column")
         {
             _csvStateMachine = new CsvStateMachine(textReader, layOut, behaviour);
             _enumerator = _csvStateMachine.Lines().GetEnumerator();
-            Layout = layOut;
+            _layout = layOut;
             _defaultHeaderName = defaultHeaderName ?? "Column";
             _textReader = textReader;
 
             var firstLine = Lines().FirstOrDefault();
 
-            if (Layout.HasHeaders && firstLine != null)
+            if (_layout.HasHeaders && firstLine != null)
             {
                 Header = new CsvHeader(firstLine.Fields, _defaultHeaderName);
             }
@@ -36,8 +37,6 @@ namespace Net.Code.Csv.Impl
         private CsvLine _cachedLine;
 
         private readonly IEnumerator<CsvLine> _enumerator;
-
-        private CsvLayout Layout { get; }
 
         public CsvHeader Header { get; private set; }
 
@@ -56,7 +55,6 @@ namespace Net.Code.Csv.Impl
                 var readLine = _enumerator.Current;
 
                 yield return readLine;
-
             }
         }
 
