@@ -23,17 +23,26 @@ You need to add this using statement:
 Now you can use code like this:
 
     var myFileName = "path/to/csvfile";
-    myFileName.ReadFileAsCsv(Encoding.Default);
+    
+    using (var reader = ReadCsv.FromFile(myFileName)) {
+        while (reader.Read()) {
+            var record = new { 
+                Name = reader["Name"];
+                BirthDate = DateTime.Parse(reader["BirthDate"]);
+            }
+        }
+    }
 
 If you have a string that actually contains the CSV content already, use this:
 
     void ParseCsv(string content) {
-        content.ReadStringAsCsv();
+        using (var reader = ReadCsv.FromString(content)) {
+        // ...
+        }
     }
     
- Finally, you can also use the ReadStreamAsCsv() extension method.
+ Finally, you can also use the ReadCsv.FromStream() method.
  
  The examples assume some common defaults about the actual CSV layout
- and behaviour, but you can of course change those by using the overloads
- that accept an instance of the CsvBehaviour and CsvLayout classes.
+ and behaviour. You can of course change those through parameters.
  
