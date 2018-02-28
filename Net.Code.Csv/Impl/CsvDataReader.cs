@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using Net.Code.Csv.Resources;
+using System.IO;
 
 namespace Net.Code.Csv.Impl
 {
@@ -17,13 +18,13 @@ namespace Net.Code.Csv.Impl
         private readonly IEnumerator<CsvLine> _enumerator;
         private bool _eof;
 
-        public CsvDataReader(CsvParser parser, IConverter converter)
+        public CsvDataReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter)
         {
-            _header = parser.Header;
+            _parser = new CsvParser(reader, csvLayout, csvBehaviour);
+            _header = _parser.Header;
             _line = null;
-            _parser = parser;
             _converter = converter;
-            _enumerator = parser.GetEnumerator();
+            _enumerator = _parser.GetEnumerator();
         }
 
         public string GetName(int i)
@@ -148,6 +149,7 @@ namespace Net.Code.Csv.Impl
             return GetValue(i, _converter.ToDateTime);
         }
 
+        // TODO verify if this is correct?
         IDataReader IDataRecord.GetData(int i)
         {
             return i == 0 ? this : null;
@@ -155,7 +157,7 @@ namespace Net.Code.Csv.Impl
 
         public bool IsDBNull(int i)
         {
-            return false; // TODO return true if field type is not string
+            return false; // TODO return true if field type is not string?
         }
 
         public int FieldCount => _parser.FieldCount;

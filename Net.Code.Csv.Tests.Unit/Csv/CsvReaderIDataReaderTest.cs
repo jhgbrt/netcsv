@@ -33,7 +33,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region IDataReader interface
 
 		[Test()]
-		public void CloseTest()
+		public void IsClosed_WhenCloseWasCalled_ReturnsTrue()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), 
                 layout:new CsvLayout(hasHeaders:true)))
@@ -87,41 +87,20 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 					Assert.AreEqual(false, column["IsHidden"]);
 					Assert.AreEqual(false, column["IsLong"]);
 					Assert.AreEqual(true, column["IsReadOnly"]);
-
+                
 					Assert.AreEqual(index, column["ColumnOrdinal"]);
 
-					switch (index)
-					{
-						case 0:
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header0, column["ColumnName"]);
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header0, column["BaseColumnName"]);
-							break;
-						case 1:
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header1, column["ColumnName"]);
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header1, column["BaseColumnName"]);
-							break;
-						case 2:
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header2, column["ColumnName"]);
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header2, column["BaseColumnName"]);
-							break;
-						case 3:
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header3, column["ColumnName"]);
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header3, column["BaseColumnName"]);
-							break;
-						case 4:
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header4, column["ColumnName"]);
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header4, column["BaseColumnName"]);
-							break;
-						case 5:
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header5, column["ColumnName"]);
-							Assert.AreEqual(CsvReaderSampleData.SampleData1Header5, column["BaseColumnName"]);
-							break;
-						default:
-							throw new IndexOutOfRangeException();
-					}
+                    Assert.AreEqual(CsvReaderSampleData.SampleData1Headers[index], column["ColumnName"]);
+                    Assert.AreEqual(CsvReaderSampleData.SampleData1Headers[index], column["BaseColumnName"]);
 				}
 			}
 		}
+
+	    [Test]
+	    public void GetSchemaTableDoesNotCloseReader()
+	    {
+	        
+	    }
 
 		[Test()]
 		public void GetSchemaTableWithoutHeadersTest()
@@ -172,7 +151,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		public void GetSchemaTableReaderClosedTest()
+		public void GetSchemaTable_WhenReaderClosed_Throws()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
 			{
@@ -185,7 +164,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		public void NextResultTest()
+		public void NextResult_ReturnsFalse()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
 			{
@@ -198,7 +177,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		public void NextResultReaderClosedTest()
+		public void NextResult_WhenClosed_Throws()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
 			{
@@ -210,22 +189,33 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 		}
 
-		[Test()]
-		public void ReadTest()
-		{
+        [Test()]
+        public void Read_RecordsAvailable_ReturnsTrue()
+        {
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
-			{
-				IDataReader reader = csv;
+            {
+                IDataReader reader = csv;
 
-				for (int i = 0; i < CsvReaderSampleData.SampleData1RecordCount; i++)
-					Assert.IsTrue(reader.Read());
+                for (int i = 0; i < CsvReaderSampleData.SampleData1RecordCount; i++)
+                    Assert.IsTrue(reader.Read());
+            }
+        }
+        [Test()]
+        public void Read_NoMoreRecords_ReturnsFalse()
+        {
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            {
+                IDataReader reader = csv;
 
-				Assert.IsFalse(reader.Read());
-			}
-		}
+                for (int i = 0; i < CsvReaderSampleData.SampleData1RecordCount; i++)
+                    reader.Read();
 
-		[Test()]
-		public void ReadReaderClosedTest()
+                Assert.IsFalse(reader.Read());
+            }
+        }
+
+        [Test()]
+		public void Read_WhenClosed_Throws()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
 			{
@@ -238,7 +228,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         }
 
 		[Test()]
-		public void DepthTest()
+		public void Depth_IsAlwaysZero()
 		{
             using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
 			{
@@ -251,7 +241,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		public void DepthReaderClosedTest()
+		public void Depth_WhenClosed_Throws()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
@@ -264,7 +254,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         }
 
 		[Test()]
-		public void IsClosedTest()
+		public void Closed_WhenClosed_IsTrue()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
@@ -280,7 +270,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		public void RecordsAffectedTest()
+		public void RecordsAffected_IsAlwaysMinusOne()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), true))
 			{
@@ -300,7 +290,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		#region IDataRecord interface
 
 		[Test()]
-		public void GetBooleanTest()
+		public void GetBoolean_WhenCalled_ReturnsBoolean()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleTypedData1), true))
 			{
@@ -315,7 +305,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		public void GetByteTest()
+		public void GetByte_WhenCalled_ReturnsByte()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleTypedData1), true))
 			{
@@ -358,7 +348,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		}
 
 		[Test()]
-		public void GetCharTest()
+		public void GetChar_WhenCalled_ReturnsChar()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleTypedData1), true))
 			{

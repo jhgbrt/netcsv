@@ -30,6 +30,15 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 		public const int SampleData1RecordCount = 6;
 		public const int SampleData1FieldCount = 6;
+        public readonly static string[] SampleData1Headers =
+        {
+            SampleData1Header0,
+            SampleData1Header1,
+            SampleData1Header2,
+            SampleData1Header3,
+            SampleData1Header4,
+            SampleData1Header5,
+        };
 
 		public const string SampleData1Header0 = "First Name";
 		public const string SampleData1Header1 = "Last Name";

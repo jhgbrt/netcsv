@@ -124,8 +124,7 @@ namespace Net.Code.Csv
 
         internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter, int bufferSize)
         {
-            var parser = new CsvParser(reader, csvLayout, csvBehaviour);
-            return new CsvDataReader(parser, converter);
+            return new CsvDataReader(reader, csvLayout, csvBehaviour, converter);
         }
     }
 }

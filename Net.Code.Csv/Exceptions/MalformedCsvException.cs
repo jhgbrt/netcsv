@@ -23,6 +23,7 @@ using System;
 using System.Globalization;
 using System.Runtime.Serialization;
 using Net.Code.Csv.Resources;
+using Net.Code.Csv.Impl;
 
 namespace Net.Code.Csv
 {
@@ -33,65 +34,20 @@ namespace Net.Code.Csv
 	public class MalformedCsvException 
 		: Exception
 	{
-	    /// <summary>
-		/// Initializes a new instance of the MalformedCsvException class.
-		/// </summary>
-		public MalformedCsvException()
-			: this(null, null)
-		{
-		}
 
-		/// <summary>
-		/// Initializes a new instance of the MalformedCsvException class.
-		/// </summary>
-		/// <param name="message">The message that describes the error.</param>
-		public MalformedCsvException(string message)
-			: this(message, null)
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the MalformedCsvException class.
-		/// </summary>
-		/// <param name="message">The message that describes the error.</param>
-		/// <param name="innerException">The exception that is the cause of the current exception.</param>
-		public MalformedCsvException(string message, Exception innerException)
-			: base(String.Empty, innerException)
-		{
-			Message = (message ?? string.Empty);
-
-			RawData = string.Empty;
-			ColumnNumber = -1;
-			LineNumber = -1;
-			FieldNumber = -1;
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the MalformedCsvException class.
-		/// </summary>
-		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="columnNumber">The current position in the raw data.</param>
-		/// <param name="lineNumber">The current record index.</param>
-		/// <param name="fieldNumber">The current field index.</param>
-		public MalformedCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber)
-			: this(rawData, columnNumber, lineNumber, fieldNumber, null)
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the MalformedCsvException class.
-		/// </summary>
-		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="columnNumber">The current position in the raw data.</param>
-		/// <param name="lineNumber">The current record index.</param>
-		/// <param name="fieldNumber">The current field index.</param>
-		/// <param name="innerException">The exception that is the cause of the current exception.</param>
-		public MalformedCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber, Exception innerException)
-			: base(String.Empty, innerException)
+        /// <summary>
+        /// Initializes a new instance of the MalformedCsvException class.
+        /// </summary>
+        /// <param name="rawData">The raw data when the error occured.</param>
+        /// <param name="columnNumber">The current position in the raw data.</param>
+        /// <param name="lineNumber">The current record index.</param>
+        /// <param name="fieldNumber">The current field index.</param>
+        internal MalformedCsvException(string rawData, Location location, int fieldNumber)
+			: base(String.Empty)
 		{
 			RawData = (rawData ?? string.Empty);
-			ColumnNumber = columnNumber;
-			LineNumber = lineNumber;
+			ColumnNumber = location.Column;
+			LineNumber = location.Line;
 			FieldNumber = fieldNumber;
 
 			Message = String.Format(CultureInfo.InvariantCulture, ExceptionMessage.MalformedCsvException, LineNumber, FieldNumber, ColumnNumber, RawData);

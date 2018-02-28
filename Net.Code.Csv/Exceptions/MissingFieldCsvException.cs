@@ -19,6 +19,7 @@
 //	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using Net.Code.Csv.Impl;
 using System;
 using System.Runtime.Serialization;
 
@@ -34,32 +35,6 @@ namespace Net.Code.Csv
 	public class MissingFieldCsvException
 		: MalformedCsvException
 	{
-	    /// <summary>
-		/// Initializes a new instance of the MissingFieldCsvException class.
-		/// </summary>
-		public MissingFieldCsvException()
-	    {
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the MissingFieldCsvException class.
-		/// </summary>
-		/// <param name="message">The message that describes the error.</param>
-		public MissingFieldCsvException(string message)
-			: base(message)
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the MissingFieldCsvException class.
-		/// </summary>
-		/// <param name="message">The message that describes the error.</param>
-		/// <param name="innerException">The exception that is the cause of the current exception.</param>
-		public MissingFieldCsvException(string message, Exception innerException)
-			: base(message, innerException)
-		{
-		}
-
 		/// <summary>
 		/// Initializes a new instance of the MissingFieldCsvException class.
 		/// </summary>
@@ -67,21 +42,8 @@ namespace Net.Code.Csv
 		/// <param name="columnNumber">The current position in the raw data.</param>
 		/// <param name="lineNumber">The current record index.</param>
 		/// <param name="fieldNumber">The current field index.</param>
-		public MissingFieldCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber)
-			: base(rawData, columnNumber, lineNumber, fieldNumber)
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the MissingFieldCsvException class.
-		/// </summary>
-		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="columnNumber">The current position in the raw data.</param>
-		/// <param name="lineNumber">The current record index.</param>
-		/// <param name="fieldNumber">The current field index.</param>
-		/// <param name="innerException">The exception that is the cause of the current exception.</param>
-		public MissingFieldCsvException(string rawData, int columnNumber, long lineNumber, int fieldNumber, Exception innerException)
-			: base(rawData, columnNumber, lineNumber, fieldNumber, innerException)
+		internal MissingFieldCsvException(string rawData, Location location, int fieldNumber)
+			: base(rawData, location, fieldNumber)
 		{
 		}
 

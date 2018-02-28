@@ -14,8 +14,8 @@
         <RepositoryUrl>https://github.com/jhgbrt/netcsv</RepositoryUrl>
         <PackageTags>csv</PackageTags>
         <PackageReleaseNotes>migrated to .netstandard 2.0</PackageReleaseNotes>
-        <AssemblyVersion>2.0.1.0</AssemblyVersion>
-        <FileVersion>2.0.1.0</FileVersion>    </PropertyGroup>
+        <AssemblyVersion>3.0.0.0</AssemblyVersion>
+        <FileVersion>3.0.0.0</FileVersion>    </PropertyGroup>
     <ItemGroup>
     </ItemGroup>
 </Project>

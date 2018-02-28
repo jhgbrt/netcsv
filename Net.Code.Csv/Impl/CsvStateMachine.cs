@@ -7,23 +7,6 @@ using System.Text;
 
 namespace Net.Code.Csv.Impl
 {
-    internal struct Location
-    {
-        public readonly int Line;
-        public readonly int Column;
-
-        private Location(int lineNumber, int columnNumber)
-        {
-            Line = lineNumber;
-            Column = columnNumber;
-        }
-
-        public static Location Origin() => new Location(0, 0);
-        public Location NextColumn() => new Location(Line, Column + 1);
-        public Location NextLine() => new Location(Line + 1, 0);
-
-        public override string ToString() => $"{Line},{Column}";
-    }
     internal class CsvStateMachine
     {
         private readonly bool _debug;
@@ -41,33 +24,22 @@ namespace Net.Code.Csv.Impl
         }
 
         bool _quoted = false;
+        bool _skipNextChar = false;
+
         StringBuilder _field = new StringBuilder();
         StringBuilder _tentative = new StringBuilder();
+        StringBuilder _rawData = new StringBuilder();
         List<string> _fields = null;
-        StringBuilder _currentRawData = new StringBuilder();
         char _currentChar = '\0';
         private Location _location = Location.Origin();
 
-        bool _skipNextChar = false;
-        Func<IEnumerable<CsvLine>> _state;
+        Func<IEnumerable<CsvLine>> CurrentState;
 
         public int? FieldCount { get; private set; }
 
         public IEnumerable<CsvLine> Lines()
         {
             return LinesImpl().Where(line => !line.IsEmpty || !_behaviour.SkipEmptyLines);
-        }
-
-        private static readonly IDictionary<string, string> Literals = new Dictionary<string, string>();
-        private static string ToLiteral(string input)
-        {
-            if (!Literals.ContainsKey(input))
-            {
-                Literals[input] = input;
-                // TODO use Roslyn 
-                // Literals[input] = Literal(input).ToString();
-            }
-            return Literals[input];
         }
 
         private IEnumerable<CsvLine> LinesImpl()
@@ -77,11 +49,11 @@ namespace Net.Code.Csv.Impl
 
             while (ReadNextCharacter())
             {
-                foreach (var line in _state()) yield return line;
+                foreach (var line in CurrentState()) yield return line;
             }
 
             // if last line does not end with a newline, we still need to yield it
-            if (_state != EndOfLine)
+            if (CurrentState != EndOfLine)
             {
                 AddField();
                 yield return CreateLine();
@@ -96,9 +68,8 @@ namespace Net.Code.Csv.Impl
                 if (i < 0) return false;
                 _currentChar = (char)i;
                 _location = _location.NextColumn();
-                _currentRawData.Append(_currentChar);
-                if (_currentRawData.Length > 32) _currentRawData.Remove(0, 1);
-                DbgLog($"Current character: '{ToLiteral(_currentChar.ToString())}'. Location is {_state.Method.Name} ({_location}).");
+                _rawData.Append(_currentChar);
+                if (_rawData.Length > 32) _rawData.Remove(0, 1);
             }
             else
             {
@@ -113,8 +84,6 @@ namespace Net.Code.Csv.Impl
             
             if (ShouldTrim)
                 result = result.Trim();
-
-            DbgLog($"Adding field: {ToLiteral(result)}");
 
             _fields.Add(result);
             _field.Clear();
@@ -135,8 +104,6 @@ namespace Net.Code.Csv.Impl
         {
             var fields = _fields;
 
-            DbgLog($"Creating line at {_location.Line} ({fields.Count} fields)");
-
             bool isEmpty = fields.Count == 0 || (fields.Count == 1 && string.IsNullOrEmpty(fields[0]));
 
             if (!FieldCount.HasValue && (!isEmpty || !_behaviour.SkipEmptyLines))
@@ -147,7 +114,7 @@ namespace Net.Code.Csv.Impl
             if (!isEmpty && count < FieldCount)
             {
                 if (_behaviour.MissingFieldAction == MissingFieldAction.ParseError)
-                    throw new MissingFieldCsvException(_currentRawData.ToString(), _location.Column, _location.Line, fields.Count());
+                    throw new MissingFieldCsvException(_rawData.ToString(), _location, fields.Count);
             }
 
             if (count < FieldCount)
@@ -157,7 +124,6 @@ namespace Net.Code.Csv.Impl
             }
 
             var line = new CsvLine(fields, isEmpty);
-            DbgLog("Yielding line: " + line);
             return line;
         }
 
@@ -168,12 +134,12 @@ namespace Net.Code.Csv.Impl
             _field.Clear();
             _tentative.Clear();
             _quoted = false;
-            DbgLog($"Start line {_location.Line}");
+            _skipNextChar = false;
         }
 
         private void TransitionTo(Func<IEnumerable<CsvLine>> state, bool skipNext = false)
         {
-            _state = state;
+            CurrentState = state;
             _skipNextChar = skipNext;
         }
 
@@ -318,13 +284,12 @@ namespace Net.Code.Csv.Impl
 
         IEnumerable<CsvLine> AfterSecondQuote()
         {
-            // after second quote, we need to detect if we're actually 
-            // at the end of a field. This is
-            // the case when the first non-whitespace character is the delimiter
-            // or end of line
+            // after second quote, we need to detect if we're actually at the end of a field. This is
+            // the case when the first non-whitespace character is the delimiter or end of line
             if (_currentChar == _csvLayout.Delimiter)
             {
-                // the second quote did mark the end of the field
+                // we encountered a field delimiter after the second quote, so we're actually at the end of the field
+                // any accumulated whitespace should be ignored, and a new field starts
                 _tentative.Clear();
                 AddField();
                 _quoted = false;
@@ -332,6 +297,8 @@ namespace Net.Code.Csv.Impl
             }
             else if (_currentChar.IsNewLine())
             {
+                // we encountered a newline after the second quote, so we're actually at the end of the field
+                // we will transition to EndOfLine
                 // the second quote did mark the end of the field and we're at the end of the line
                 _tentative.Clear();
                 AddField();
@@ -351,12 +318,13 @@ namespace Net.Code.Csv.Impl
             }
             else
             {
-                // the second quote did NOT mark the end of the field, so we're still 'inside' the field
+                // we found a 'normal' (non-whitespace, non-delimiter, non-newline) character after 
+                // the second quote, therefore the second quote did NOT mark the end of the field.
                 // this means that the quote is now confirmed to have occurred inside the quoted field
                 switch (_behaviour.QuotesInsideQuotedFieldAction)
                 {
                     case QuotesInsideQuotedFieldAction.ThrowException:
-                        throw new MalformedCsvException(_currentRawData.ToString(), _location.Column, _location.Line, _fields.Count);
+                        throw new MalformedCsvException(_rawData.ToString(), _location, _fields.Count);
                     case QuotesInsideQuotedFieldAction.AdvanceToNextLine:
                         TransitionTo(ParseError);
                         break;
@@ -380,11 +348,6 @@ namespace Net.Code.Csv.Impl
                 TransitionTo(BeginningOfLine);
             }
             yield break;
-        }
-
-        void DbgLog(string message)
-        {
-            Debug.WriteLineIf(_debug, message);
         }
 
         char? Peek()
