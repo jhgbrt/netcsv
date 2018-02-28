@@ -13,7 +13,7 @@ LumenWorks.Framework.IO parser. There were a few itches:
 How to use?
 ===========
 
-There are a few extension methods on string and stream available to
+There are a few static methods available in the `ReadCsv` class to
 easily read a CSV file using the DataReader style:
 
 You need to add this using statement:
@@ -45,4 +45,8 @@ If you have a string that actually contains the CSV content already, use this:
  
  The examples assume some common defaults about the actual CSV layout
  and behaviour. You can of course change those through parameters.
+ 
+ Parameters that specify the CSV format include the encoding, the quote character, the field delimiter, a.o.
+ Other parameters specify the 'behaviour' of the CSV reader: what to do with empty lines or missing fields, 
+ whether fields should be trimmed or not, etc.
  
