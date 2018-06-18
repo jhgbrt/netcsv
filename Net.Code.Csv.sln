@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Code.Csv", "Net.Code.Cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Code.Csv.Tests.Unit", "Net.Code.Csv.Tests.Unit\Net.Code.Csv.Tests.Unit.csproj", "{DBF22390-41BC-4E33-BC9E-F381621EBF01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvTest", "CsvTest\CsvTest.csproj", "{43DB5247-C879-4BB9-BE7F-B393C0F8DE54}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvTest", "CsvTest\CsvTest.csproj", "{43DB5247-C879-4BB9-BE7F-B393C0F8DE54}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,8 +27,10 @@ Global
 		{4D986B15-FED2-43F9-A6B3-77421FE54CFF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release 4.0|Any CPU.ActiveCfg = Release 4.0|Any CPU
-		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release 4.5|Any CPU.ActiveCfg = Release 4.5|Any CPU
+		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release 4.0|Any CPU.ActiveCfg = Release|Any CPU
+		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release 4.0|Any CPU.Build.0 = Release|Any CPU
+		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release 4.5|Any CPU.ActiveCfg = Release|Any CPU
+		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release 4.5|Any CPU.Build.0 = Release|Any CPU
 		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBF22390-41BC-4E33-BC9E-F381621EBF01}.Release|Any CPU.Build.0 = Release|Any CPU
 		{43DB5247-C879-4BB9-BE7F-B393C0F8DE54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
