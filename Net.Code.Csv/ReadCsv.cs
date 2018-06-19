@@ -51,7 +51,7 @@ namespace Net.Code.Csv
         /// Read a stream as CSV, using specific behaviour, layout and conversion options.
         /// The stream will not be disposed by disposing the data reader.
         /// </summary>
-        /// <param name="path">The full or relative path name</param>
+        /// <param name="stream">The stream</param>
         /// <param name="encoding">The encoding. Default is UTF8.</param>
         /// <param name="quote">The quote character. Default '"'</param>
         /// <param name="delimiter">Field delimiter. Default ','</param>
@@ -80,7 +80,7 @@ namespace Net.Code.Csv
                 IConverter converter = null,
                 int bufferSize = 4096)
         {
-            var reader = new StreamReader(stream, encoding = Encoding.UTF8, false, 1024, true);
+            var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, false, bufferSize, true);
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             return FromReader(reader, layout, behaviour, converter ?? Converter.Default, bufferSize);

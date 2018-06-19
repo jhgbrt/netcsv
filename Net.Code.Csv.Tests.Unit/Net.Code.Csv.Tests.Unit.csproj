@@ -4,6 +4,14 @@
     <TargetFramework>net462</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="test.csv" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="test.csv">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj">
       <Project>{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}</Project>
       <Name>Net.Code.Csv</Name>
