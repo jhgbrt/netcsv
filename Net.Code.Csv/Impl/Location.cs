@@ -14,7 +14,6 @@
         public static Location Origin() => new Location(0, 0);
         public Location NextColumn() => new Location(Line, Column + 1);
         public Location NextLine() => new Location(Line + 1, 0);
-
         public override string ToString() => $"{Line},{Column}";
     }
 }

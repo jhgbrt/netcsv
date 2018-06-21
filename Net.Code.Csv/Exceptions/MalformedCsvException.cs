@@ -110,7 +110,6 @@ namespace Net.Code.Csv
 			base.GetObjectData(info, context);
 
 			info.AddValue("MyMessage", Message);
-
 			info.AddValue("RawData", RawData);
 			info.AddValue("ColumnNumber", ColumnNumber);
 			info.AddValue("LineNumber", LineNumber);

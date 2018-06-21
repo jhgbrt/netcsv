@@ -35,10 +35,7 @@ namespace Net.Code.Csv.Impl
         /// </summary>
         public static readonly CsvLine Empty = new CsvLine(Enumerable.Empty<string>(), true);
 
-        public override string ToString()
-        {
-            return string.Join(";", Fields);
-        }
+        public override string ToString() => string.Join(";", Fields);
 
         public string this[int field]
         {

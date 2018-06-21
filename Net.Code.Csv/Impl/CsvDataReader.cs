@@ -27,27 +27,13 @@ namespace Net.Code.Csv.Impl
             _enumerator = _parser.GetEnumerator();
         }
 
-        public string GetName(int i)
-        {
-            return _header[i];
-        }
+        public string GetName(int i) => _header[i];
 
-        public string GetDataTypeName(int i)
-        {
-            return typeof(string).FullName;
-        }
+        public string GetDataTypeName(int i) => typeof(string).FullName;
 
-        public Type GetFieldType(int i)
-        {
-            return typeof(string);
-        }
+        public Type GetFieldType(int i) => typeof(string);
 
-        public object GetValue(int i)
-        {
-            if (IsDBNull(i))
-                return DBNull.Value;
-            return _line.Fields[i];
-        }
+        public object GetValue(int i) => IsDBNull(i) ? (object)DBNull.Value : _line.Fields[i];
 
         public int GetValues(object[] values)
         {
@@ -69,25 +55,13 @@ namespace Net.Code.Csv.Impl
             return index;
         }
 
-        public bool GetBoolean(int i)
-        {
-            return GetValue(i, _converter.ToBoolean);
-        }
+        public bool GetBoolean(int i) => GetValue(i, _converter.ToBoolean);
 
-        public byte GetByte(int i)
-        {
-            return GetValue(i, _converter.ToByte);
-        }
+        public byte GetByte(int i) => GetValue(i, _converter.ToByte);
 
-        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-        {
-            throw new NotImplementedException();
-        }
+        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length) => throw new NotImplementedException();
 
-        public char GetChar(int i)
-        {
-            return GetValue(i, _converter.ToChar);
-        }
+        public char GetChar(int i) => GetValue(i, _converter.ToChar);
 
         public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
         {
@@ -104,61 +78,28 @@ namespace Net.Code.Csv.Impl
             return length;
         }
 
-        public Guid GetGuid(int i)
-        {
-            return GetValue(i, _converter.ToGuid);
-        }
+        public Guid GetGuid(int i) => GetValue(i, _converter.ToGuid);
 
-        public short GetInt16(int i)
-        {
-            return GetValue(i, _converter.ToInt16);
-        }
+        public short GetInt16(int i) => GetValue(i, _converter.ToInt16);
 
-        public int GetInt32(int i)
-        {
-            return GetValue(i, _converter.ToInt32);
-        }
+        public int GetInt32(int i) => GetValue(i, _converter.ToInt32);
 
-        public long GetInt64(int i)
-        {
-            return GetValue(i, _converter.ToInt64);
-        }
+        public long GetInt64(int i) => GetValue(i, _converter.ToInt64);
 
-        public float GetFloat(int i)
-        {
-            return GetValue(i, _converter.ToSingle);
-        }
+        public float GetFloat(int i) => GetValue(i, _converter.ToSingle);
 
-        public double GetDouble(int i)
-        {
-            return GetValue(i, _converter.ToDouble);
-        }
+        public double GetDouble(int i) => GetValue(i, _converter.ToDouble);
 
-        public string GetString(int i)
-        {
-            return _line.Fields[i];
-        }
+        public string GetString(int i) => _line.Fields[i];
 
-        public decimal GetDecimal(int i)
-        {
-            return GetValue(i, _converter.ToDecimal);
-        }
+        public decimal GetDecimal(int i) => GetValue(i, _converter.ToDecimal);
 
-        public DateTime GetDateTime(int i)
-        {
-            return GetValue(i, _converter.ToDateTime);
-        }
+        public DateTime GetDateTime(int i) => GetValue(i, _converter.ToDateTime);
 
         // TODO verify if this is correct?
-        IDataReader IDataRecord.GetData(int i)
-        {
-            return i == 0 ? this : null;
-        }
+        IDataReader IDataRecord.GetData(int i) => i == 0 ? this : null;
 
-        public bool IsDBNull(int i)
-        {
-            return false; // TODO return true if field type is not string?
-        }
+        public bool IsDBNull(int i) => false; // TODO return true if field type is not string?
 
         public int FieldCount => _parser.FieldCount;
 
@@ -166,10 +107,7 @@ namespace Net.Code.Csv.Impl
 
         object IDataRecord.this[string name] => _line.Fields[GetOrdinal(name)];
 
-        T GetValue<T>(int fieldNumber, Func<string, T> convert)
-        {
-            return convert(_line.Fields[fieldNumber]);
-        }
+        T GetValue<T>(int fieldNumber, Func<string, T> convert) => convert(_line.Fields[fieldNumber]);
 
         public void Dispose()
         {
@@ -180,10 +118,7 @@ namespace Net.Code.Csv.Impl
             _isDisposed = true;
         }
 
-        public void Close()
-        {
-            Dispose();
-        }
+        public void Close() => Dispose();
 
         public DataTable GetSchemaTable()
         {
@@ -274,10 +209,7 @@ namespace Net.Code.Csv.Impl
             return schema;
         }
 
-        public bool NextResult()
-        {
-            return false;
-        }
+        public bool NextResult() => false;
 
         public bool Read()
         {
