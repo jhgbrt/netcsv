@@ -10,6 +10,10 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 	[TestFixture]
 	public class CsvStateMachineTests
 	{
+	    private static IEnumerable<string> Split(string line)
+	    {
+	        return Split(line, new CsvLayout(), new CsvBehaviour());
+	    }
         private static IEnumerable<string> Split(string line, CsvLayout splitLineParams)
         {
             return Split(line, splitLineParams, new CsvBehaviour());
@@ -142,13 +146,26 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             var result = splitter.Lines();
             CollectionAssert.IsEmpty(result);
 	    }
-
-		[Test]
+	    [Test]
+	    public void EmptyFields_Comma()
+	    {
+	        const string line = ",,";
+	        var result = Split(line, new CsvLayout());
+	        CollectionAssert.AreEqual(new[] { "", "", "" }, result);
+	    }
+	    [Test]
+	    public void EmptyFields_Tab()
+	    {
+	        const string line = "\t\t";
+	        var result = Split(line, new CsvLayout(delimiter:'\t'));
+	        CollectionAssert.AreEqual(new[] { "", "", "" }, result);
+	    }
+        [Test]
 		public void QuotedStringWithDelimiter()
 		{
             // "x ""y"", z"
 			const string line = "\"x \"y\" z, u\",v";
-			var splitLineParams = new CsvLayout('"', ',');
+			var splitLineParams = new CsvLayout();
             var result = Split(line, splitLineParams);
             CollectionAssert.AreEqual(new[] { "x \"y\" z, u", "v" }, result);
 
@@ -371,6 +388,14 @@ side""  x ", "3" }, result[0].Fields);
             Assert.AreEqual("", csv[3]);
 
         }
+
+	    [Test]
+	    public void CanSplitByTabs()
+	    {
+	        const string data = "1\t2\t3";
+	        var result = Split(data, new CsvLayout(delimiter:'\t'));
+            CollectionAssert.AreEqual(new[]{"1", "2", "3"}, result);
+	    }
 
     }
 }

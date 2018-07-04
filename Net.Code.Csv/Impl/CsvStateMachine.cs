@@ -9,27 +9,30 @@ namespace Net.Code.Csv.Impl
 {
     internal class CsvStateMachine
     {
-        private readonly bool _debug;
         private readonly TextReader _textReader;
         private readonly CsvLayout _csvLayout;
         private readonly CsvBehaviour _behaviour;
 
-        public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour, bool debug = false)
+        private static void Log(string text)
+        {
+            //Console.WriteLine(text);
+        }
+
+        public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
         {
             _textReader = textReader;
             _csvLayout = csvLayout;
             _behaviour = behaviour;
-            _debug = debug;
             TransitionTo(BeginningOfLine);
         }
 
-        bool _quoted = false;
-        bool _skipNextChar = false;
+        bool _quoted;
+        bool _skipNextChar;
 
-        StringBuilder _field = new StringBuilder();
-        StringBuilder _tentative = new StringBuilder();
-        StringBuilder _rawData = new StringBuilder();
-        List<string> _fields = null;
+        readonly StringBuilder _field = new StringBuilder();
+        readonly StringBuilder _tentative = new StringBuilder();
+        readonly StringBuilder _rawData = new StringBuilder();
+        List<string> _fields;
         char _currentChar = '\0';
         private Location _location = Location.Origin();
 
@@ -65,15 +68,21 @@ namespace Net.Code.Csv.Impl
             if (!_skipNextChar)
             {
                 var i = _textReader.Read();
-                if (i < 0) return false;
+                if (i < 0)
+                {
+                    Log($"ReadNextCharacter - no result");
+                    return false;
+                }
                 _currentChar = (char)i;
                 _location = _location.NextColumn();
                 _rawData.Append(_currentChar);
                 if (_rawData.Length > 32) _rawData.Remove(0, 1);
+                Log($"ReadNextCharacter: {_currentChar}");
             }
             else
             {
                 _skipNextChar = false;
+                Log($"ReadNextCharacter skipped");
             }
             return true;
         }
@@ -139,6 +148,7 @@ namespace Net.Code.Csv.Impl
 
         private void TransitionTo(Func<IEnumerable<CsvLine>> state, bool skipNext = false)
         {
+            Log($"TransitionTo state = {state.Method.Name}, skipNext = {skipNext}");
             CurrentState = state;
             _skipNextChar = skipNext;
         }
@@ -208,8 +218,15 @@ namespace Net.Code.Csv.Impl
             // white space may have to be added to the next field (if it is not quoted 
             // and we don't want to trim
             // if the next field is quoted, whitespace has to be skipped in any case
-
-            if (_currentChar.IsNewLine())
+            if (_currentChar == _csvLayout.Delimiter)
+            {
+                // Found the next delimiter. We found an empty field.
+                // Accumulated whitespace should be added to this current field
+                _field.Append(_tentative);
+                _tentative.Clear();
+                AddField();
+            }
+            else if (_currentChar.IsNewLine())
             {
                 // Found newline. Accumulated whitespace belongs to last field.
                 _field.Append(_tentative);

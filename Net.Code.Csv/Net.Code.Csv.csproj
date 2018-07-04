@@ -1,21 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFrameworks>netstandard2.0</TargetFrameworks>
-        <SignAssembly>False</SignAssembly>
-        <Title>Net.Code.Csv</Title>
-        <Version>3.0.1.0</Version>
-        <Copyright>Copyright 2010 Sébastien Loron, 2013 Jeroen Haegebaert</Copyright>
-        <Description>.net library used for csv parsing.</Description>
-        <Authors>Jeroen Haegebaert</Authors>
-        <Company></Company>
-        <PackageLicenseUrl>https://raw.githubusercontent.com/jhgbrt/netcsv/master/Net.Code.Csv/LICENSE.txt</PackageLicenseUrl>
-        <PackageProjectUrl>https://github.com/jhgbrt/netcsv/</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/jhgbrt/netcsv</RepositoryUrl>
-        <PackageTags>csv</PackageTags>
-        <PackageReleaseNotes>migrated to .netstandard 2.0</PackageReleaseNotes>
-        <AssemblyVersion>3.0.1.0</AssemblyVersion>
-        <FileVersion>3.0.1.0</FileVersion>    </PropertyGroup>
-    <ItemGroup>
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <SignAssembly>False</SignAssembly>
+    <Title>Net.Code.Csv</Title>
+    <Version>3.0.1</Version>
+    <Copyright>Copyright 2010 Sébastien Loron, 2013 Jeroen Haegebaert</Copyright>
+    <Description>.net library used for csv parsing.</Description>
+    <Authors>Jeroen Haegebaert</Authors>
+    <Company></Company>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/jhgbrt/netcsv/master/Net.Code.Csv/LICENSE.txt</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/jhgbrt/netcsv/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jhgbrt/netcsv</RepositoryUrl>
+    <PackageTags>csv</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <AssemblyVersion>3.0.2.0</AssemblyVersion>
+    <FileVersion>3.0.2.0</FileVersion>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
 </Project>
