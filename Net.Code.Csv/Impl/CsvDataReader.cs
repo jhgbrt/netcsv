@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
-using Net.Code.Csv.Resources;
 using System.IO;
 
 namespace Net.Code.Csv.Impl
@@ -50,7 +49,7 @@ namespace Net.Code.Csv.Impl
             int index;
 
             if (!_header.TryGetIndex(name, out index))
-                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, ExceptionMessage.FieldHeaderNotFound, name), nameof(name));
+                throw new ArgumentException($"'{name}' field header not found", nameof(name));
 
             return index;
         }

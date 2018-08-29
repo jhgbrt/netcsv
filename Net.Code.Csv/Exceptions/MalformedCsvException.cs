@@ -22,7 +22,6 @@
 using System;
 using System.Globalization;
 using System.Runtime.Serialization;
-using Net.Code.Csv.Resources;
 using Net.Code.Csv.Impl;
 
 namespace Net.Code.Csv
@@ -49,8 +48,7 @@ namespace Net.Code.Csv
 			ColumnNumber = location.Column;
 			LineNumber = location.Line;
 			FieldNumber = fieldNumber;
-
-			Message = String.Format(CultureInfo.InvariantCulture, ExceptionMessage.MalformedCsvException, LineNumber, FieldNumber, ColumnNumber, RawData);
+			Message = $"The CSV appears to be corrupt on line {LineNumber}, field '{FieldNumber}' at position {ColumnNumber}. Current raw data : '{RawData}'.";
 		}
 
 		/// <summary>
