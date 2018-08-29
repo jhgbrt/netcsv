@@ -1,7 +1,7 @@
-﻿using System.Data;
+﻿using Net.Code.Csv.Impl;
+using System.Data;
 using System.IO;
 using System.Text;
-using Net.Code.Csv.Impl;
 
 namespace Net.Code.Csv
 {
@@ -122,9 +122,6 @@ namespace Net.Code.Csv
         }
 
 
-        internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter, int bufferSize)
-        {
-            return new CsvDataReader(reader, csvLayout, csvBehaviour, converter);
-        }
+        internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter, int bufferSize) => new CsvDataReader(reader, csvLayout, csvBehaviour, converter);
     }
 }

@@ -7,7 +7,7 @@ namespace Net.Code.Csv.Impl
     /// <summary>
     /// A CSV line
     /// </summary>
-    class CsvLine
+    internal class CsvLine
     {
         /// <summary>
         /// Constructs a line from a collection of fields
@@ -42,8 +42,15 @@ namespace Net.Code.Csv.Impl
             get
             {
                 if (field < Fields.Length)
+                {
                     return Fields[field];
-                if (IsEmpty) return string.Empty;
+                }
+
+                if (IsEmpty)
+                {
+                    return string.Empty;
+                }
+
                 throw new ArgumentOutOfRangeException(nameof(field));
             }
         }

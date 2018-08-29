@@ -1,6 +1,3 @@
-using System;
-using Net.Code.Csv.Impl;
-
 namespace Net.Code.Csv
 {
     /// <summary>
@@ -62,6 +59,7 @@ namespace Net.Code.Csv
         /// </summary>
         public bool HasHeaders { get; }
 
-        internal bool IsEscape(char currentChar, char? nextChar) => currentChar == Escape && (nextChar == Quote || nextChar == Escape);
+        internal bool IsEscape(char currentChar, char? nextChar) 
+            => currentChar == Escape && (nextChar == Quote || nextChar == Escape);
     }
 }
