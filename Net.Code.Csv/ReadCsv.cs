@@ -8,7 +8,7 @@ namespace Net.Code.Csv
     public static class ReadCsv
     {
         /// <summary>
-        /// Read a file as CSV, using specific behaviour, layout and conversion options. Make sure to dispose the datareader.
+        /// Read a file as CSV, using specific behaviour, layout and conversion options. Make sure to dispose the DataReader.
         /// </summary>
         /// <param name="path">The full or relative path name</param>
         /// <param name="encoding">The encoding of the file. Default is UTF8.</param>
@@ -23,7 +23,7 @@ namespace Net.Code.Csv
         /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
         /// <param name="converter">Converter class for converting strings to primitive types (used by the data reader). When none is specified, System.Convert is used.</param>
         /// <param name="bufferSize">The number of characters to buffer while parsing the CSV.</param>
-        /// <returns>a datareader instance to read the contents of the CSV file</returns>
+        /// <returns>a DataReader instance to read the contents of the CSV file</returns>
         public static IDataReader FromFile(
             string path,
             Encoding encoding = null,
@@ -64,7 +64,7 @@ namespace Net.Code.Csv
         /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
         /// <param name="converter">Converter class for converting strings to primitive types (used by the data reader)</param>
         /// <param name="bufferSize">The number of characters to buffer while parsing the CSV.</param>
-        /// <returns>a datareader instance to read the contents of the CSV file</returns>
+        /// <returns>a DataReader instance to read the contents of the CSV file</returns>
         public static IDataReader FromStream(
                 Stream stream,
                 Encoding encoding = null,
@@ -101,7 +101,7 @@ namespace Net.Code.Csv
         /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
         /// <param name="converter">Converter class for converting strings to primitive types (used by the data reader</param>
         /// <param name="bufferSize">The number of characters to buffer while parsing the CSV.</param>
-        /// <returns>a datareader instance to read the contents of the CSV file</returns>
+        /// <returns>a DataReader instance to read the contents of the CSV file</returns>
         public static IDataReader FromString(
             string input,
             char quote = '"',

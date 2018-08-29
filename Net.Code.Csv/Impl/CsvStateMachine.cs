@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,9 @@ namespace Net.Code.Csv.Impl
 
         private static void Log(string text)
         {
-            //Console.WriteLine(text);
+#if DEBUG
+            Debug.WriteLine(text);
+#endif
         }
 
         public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
