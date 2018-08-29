@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
   </PropertyGroup>
@@ -12,20 +12,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj">
-      <Project>{E3B83D68-C90C-4874-8E5F-DEC8D038BC7C}</Project>
-      <Name>Net.Code.Csv</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NUnit">
-      <Version>3.10.1</Version>
-    </PackageReference>
-    <PackageReference Include="NUnit3TestAdapter">
-      <Version>3.10.0</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
+    <PackageReference Include="NUnit" Version="3.10.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version ="3.10.0"/>
   </ItemGroup>
 </Project>
