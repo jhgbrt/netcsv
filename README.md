@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/7ne2rqat9o6g136s?svg=true)](https://ci.appveyor.com/project/jhgbrt/netcsv)
+
 This CSV parser is a from-the-ground-up rewrite of the 
 LumenWorks.Framework.IO parser. There were a few itches:
 
