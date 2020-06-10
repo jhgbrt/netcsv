@@ -101,12 +101,12 @@
     <Compile Include="CsvReader.DataReaderValidations.cs" />
     <Compile Include="CsvReader.RecordEnumerator.cs" />
     <Compile Include="Csv\CsvStateMachineTests.cs" />
-    <Compile Include="Csv\CsvParserTest.cs" />
     <Compile Include="Csv\CsvReaderIDataReaderTest.cs" />
     <Compile Include="Csv\CsvReaderMalformedTest.cs" />
     <Compile Include="Csv\CsvReaderSampleData.cs" />
     <Compile Include="Csv\CsvReaderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SampleFiles\EncodingTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj">
@@ -136,6 +136,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="SampleFiles\ansi.txt" />
+    <EmbeddedResource Include="SampleFiles\utf7.txt" />
+    <EmbeddedResource Include="SampleFiles\utf8.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

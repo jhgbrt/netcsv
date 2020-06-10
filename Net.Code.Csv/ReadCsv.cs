@@ -11,7 +11,7 @@ namespace Net.Code.Csv
         /// Read a file as CSV, using specific behaviour, layout and conversion options. Make sure to dispose the datareader.
         /// </summary>
         /// <param name="path">The full or relative path name</param>
-        /// <param name="encoding">The encoding of the file. Default is UTF8.</param>
+        /// <param name="encoding">The encoding of the file.</param>
         /// <param name="quote">The quote character. Default '"'</param>
         /// <param name="delimiter">Field delimiter. Default ','</param>
         /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
@@ -43,7 +43,7 @@ namespace Net.Code.Csv
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             var stream = File.OpenRead(path);
-            var reader = new StreamReader(stream, encoding ?? Encoding.UTF8);
+            var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null);
             return FromReader(reader, layout, behaviour, converter ?? Converter.Default, bufferSize);
         }
 
@@ -80,7 +80,7 @@ namespace Net.Code.Csv
                 IConverter converter = null,
                 int bufferSize = 4096)
         {
-            var reader = new StreamReader(stream, encoding = Encoding.UTF8, false, 1024, true);
+            var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, 1024, true);
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             return FromReader(reader, layout, behaviour, converter ?? Converter.Default, bufferSize);
