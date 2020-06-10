@@ -1,22 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="test.csv" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="test.csv">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Encoding\ansi.txt" />
+    <EmbeddedResource Include="Encoding\unicodebigendian.txt" />
+    <EmbeddedResource Include="Encoding\utf7.txt" />
+    <EmbeddedResource Include="Encoding\unicode.txt" />
+    <EmbeddedResource Include="Encoding\utf8.txt" />
+    <EmbeddedResource Include="test.csv" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.10.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
-  </ItemGroup>
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0-beta.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.0-preview-20200519-01" />
+</ItemGroup>
 </Project>

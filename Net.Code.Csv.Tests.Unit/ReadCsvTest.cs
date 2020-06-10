@@ -4,6 +4,16 @@ using NUnit.Framework;
 
 namespace Net.Code.Csv.Tests.Unit
 { 
+    [SetUpFixture]
+    public class Config
+    {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+    }
+
     [TestFixture]
     public class ReadCsvTest
     {
