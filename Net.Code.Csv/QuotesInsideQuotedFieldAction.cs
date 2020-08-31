@@ -1,10 +1,10 @@
 namespace Net.Code.Csv
 {
-	/// <summary>
-	/// Specifies the action to take when a quote is found inside a quoted field
-	/// </summary>
-	public enum QuotesInsideQuotedFieldAction
-	{
+    /// <summary>
+    /// Specifies the action to take when a quote is found inside a quoted field
+    /// </summary>
+    public enum QuotesInsideQuotedFieldAction
+    {
         /// <summary>
         /// Ignore the quote
         /// </summary>
@@ -17,5 +17,5 @@ namespace Net.Code.Csv
         /// Throw an exception
         /// </summary>
 		ThrowException = 2,
-	}
+    }
 }

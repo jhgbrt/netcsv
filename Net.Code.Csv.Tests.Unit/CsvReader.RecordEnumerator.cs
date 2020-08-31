@@ -22,7 +22,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Net.Code.Csv.Resources;
+using Net.Code.Csv.Tests.Unit.Resources;
 
 namespace Net.Code.Csv
 {

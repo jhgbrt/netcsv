@@ -1,3 +1,7 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/7ne2rqat9o6g136s?svg=true)](https://ci.appveyor.com/project/jhgbrt/netcsv)
+
+[![Downloads](https://img.shields.io/nuget/dt/Net.Code.Csv.svg)](https://www.nuget.org/packages/Net.Code.Csv)
+
 This CSV parser is a from-the-ground-up rewrite of the 
 LumenWorks.Framework.IO parser. There were a few itches:
 
@@ -13,7 +17,7 @@ LumenWorks.Framework.IO parser. There were a few itches:
 How to use?
 ===========
 
-There are a few extension methods on string and stream available to
+There are a few static methods available in the `ReadCsv` class to
 easily read a CSV file using the DataReader style:
 
 You need to add this using statement:
@@ -23,17 +27,30 @@ You need to add this using statement:
 Now you can use code like this:
 
     var myFileName = "path/to/csvfile";
-    myFileName.ReadFileAsCsv(Encoding.Default);
+    
+    using (var reader = ReadCsv.FromFile(myFileName)) {
+        while (reader.Read()) {
+            var record = new { 
+                Name = reader["Name"];
+                BirthDate = DateTime.Parse(reader["BirthDate"]);
+            }
+        }
+    }
 
 If you have a string that actually contains the CSV content already, use this:
 
     void ParseCsv(string content) {
-        content.ReadStringAsCsv();
+        using (var reader = ReadCsv.FromString(content)) {
+        // ...
+        }
     }
     
- Finally, you can also use the ReadStreamAsCsv() extension method.
+ Finally, you can also use the ReadCsv.FromStream() method.
  
  The examples assume some common defaults about the actual CSV layout
- and behaviour, but you can of course change those by using the overloads
- that accept an instance of the CsvBehaviour and CsvLayout classes.
+ and behaviour. You can of course change those through parameters.
+ 
+ Parameters that specify the CSV format include the encoding, the quote character, the field delimiter, a.o.
+ Other parameters specify the 'behaviour' of the CSV reader: what to do with empty lines or missing fields, 
+ whether fields should be trimmed or not, etc.
  

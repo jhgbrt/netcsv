@@ -1,9 +1,5 @@
 ﻿namespace Net.Code.Csv
 {
-    public struct CsvOptions
-    {
-    }
-
     /// <summary>
     /// Describes the way the CSV parser should behave
     /// </summary>

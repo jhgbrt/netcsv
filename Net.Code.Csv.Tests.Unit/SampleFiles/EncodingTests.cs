@@ -10,36 +10,48 @@ using NUnit.Framework;
 
 namespace Net.Code.Csv.Tests.Unit.SampleFiles
 {
+
     [TestFixture]
     public class EncodingTests
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
+
+        [Test]
+        public void Cp1253()
+        {
+            Test("1253", Encoding.GetEncoding(1253), "Βέλγιο");
+        }
         [Test]
         public void Utf8()
         {
-            Test("utf8", Encoding.UTF8);
+            Test("utf8", Encoding.UTF8, "België");
         }
         [Test]
         public void Ansi()
         {
-            Test("ansi", Encoding.GetEncoding(1252));
+            Test("ansi", Encoding.GetEncoding(1252), "België");
         }
         [Test]
         public void Utf7()
         {
-            Test("utf7", Encoding.UTF7);
+            Test("utf7", Encoding.UTF7, "België");
         }
 
-        private static void Test(string encodingName, Encoding encoding)
+        private static void Test(string encodingName, Encoding encoding, string expected)
         {
             var assembly = Assembly.GetExecutingAssembly();
             var resourceName = "Net.Code.Csv.Tests.Unit.SampleFiles." + encodingName + ".txt";
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            using (StreamReader reader = new StreamReader(stream, encoding))
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            using (var reader = ReadCsv.FromStream(stream, encoding: encoding, delimiter: ';', hasHeaders: true))
             {
-                string result = reader.ReadToEnd();
-                Assert.AreEqual("H1;H2\r\nä û;België", result);
-                Console.WriteLine(result);
+                reader.Read();
+                Assert.AreEqual(expected, reader[1]);
             }
         }
     }

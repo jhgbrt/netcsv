@@ -7,40 +7,47 @@ using System.Text;
 
 namespace Net.Code.Csv.Impl
 {
+    static class CharEx
+    {
+
+        public static bool IsNewLine(this char c) => c == '\r' || c == '\n';
+    }
+
     internal class CsvStateMachine
     {
-        private readonly bool _debug;
         private readonly TextReader _textReader;
         private readonly CsvLayout _csvLayout;
         private readonly CsvBehaviour _behaviour;
 
-        public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour, bool debug = false)
+        private static void Log(string text)
+        {
+#if DEBUG
+            Debug.WriteLine(text);
+#endif
+        }
+
+        public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
         {
             _textReader = textReader;
             _csvLayout = csvLayout;
             _behaviour = behaviour;
-            _debug = debug;
             TransitionTo(BeginningOfLine);
         }
 
-        bool _quoted = false;
-        bool _skipNextChar = false;
+        readonly StringBuilder _field = new StringBuilder();
+        readonly StringBuilder _tentative = new StringBuilder();
+        readonly StringBuilder _rawData = new StringBuilder();
 
-        StringBuilder _field = new StringBuilder();
-        StringBuilder _tentative = new StringBuilder();
-        StringBuilder _rawData = new StringBuilder();
-        List<string> _fields = null;
+        bool _quoted;
+        bool _skipNextChar;
+        List<string> _fields;
         char _currentChar = '\0';
         private Location _location = Location.Origin();
-
-        Func<IEnumerable<CsvLine>> CurrentState;
+        private Func<IEnumerable<CsvLine>> CurrentState;
 
         public int? FieldCount { get; private set; }
 
-        public IEnumerable<CsvLine> Lines()
-        {
-            return LinesImpl().Where(line => !line.IsEmpty || !_behaviour.SkipEmptyLines);
-        }
+        public IEnumerable<CsvLine> Lines() => LinesImpl().Where(line => !line.IsEmpty || !_behaviour.SkipEmptyLines);
 
         private IEnumerable<CsvLine> LinesImpl()
         {
@@ -49,7 +56,10 @@ namespace Net.Code.Csv.Impl
 
             while (ReadNextCharacter())
             {
-                foreach (var line in CurrentState()) yield return line;
+                foreach (var line in CurrentState())
+                {
+                    yield return line;
+                }
             }
 
             // if last line does not end with a newline, we still need to yield it
@@ -60,30 +70,43 @@ namespace Net.Code.Csv.Impl
             }
 
         }
-        bool ReadNextCharacter()
+
+        private bool ReadNextCharacter()
         {
             if (!_skipNextChar)
             {
                 var i = _textReader.Read();
-                if (i < 0) return false;
+                if (i < 0)
+                {
+                    Log("ReadNextCharacter - no result");
+                    return false;
+                }
                 _currentChar = (char)i;
                 _location = _location.NextColumn();
                 _rawData.Append(_currentChar);
-                if (_rawData.Length > 32) _rawData.Remove(0, 1);
+                if (_rawData.Length > 32)
+                {
+                    _rawData.Remove(0, 1);
+                }
+
+                Log($"ReadNextCharacter: {_currentChar}");
             }
             else
             {
                 _skipNextChar = false;
+                Log("ReadNextCharacter skipped");
             }
             return true;
         }
 
-        void AddField()
+        private void AddField()
         {
             var result = _field.ToString();
-            
+
             if (ShouldTrim)
+            {
                 result = result.Trim();
+            }
 
             _fields.Add(result);
             _field.Clear();
@@ -100,34 +123,41 @@ namespace Net.Code.Csv.Impl
             }
         }
 
-        CsvLine CreateLine()
+        private CsvLine CreateLine()
         {
             var fields = _fields;
 
-            bool isEmpty = fields.Count == 0 || (fields.Count == 1 && string.IsNullOrEmpty(fields[0]));
+            var isEmpty = fields.Count == 0 || (fields.Count == 1 && string.IsNullOrEmpty(fields[0]));
 
             if (!FieldCount.HasValue && (!isEmpty || !_behaviour.SkipEmptyLines))
+            {
                 FieldCount = fields.Count;
+            }
 
-            var count = fields.Count();
+            var count = fields.Count;
 
             if (!isEmpty && count < FieldCount)
             {
                 if (_behaviour.MissingFieldAction == MissingFieldAction.ParseError)
+                {
                     throw new MissingFieldCsvException(_rawData.ToString(), _location, fields.Count);
+                }
             }
 
             if (count < FieldCount)
             {
-                string s = _behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : "";
-                while (fields.Count < FieldCount) fields.Add(s);
+                var s = _behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : "";
+                while (fields.Count < FieldCount)
+                {
+                    fields.Add(s);
+                }
             }
 
             var line = new CsvLine(fields, isEmpty);
             return line;
         }
 
-        void StartLine()
+        private void StartLine()
         {
             _fields = new List<string>();
             _location = _location.NextLine();
@@ -139,16 +169,19 @@ namespace Net.Code.Csv.Impl
 
         private void TransitionTo(Func<IEnumerable<CsvLine>> state, bool skipNext = false)
         {
+            Log($"TransitionTo state = {state.Method.Name}, skipNext = {skipNext}");
             CurrentState = state;
             _skipNextChar = skipNext;
         }
 
-        IEnumerable<CsvLine> BeginningOfLine()
+        private IEnumerable<CsvLine> BeginningOfLine()
         {
             // begin of line can be newline, comment, quote or other 
             if (_currentChar.IsNewLine())
             {
-                yield return CsvLine.Empty;
+                // TODO there is no test for this
+                // if (!_behaviour.SkipEmptyLines)
+                    yield return CsvLine.Empty;
                 StartLine();
             }
             else if (_currentChar == _csvLayout.Comment)
@@ -166,7 +199,7 @@ namespace Net.Code.Csv.Impl
             }
         }
 
-        IEnumerable<CsvLine> Comment()
+        private IEnumerable<CsvLine> Comment()
         {
             // If we're processing a comment, there is nothing to do. 
             // When we encounter a newline character we simply start a new line.
@@ -178,7 +211,7 @@ namespace Net.Code.Csv.Impl
             yield break;
         }
 
-        IEnumerable<CsvLine> InsideField()
+        private IEnumerable<CsvLine> InsideField()
         {
             // Inside a non-quoted field, we can encounter either a delimiter
             // or a new line. Otherwise, we accumulate the character for the current field.
@@ -202,14 +235,21 @@ namespace Net.Code.Csv.Impl
             yield break;
         }
 
-        IEnumerable<CsvLine> OutsideField()
+        private IEnumerable<CsvLine> OutsideField()
         {
             // Outside field (after a delimiter): find out whether next field is quoted
             // white space may have to be added to the next field (if it is not quoted 
-            // and we don't want to trim
+            // and we don't want to trim)
             // if the next field is quoted, whitespace has to be skipped in any case
-
-            if (_currentChar.IsNewLine())
+            if (_currentChar == _csvLayout.Delimiter)
+            {
+                // Found the next delimiter. We found an empty field.
+                // Accumulated whitespace should be added to this current field
+                _field.Append(_tentative);
+                _tentative.Clear();
+                AddField();
+            }
+            else if (_currentChar.IsNewLine())
             {
                 // Found newline. Accumulated whitespace belongs to last field.
                 _field.Append(_tentative);
@@ -243,21 +283,21 @@ namespace Net.Code.Csv.Impl
             yield break;
         }
 
-        IEnumerable<CsvLine> EndOfLine()
+        private IEnumerable<CsvLine> EndOfLine()
         {
             yield return CreateLine();
             StartLine();
             TransitionTo(BeginningOfLine);
         }
 
-        IEnumerable<CsvLine> Escaped()
+        private IEnumerable<CsvLine> Escaped()
         {
             _field.Append(_currentChar);
             TransitionTo(InsideQuotedField);
             yield break;
         }
 
-        IEnumerable<CsvLine> InsideQuotedField()
+        private IEnumerable<CsvLine> InsideQuotedField()
         {
             if (_csvLayout.IsEscape(_currentChar, Peek()))
             {
@@ -282,7 +322,7 @@ namespace Net.Code.Csv.Impl
             yield break;
         }
 
-        IEnumerable<CsvLine> AfterSecondQuote()
+        private IEnumerable<CsvLine> AfterSecondQuote()
         {
             // after second quote, we need to detect if we're actually at the end of a field. This is
             // the case when the first non-whitespace character is the delimiter or end of line
@@ -339,7 +379,7 @@ namespace Net.Code.Csv.Impl
             yield break;
         }
 
-        IEnumerable<CsvLine> ParseError()
+        private IEnumerable<CsvLine> ParseError()
         {
             // A parse error was detected. Ignore unless EOL.
             if (_currentChar.IsNewLine())
@@ -350,9 +390,9 @@ namespace Net.Code.Csv.Impl
             yield break;
         }
 
-        char? Peek()
+        private char? Peek()
         {
-            int peek = _textReader.Peek();
+            var peek = _textReader.Peek();
             return peek < 0 ? null : (char?)peek;
         }
     }

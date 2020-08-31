@@ -35,18 +35,22 @@ namespace Net.Code.Csv.Impl
         /// </summary>
         public static readonly CsvLine Empty = new CsvLine(Enumerable.Empty<string>(), true);
 
-        public override string ToString()
-        {
-            return string.Join(";", Fields);
-        }
+        public override string ToString() => string.Join(";", Fields);
 
         public string this[int field]
         {
             get
             {
                 if (field < Fields.Length)
+                {
                     return Fields[field];
-                if (IsEmpty) return string.Empty;
+                }
+
+                if (IsEmpty)
+                {
+                    return string.Empty;
+                }
+
                 throw new ArgumentOutOfRangeException(nameof(field));
             }
         }

@@ -33,7 +33,7 @@ using System.Linq;
 using System.Globalization;
 using System.IO;
 using Net.Code.Csv.Impl;
-using Net.Code.Csv.Resources;
+using Net.Code.Csv.Tests.Unit.Resources;
 
 namespace Net.Code.Csv
 {
