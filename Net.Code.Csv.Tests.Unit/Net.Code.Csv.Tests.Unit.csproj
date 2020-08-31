@@ -1,23 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Encoding\ansi.txt" />
-    <EmbeddedResource Include="Encoding\unicodebigendian.txt" />
-    <EmbeddedResource Include="Encoding\utf7.txt" />
-    <EmbeddedResource Include="Encoding\unicode.txt" />
-    <EmbeddedResource Include="Encoding\utf8.txt" />
-    <EmbeddedResource Include="test.csv" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0-preview-20200812-03" />
-	  <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.0.0-alpha.1" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="SampleFiles\ansi.txt" />
+		<EmbeddedResource Include="SampleFiles\utf7.txt" />
+		<EmbeddedResource Include="SampleFiles\utf8.txt" />
+		<EmbeddedResource Include="SampleFiles\1253.txt" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0-preview-20200812-03" />
+		<PackageReference Include="NUnit" Version="3.12.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.0.0-alpha.1" />
+	</ItemGroup>
 </Project>
