@@ -179,9 +179,7 @@ namespace Net.Code.Csv.Impl
             // begin of line can be newline, comment, quote or other 
             if (_currentChar.IsNewLine())
             {
-                // TODO there is no test for this
-                // if (!_behaviour.SkipEmptyLines)
-                    yield return CsvLine.Empty;
+                yield return CsvLine.Empty;
                 StartLine();
             }
             else if (_currentChar == _csvLayout.Comment)

@@ -319,7 +319,7 @@ side""  x ", "3" }, result[0].Fields);
             Assert.AreEqual(2, result.Count());
             CollectionAssert.AreEqual(new[] { "a", "b" }, result[0].Fields);
             Assert.IsTrue(result[1].IsEmpty);
-            CollectionAssert.AreEqual(new[] { "", string.Empty }, result[1].Fields);
+            CollectionAssert.AreEqual(new[] { string.Empty, string.Empty }, result[1].Fields);
         }
 
         [Test]
