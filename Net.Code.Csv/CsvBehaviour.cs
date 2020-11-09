@@ -29,9 +29,6 @@ namespace Net.Code.Csv
         /// </summary>
         public static CsvBehaviour Default => new CsvBehaviour();
 
-        internal bool ShouldTrim(bool quoted)
-            => (TrimmingOptions == ValueTrimmingOptions.All)
-            || (quoted && TrimmingOptions == ValueTrimmingOptions.QuotedOnly)
-            || (!quoted && TrimmingOptions == ValueTrimmingOptions.UnquotedOnly);
+        
     }
 }

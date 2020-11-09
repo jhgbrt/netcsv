@@ -36,15 +36,14 @@ namespace Net.Code.Csv
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
             bool skipEmptyLines = true,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            IConverter converter = null,
-            int bufferSize = 4096)
+            IConverter converter = null)
         {
             // caller should dispose IDataReader, which will indirectly also close the stream
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             var stream = File.OpenRead(path);
             var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null);
-            return FromReader(reader, layout, behaviour, converter ?? Converter.Default, bufferSize);
+            return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
         }
 
         /// <summary>
@@ -83,7 +82,7 @@ namespace Net.Code.Csv
             var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, 1024, true);
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
-            return FromReader(reader, layout, behaviour, converter ?? Converter.Default, bufferSize);
+            return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
         }
 
         /// <summary>
@@ -113,15 +112,16 @@ namespace Net.Code.Csv
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
             bool skipEmptyLines = true,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            IConverter converter = null, int bufferSize = 4096)
+            IConverter converter = null)
         {
             var reader = new StringReader(input);
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
-            return FromReader(reader, layout, behaviour, converter ?? Converter.Default, bufferSize);
+            return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
         }
 
 
-        internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter, int bufferSize) => new CsvDataReader(reader, csvLayout, csvBehaviour, converter);
+        internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter) 
+            => new CsvDataReader(reader, csvLayout, csvBehaviour, converter);
     }
 }
