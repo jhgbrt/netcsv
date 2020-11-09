@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <SignAssembly>False</SignAssembly>
     <Title>Net.Code.Csv</Title>
-    <Version>3.0.1</Version>
+    <Version>4.0.0-preview.1</Version>
     <Copyright>Copyright 2010 Sébastien Loron, 2013 Jeroen Haegebaert</Copyright>
     <Description>.net library used for csv parsing.</Description>
     <Authors>Jeroen Haegebaert</Authors>
@@ -14,8 +14,8 @@
     <RepositoryUrl>https://github.com/jhgbrt/netcsv</RepositoryUrl>
     <PackageTags>csv</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <AssemblyVersion>3.0.2.0</AssemblyVersion>
-    <FileVersion>3.0.2.0</FileVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>

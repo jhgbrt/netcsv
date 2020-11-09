@@ -6,16 +6,16 @@ namespace Net.Code.Csv.Impl
     /// <summary>
     /// A CSV header line
     /// </summary>
-    class CsvHeader : CsvLine
+    record CsvHeader : CsvLine
     {
         private readonly IReadOnlyDictionary<string, int> _fieldHeaderIndexes;
 
-        public CsvHeader(IEnumerable<string> fields, string defaultHeaderName)
-            : base(DefaultWhereEmpty(fields, defaultHeaderName), false)
+        public CsvHeader(string[] fields, string defaultHeaderName)
+            : base(DefaultWhereEmpty(fields, defaultHeaderName).ToArray(), false)
             => _fieldHeaderIndexes = Fields.WithIndex().ToDictionary(x => x.item, x => x.index);
 
         private static IEnumerable<string> DefaultWhereEmpty(IEnumerable<string> fields, string defaultHeaderName)
-            => fields.Select((f, i) => string.IsNullOrWhiteSpace(f) ? defaultHeaderName + i : f).ToList();
+            => fields.Select((f, i) => string.IsNullOrWhiteSpace(f) ? defaultHeaderName + i : f);
 
         public int this[string headerName] => _fieldHeaderIndexes[headerName];
 

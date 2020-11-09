@@ -99,7 +99,7 @@ namespace Net.Code.Csv
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
         public CsvReader(TextReader reader, bool hasHeaders)
-            : this(reader, DefaultBufferSize, new CsvLayout(hasHeaders: hasHeaders), CsvBehaviour.Default)
+            : this(reader, DefaultBufferSize, new CsvLayout(HasHeaders: hasHeaders), CsvBehaviour.Default)
         {
         }
 
@@ -116,7 +116,7 @@ namespace Net.Code.Csv
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
         public CsvReader(TextReader reader, bool hasHeaders, int bufferSize)
-            : this(reader, bufferSize, new CsvLayout(hasHeaders: hasHeaders), CsvBehaviour.Default)
+            : this(reader, bufferSize, new CsvLayout(HasHeaders: hasHeaders), CsvBehaviour.Default)
         {
         }
 
@@ -133,7 +133,7 @@ namespace Net.Code.Csv
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
         public CsvReader(TextReader reader, bool hasHeaders, char delimiter)
-            : this(reader, DefaultBufferSize, new CsvLayout(hasHeaders: hasHeaders, delimiter: delimiter), CsvBehaviour.Default)
+            : this(reader, DefaultBufferSize, new CsvLayout(HasHeaders: hasHeaders, Delimiter: delimiter), CsvBehaviour.Default)
         {
         }
 
@@ -151,7 +151,7 @@ namespace Net.Code.Csv
         ///		Cannot read from <paramref name="reader"/>.
         /// </exception>
         public CsvReader(TextReader reader, bool hasHeaders, char delimiter, int bufferSize)
-            : this(reader, bufferSize, new CsvLayout(hasHeaders: hasHeaders, delimiter: delimiter), CsvBehaviour.Default)
+            : this(reader, bufferSize, new CsvLayout(HasHeaders: hasHeaders, Delimiter: delimiter), CsvBehaviour.Default)
         {
         }
 
@@ -176,7 +176,7 @@ namespace Net.Code.Csv
         /// </exception>
         public CsvReader(TextReader reader, bool hasHeaders, char delimiter, char quote, char escape, char comment, ValueTrimmingOptions trimmingOptions)
             : this(reader, DefaultBufferSize,
-            new CsvLayout(hasHeaders: hasHeaders, delimiter: delimiter, quote: quote, escape: escape, comment: comment), new CsvBehaviour(trimmingOptions: trimmingOptions))
+            new CsvLayout(HasHeaders: hasHeaders, Delimiter: delimiter, Quote: quote, Escape: escape, Comment: comment), new CsvBehaviour(TrimmingOptions: trimmingOptions))
         {
         }
 

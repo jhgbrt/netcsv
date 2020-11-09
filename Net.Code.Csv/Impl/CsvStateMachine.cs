@@ -153,7 +153,7 @@ namespace Net.Code.Csv.Impl
                 }
             }
 
-            var line = new CsvLine(fields, isEmpty);
+            var line = new CsvLine(fields.ToArray(), isEmpty);
             return line;
         }
 

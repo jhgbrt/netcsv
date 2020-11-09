@@ -141,8 +141,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			{
 				using (CsvReader csv = new CsvReader(
                     new StringReader(Data),
-                    layout: new CsvLayout(escape:'\\'), 
-                    behaviour: new CsvBehaviour(quotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
+                    layout: new CsvLayout(Escape:'\\'), 
+                    behaviour: new CsvBehaviour(QuotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
 				{
 					while (csv.ReadNextRecord())
 						for (int i = 0; i < csv.FieldCount; i++)
@@ -165,8 +165,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data), 4096, new CsvLayout(escape:'\\'), 
-                    new CsvBehaviour(quotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
+				using (CsvReader csv = new CsvReader(new StringReader(Data), 4096, new CsvLayout(Escape:'\\'), 
+                    new CsvBehaviour(QuotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
 				{
 					while (csv.ReadNextRecord())
 						for (int i = 0; i < csv.FieldCount; i++)
@@ -222,7 +222,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			                    "\"15907\";\"\"BOLT TIL 2-05-405\";\"\";\"42,50\";\"4027816159070\"\n" +
 			                    "\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
 
-			using (var csv = new CsvReader(new System.IO.StringReader(Data), 4096, new CsvLayout(delimiter:';'), new CsvBehaviour(quotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.AdvanceToNextLine)))
+			using (var csv = new CsvReader(new System.IO.StringReader(Data), 4096, new CsvLayout(Delimiter:';'), new CsvBehaviour(QuotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.AdvanceToNextLine)))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 
@@ -243,8 +243,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				+ "\na,b,c,d,"
 				+ "\na,b,";
 
-			using (var csv = new CsvReader(new StringReader(Data), CsvReader.DefaultBufferSize, new CsvLayout(hasHeaders:false), 
-                new  CsvBehaviour(missingFieldAction:MissingFieldAction.ReplaceByNull)))
+			using (var csv = new CsvReader(new StringReader(Data), CsvReader.DefaultBufferSize, new CsvLayout(HasHeaders:false), 
+                new  CsvBehaviour(MissingFieldAction:MissingFieldAction.ReplaceByNull)))
 			{
 				var record = new string[5];
 

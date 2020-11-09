@@ -651,11 +651,11 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			const string data = ",,\n1,";
 
 			using (CsvReader csv = new CsvReader(new StringReader(data), CsvReader.DefaultBufferSize, 
-                new CsvLayout(delimiter:','), 
+                new CsvLayout(Delimiter:','), 
                 new CsvBehaviour(
-                    trimmingOptions: ValueTrimmingOptions.None,
-                    skipEmptyLines:false,
-                    missingFieldAction:MissingFieldAction.ReplaceByNull
+                    TrimmingOptions: ValueTrimmingOptions.None,
+                    SkipEmptyLines:false,
+                    MissingFieldAction:MissingFieldAction.ReplaceByNull
                 )))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
@@ -994,7 +994,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test]
 		public void ParsingTest42()
 		{
-			using (var csv = new CsvReader(new StringReader(" "), CsvReader.DefaultBufferSize, new CsvLayout(), new CsvBehaviour(skipEmptyLines:false)))
+			using (var csv = new CsvReader(new StringReader(" "), CsvReader.DefaultBufferSize, new CsvLayout(), new CsvBehaviour(SkipEmptyLines:false)))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
 				Assert.AreEqual(1, csv.FieldCount);
@@ -1010,9 +1010,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
                 CsvReader.DefaultBufferSize, 
                 new CsvLayout(), 
                 new CsvBehaviour(
-                    missingFieldAction:MissingFieldAction.ReplaceByNull,
-                    trimmingOptions: ValueTrimmingOptions.All,
-                    skipEmptyLines: false
+                    MissingFieldAction:MissingFieldAction.ReplaceByNull,
+                    TrimmingOptions: ValueTrimmingOptions.All,
+                    SkipEmptyLines: false
                 )))
 			{
 				Assert.IsTrue(csv.ReadNextRecord());
@@ -1177,7 +1177,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			if (defaultHeaderName == null)
 				defaultHeaderName = "Column";
 
-			using (var csv = new CsvReader(new StringReader(",  ,,aaa,\"   \",,,"), layout: new CsvLayout(hasHeaders: true), behaviour: CsvBehaviour.Default, defaultHeaderName: defaultHeaderName))
+			using (var csv = new CsvReader(new StringReader(",  ,,aaa,\"   \",,,"), layout: new CsvLayout(HasHeaders: true), behaviour: CsvBehaviour.Default, defaultHeaderName: defaultHeaderName))
 			{
 				Assert.IsFalse(csv.ReadNextRecord());
 				Assert.AreEqual(8, csv.FieldCount);
@@ -1349,8 +1349,8 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		public void SkipEmptyLinesTest1()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader("00\n\n10"), CsvReader.DefaultBufferSize, 
-                new CsvLayout(hasHeaders:false), 
-                new CsvBehaviour(skipEmptyLines:false)))
+                new CsvLayout(HasHeaders:false), 
+                new CsvBehaviour(SkipEmptyLines:false)))
 			{
 				Assert.AreEqual(1, csv.FieldCount);
 
@@ -1370,7 +1370,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test]
 		public void SkipEmptyLinesTest2()
 		{
-			using (CsvReader csv = new CsvReader(new StringReader("00\n\n10"), CsvReader.DefaultBufferSize, new CsvLayout(),new CsvBehaviour(skipEmptyLines:true) ))
+			using (CsvReader csv = new CsvReader(new StringReader("00\n\n10"), CsvReader.DefaultBufferSize, new CsvLayout(),new CsvBehaviour(SkipEmptyLines:true) ))
 			{
 				Assert.AreEqual(1, csv.FieldCount);
 

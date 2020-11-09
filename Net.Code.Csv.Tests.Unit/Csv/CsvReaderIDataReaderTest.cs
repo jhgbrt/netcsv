@@ -36,7 +36,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		public void IsClosed_WhenCloseWasCalled_ReturnsTrue()
 		{
 			using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), 
-                layout:new CsvLayout(hasHeaders:true)))
+                layout:new CsvLayout(HasHeaders:true)))
 			{
 				IDataReader reader = csv;
 
@@ -51,7 +51,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test()]
 		public void GetSchemaTableWithHeadersTest()
 		{
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
 			{
 				IDataReader reader = csv;
 
@@ -153,7 +153,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test()]
 		public void GetSchemaTable_WhenReaderClosed_Throws()
 		{
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
 			{
 				IDataReader reader = csv;
 				csv.ReadNextRecord();
@@ -166,7 +166,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test()]
 		public void NextResult_ReturnsFalse()
 		{
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
 			{
 				IDataReader reader = csv;
 				Assert.IsFalse(reader.NextResult());
@@ -179,7 +179,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test()]
 		public void NextResult_WhenClosed_Throws()
 		{
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
 			{
 				IDataReader reader = csv;
 				csv.ReadNextRecord();
@@ -192,7 +192,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         [Test()]
         public void Read_RecordsAvailable_ReturnsTrue()
         {
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
             {
                 IDataReader reader = csv;
 
@@ -203,7 +203,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         [Test()]
         public void Read_NoMoreRecords_ReturnsFalse()
         {
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
             {
                 IDataReader reader = csv;
 
@@ -217,7 +217,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         [Test()]
 		public void Read_WhenClosed_Throws()
 		{
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
 			{
 				IDataReader reader = csv;
 				csv.ReadNextRecord();
@@ -230,7 +230,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 		[Test()]
 		public void Depth_IsAlwaysZero()
 		{
-            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(hasHeaders: true)))
+            using (CsvReader csv = new CsvReader(new StringReader(CsvReaderSampleData.SampleData1), layout: new CsvLayout(HasHeaders: true)))
 			{
 				IDataReader reader = csv;
 				Assert.AreEqual(0, reader.Depth);

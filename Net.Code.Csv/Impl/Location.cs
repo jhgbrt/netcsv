@@ -1,19 +1,10 @@
 ﻿namespace Net.Code.Csv.Impl
 {
-    internal struct Location
+    internal record Location(int Line, int Column)
     {
-        public readonly int Line;
-        public readonly int Column;
-
-        private Location(int lineNumber, int columnNumber)
-        {
-            Line = lineNumber;
-            Column = columnNumber;
-        }
-
         public static Location Origin() => new Location(0, 0);
-        public Location NextColumn() => new Location(Line, Column + 1);
-        public Location NextLine() => new Location(Line + 1, 0);
+        public Location NextColumn() => this with { Column = Column + 1 };
+        public Location NextLine() => this with { Line = Line + 1, Column = 0 };
         public override string ToString() => $"{Line},{Column}";
     }
 }

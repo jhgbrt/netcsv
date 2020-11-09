@@ -29,7 +29,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         [Test]
         public void SplitsSimpleDelimitedLine()
         {
-            var splitLineParams = new CsvLayout(quote: '"', delimiter: ';');
+            var splitLineParams = new CsvLayout(Quote: '"', Delimiter: ';');
             var result = Split("1;2;3", splitLineParams);
             CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
         }
@@ -157,7 +157,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public void EmptyFields_Tab()
         {
             const string line = "\t\t";
-            var result = Split(line, new CsvLayout(delimiter: '\t'));
+            var result = Split(line, new CsvLayout(Delimiter: '\t'));
             CollectionAssert.AreEqual(new[] { "", "", "" }, result);
         }
         [Test]
@@ -288,7 +288,7 @@ side""  x ", "3" }, result[0].Fields);
         {
             var input = "1\n\n2";
             var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(),
-                                           new CsvBehaviour(skipEmptyLines: false));
+                                           new CsvBehaviour(SkipEmptyLines: false));
 
             var result = splitter.Lines().ToArray();
 
@@ -300,7 +300,7 @@ side""  x ", "3" }, result[0].Fields);
         {
             var input = "\r\n1\n\n2";
             var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(),
-                                           new CsvBehaviour(skipEmptyLines: true));
+                                           new CsvBehaviour(SkipEmptyLines: true));
 
             var result = splitter.Lines().ToArray();
 
@@ -312,7 +312,7 @@ side""  x ", "3" }, result[0].Fields);
         public void WhenSkipEmptyLinesIsFalse_AndEmptyLineIsAtTheEnd_ReturnsEmptyLine()
         {
             var input = "a,b\n   ";
-            var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(skipEmptyLines: false));
+            var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(SkipEmptyLines: false));
 
             var result = splitter.Lines().ToArray();
 
@@ -337,7 +337,7 @@ side""  x ", "3" }, result[0].Fields);
         public void Testing()
         {
             var input = "00,   ,02\n,,";
-            var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(trimmingOptions: ValueTrimmingOptions.None));
+            var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(TrimmingOptions: ValueTrimmingOptions.None));
             var result = splitter.Lines().ToArray();
             Assert.AreEqual(2, result.Count());
             CollectionAssert.AreEqual(new[] { "00", "   ", "02" }, result[0].Fields);
@@ -350,7 +350,7 @@ side""  x ", "3" }, result[0].Fields);
                         + "\na,b,c,d,"
                         + "\na,b,";
 
-            var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(missingFieldAction: MissingFieldAction.ReplaceByNull));
+            var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(MissingFieldAction: MissingFieldAction.ReplaceByNull));
             var result = splitter.Lines().ToArray();
             Assert.AreEqual(3, result.Count());
 
@@ -384,7 +384,7 @@ side""  x ", "3" }, result[0].Fields);
         public void CanSplitByTabs()
         {
             const string data = "1\t2\t3";
-            var result = Split(data, new CsvLayout(delimiter: '\t'));
+            var result = Split(data, new CsvLayout(Delimiter: '\t'));
             CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
         }
 
