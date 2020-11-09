@@ -28,7 +28,5 @@ namespace Net.Code.Csv
         /// skip empty lines and ignore quotes inside quoted fields.
         /// </summary>
         public static CsvBehaviour Default => new CsvBehaviour();
-
-        
     }
 }
