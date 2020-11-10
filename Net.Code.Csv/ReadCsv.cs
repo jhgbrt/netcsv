@@ -1,4 +1,6 @@
 ﻿using Net.Code.Csv.Impl;
+
+using System;
 using System.Data;
 using System.IO;
 using System.Text;
@@ -22,7 +24,7 @@ namespace Net.Code.Csv
         /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
         /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
         /// <param name="converter">Converter class for converting strings to primitive types (used by the data reader). When none is specified, System.Convert is used.</param>
-        /// <param name="bufferSize">The number of characters to buffer while parsing the CSV.</param>
+        /// <param name="schema">The CSV schema.</param>
         /// <returns>a DataReader instance to read the contents of the CSV file</returns>
         public static IDataReader FromFile(
             string path,
@@ -36,10 +38,11 @@ namespace Net.Code.Csv
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
             bool skipEmptyLines = true,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            IConverter converter = null)
+            IConverter converter = null,
+            CsvSchema schema = null)
         {
             // caller should dispose IDataReader, which will indirectly also close the stream
-            var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
+            var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             var stream = File.OpenRead(path);
             var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null);
@@ -62,7 +65,7 @@ namespace Net.Code.Csv
         /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
         /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
         /// <param name="converter">Converter class for converting strings to primitive types (used by the data reader)</param>
-        /// <param name="bufferSize">The number of characters to buffer while parsing the CSV.</param>
+        /// <param name="schema">The CSV schema.</param>
         /// <returns>a DataReader instance to read the contents of the CSV file</returns>
         public static IDataReader FromStream(
                 Stream stream,
@@ -77,10 +80,10 @@ namespace Net.Code.Csv
                 bool skipEmptyLines = true,
                 QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
                 IConverter converter = null,
-                int bufferSize = 4096)
+                CsvSchema schema = null)
         {
             var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, 1024, true);
-            var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
+            var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
         }
@@ -99,7 +102,7 @@ namespace Net.Code.Csv
         /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
         /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
         /// <param name="converter">Converter class for converting strings to primitive types (used by the data reader</param>
-        /// <param name="bufferSize">The number of characters to buffer while parsing the CSV.</param>
+        /// <param name="schema">The CSV schema.</param>
         /// <returns>a DataReader instance to read the contents of the CSV file</returns>
         public static IDataReader FromString(
             string input,
@@ -112,10 +115,11 @@ namespace Net.Code.Csv
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
             bool skipEmptyLines = true,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            IConverter converter = null)
+            IConverter converter = null,
+            CsvSchema schema = null)
         {
             var reader = new StringReader(input);
-            var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders);
+            var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
         }

@@ -16,6 +16,7 @@ namespace Net.Code.Csv.Impl
         private readonly IConverter _converter;
         private bool _isDisposed;
         private readonly IEnumerator<CsvLine> _enumerator;
+        private readonly CsvSchema _schema;
         private bool _eof;
 
         public CsvDataReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter)
@@ -25,6 +26,7 @@ namespace Net.Code.Csv.Impl
             _line = null;
             _converter = converter;
             _enumerator = _parser.GetEnumerator();
+            _schema = csvLayout.Schema;
         }
 
         public string GetName(int i) => _header[i];
@@ -33,7 +35,9 @@ namespace Net.Code.Csv.Impl
 
         public Type GetFieldType(int i) => typeof(string);
 
-        public object GetValue(int i) => IsDBNull(i) ? (object)DBNull.Value : _line.Fields[i];
+        public object GetValue(int i) => IsDBNull(i) 
+            ? DBNull.Value 
+            : _schema?.Columns[i].Convert(_line.Fields[i]) ?? _line.Fields[i];
 
         public int GetValues(object[] values)
         {
@@ -118,9 +122,9 @@ namespace Net.Code.Csv.Impl
 
         public int FieldCount => _parser.FieldCount;
 
-        object IDataRecord.this[int i] => _line.Fields[i];
+        object IDataRecord.this[int i] => GetValue(i);
 
-        object IDataRecord.this[string name] => _line.Fields[GetOrdinal(name)];
+        object IDataRecord.this[string name] => GetValue(GetOrdinal(name));
 
         private T GetValue<T>(int fieldNumber, Func<string, T> convert) => convert(_line.Fields[fieldNumber]);
 
@@ -218,6 +222,7 @@ namespace Net.Code.Csv.Impl
                     schemaRow[1] = columnNames[i]; // Base column name
                     schemaRow[4] = columnNames[i]; // Column name
                     schemaRow[5] = i; // Column ordinal
+                    schemaRow[7] = _schema?.Columns[i].Type ?? typeof(string);
 
                     schema.Rows.Add(schemaRow);
                 }
