@@ -1,39 +1,31 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace Net.Code.Csv
 {
-    public static class SmartConvert
-    {
-        public static bool ToBool(string s) => s switch
-        {
-            "yes" or "y" or "YES" or "Y" or "True" or "true" or "TRUE" or "1" => true,
-            "no" or "n" or "NO" or "N" or "False" or "false" or "FALSE" or "0" => false,
-            _ => throw new ArgumentException($"{nameof(s)} = {s} could not be converted to a boolean value")
-        };
-        public static DateTime ToDateTime(string s)
-        {
-            DateTime result;
-            if (DateTime.TryParse(s, out result)) return result;
-            if (DateTime.TryParseExact(s, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) return result;
-            if (DateTime.TryParseExact(s, "yyyy/MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) return result;
-            if (DateTime.TryParseExact(s, "yyyy_MM_dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) return result;
-            throw new ArgumentException($"{nameof(s)} = {s} could not be converted to a DateTime value");
-        }
-    }
     public record CsvSchema(params CsvColumn[] Columns);
-    public record CsvColumn(string Name, Type Type, Func<string, object> Convert);
+    public record CsvColumn(string Name, string PropertyName, Type Type, Func<string, object> Convert);
     public class CsvSchemaBuilder
     {
         List<CsvColumn> _columns = new List<CsvColumn>();
         public CsvSchemaBuilder AddColumn<T>(string name, Func<string, T> convert)
         {
-            _columns.Add(new CsvColumn(name, typeof(T), s => convert(s)));
+            _columns.Add(new CsvColumn(name, name, typeof(T), s => convert(s)));
+            return this;
+        }
+        public CsvSchemaBuilder AddColumn<T>(string name, PropertyInfo property, Func<string, T> convert)
+        {
+            _columns.Add(new CsvColumn(name, property.Name, typeof(T), s => convert(s)));
+            return this;
+        }
+        public CsvSchemaBuilder AddColumn<T>(string name, PropertyInfo property, Func<string, object> convert)
+        {
+            _columns.Add(new CsvColumn(name, property.Name, typeof(T), s => convert(s)));
             return this;
         }
         public CsvSchemaBuilder AddString(string name) => AddColumn(name, s => s);
@@ -52,21 +44,32 @@ namespace Net.Code.Csv
         public CsvSchemaBuilder AddGuid(string name, Func<string, Guid> convert = null) => AddColumn(name, convert ?? Guid.Parse);
         public CsvSchemaBuilder AddDecimal(string name, Func<string, decimal> convert = null) => AddColumn(name, convert ?? Convert.ToDecimal);
         public CsvSchemaBuilder AddDateTime(string name, Func<string, DateTime> convert = null) => AddColumn(name, convert ?? Convert.ToDateTime);
+        public CsvSchemaBuilder From<T>()
+        {
+            foreach (var p in typeof(T).GetProperties())
+            {
+                if (p.PropertyType == typeof(DateTime) && p.GetCustomAttribute<CsvFormatAttribute>()?.Format is string format)
+                {
+                    AddDateTime(p.Name, s => DateTime.ParseExact(s, format, DateTimeFormatInfo.InvariantInfo));
+                }
+                else
+                {
+                    var converter = TypeDescriptor.GetConverter(p.PropertyType);
+                    _columns.Add(new CsvColumn(p.Name, p.Name, p.PropertyType, s => converter.ConvertFromString(s)));
+                }
+            }
+            return this;
+        }
         public CsvSchema Schema => new CsvSchema(_columns.ToArray());
     }
 
-    public static class Extensions
+    public class CsvFormatAttribute : Attribute
     {
-        public static IEnumerable<T> As<T>(this IDataReader reader)
+        public string Format { get; set; }
+        public CsvFormatAttribute(string format)
         {
-            while (reader.Read())
-            {
-                var values = from prop in typeof(T).GetProperties()
-                             select reader.GetValue(reader.GetOrdinal(prop.Name));
-                T item = (T)Activator.CreateInstance(typeof(T), values.ToArray());
-                yield return item;
-            }
-
+            Format = format;
         }
     }
+
 }

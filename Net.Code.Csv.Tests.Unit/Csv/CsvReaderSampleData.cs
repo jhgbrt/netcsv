@@ -71,10 +71,29 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 ,Blankman,,SomeTown, SD, 00298
 ""Joan """"the bone"""", Anne"",Jet,""9th, at Terrace plc"",Desert City,CO,00123";
 
+		public static CsvSchema SampleTypedData1Schema = new CsvSchemaBuilder()
+			.AddBoolean(typeof(bool).FullName)
+			.AddDateTime(typeof(DateTime).FullName)
+			.AddSingle(typeof(float).FullName)
+			.AddDouble(typeof(double).FullName)
+			.AddDecimal(typeof(decimal).FullName)
+			.AddSByte(typeof(sbyte).FullName)
+			.AddInt16(typeof(short).FullName)
+			.AddInt32(typeof(int).FullName)
+			.AddInt64(typeof(long).FullName)
+			.AddByte(typeof(byte).FullName)
+			.AddUInt16(typeof(ushort).FullName)
+			.AddUInt32(typeof(uint).FullName)
+			.AddUInt64(typeof(ulong).FullName)
+			.AddChar(typeof(char).FullName)
+			.AddString(typeof(string).FullName)
+			.AddGuid(typeof(Guid).FullName)
+			.AddColumn(typeof(System.DBNull).FullName, s => DBNull.Value)
+			.Schema;
+
 		public const string SampleTypedData1 = @"
 System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System.SByte,System.Int16,System.Int32,System.Int64,System.Byte,System.UInt16,System.UInt32,System.UInt64,System.Char,System.String,System.Guid,System.DBNull
-1,2001-01-01,1,1,1,1,1,1,1,1,1,1,1,a,abc,{11111111-1111-1111-1111-111111111111},
-""true"",""2001-01-01"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""a"",""abc"",""{11111111-1111-1111-1111-111111111111}"",""""";
+""true"",""2001-11-15"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""a"",""abc"",""{11111111-1111-1111-1111-111111111111}"",""""";
 
 		#endregion
 

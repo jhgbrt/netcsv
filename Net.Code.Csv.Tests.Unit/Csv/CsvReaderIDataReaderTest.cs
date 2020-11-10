@@ -95,12 +95,77 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				}
 			}
 		}
+		[Test]
+		public void GetSchemaTable_WithSchema_RetrievesCorrectlyTypedValues()
+        {
+			using (IDataReader csv = ReadCsv.FromString(CsvReaderSampleData.SampleTypedData1,
+				hasHeaders: true, schema: CsvReaderSampleData.SampleTypedData1Schema))
+            {
+				csv.Read();
+				Assert.AreEqual(true, csv["System.Boolean"]);
+				Assert.AreEqual(new DateTime(2001, 11, 15), csv["System.DateTime"]);
+				Assert.AreEqual(1, csv["System.Single"]);
+				Assert.AreEqual(1, csv["System.Double"]);
+				Assert.AreEqual(1, csv["System.Decimal"]);
+				Assert.AreEqual(1, csv["System.Int16"]);
+				Assert.AreEqual(1, csv["System.Int32"]);
+				Assert.AreEqual(1, csv["System.Int64"]);
+				Assert.AreEqual(1, csv["System.UInt16"]);
+				Assert.AreEqual(1, csv["System.UInt32"]);
+				Assert.AreEqual(1, csv["System.UInt64"]);
+				Assert.AreEqual(1, csv["System.Byte"]);
+				Assert.AreEqual(1, csv["System.SByte"]);
+				Assert.AreEqual('a', csv["System.Char"]);
+				Assert.AreEqual("abc", csv["System.String"]);
+				Assert.AreEqual(Guid.Parse("{11111111-1111-1111-1111-111111111111}"), csv["System.Guid"]);
+				Assert.AreEqual(DBNull.Value, csv["System.DBNull"]);
+			}
 
-	    [Test]
-	    public void GetSchemaTableDoesNotCloseReader()
+		}
+		[Test]
+	    public void GetSchemaTable_WithSchema_SetsType()
 	    {
-	        
-	    }
+			using (IDataReader csv = ReadCsv.FromString(CsvReaderSampleData.SampleTypedData1, 
+				hasHeaders: true, schema: CsvReaderSampleData.SampleTypedData1Schema))
+			{
+				IDataReader reader = csv;
+				DataTable schema = reader.GetSchemaTable();			
+				foreach (DataColumn column in schema.Columns)
+				{
+					Assert.IsTrue(column.ReadOnly);
+				}
+
+				for (int index = 0; index < schema.Rows.Count; index++)
+				{
+					DataRow column = schema.Rows[index];
+					var header = (string)column["ColumnName"];
+
+					Assert.AreEqual(int.MaxValue, column["ColumnSize"]);
+					Assert.AreEqual(DBNull.Value, column["NumericPrecision"]);
+					Assert.AreEqual(DBNull.Value, column["NumericScale"]);
+					Assert.AreEqual(false, column["IsUnique"]);
+					Assert.AreEqual(false, column["IsKey"]);
+					Assert.AreEqual(string.Empty, column["BaseServerName"]);
+					Assert.AreEqual(string.Empty, column["BaseCatalogName"]);
+					Assert.AreEqual(string.Empty, column["BaseSchemaName"]);
+					Assert.AreEqual(string.Empty, column["BaseTableName"]);
+					Assert.AreEqual(Type.GetType(header), column["DataType"]);
+					Assert.AreEqual(true, column["AllowDBNull"]);
+					Assert.AreEqual((int)DbType.String, column["ProviderType"]);
+					Assert.AreEqual(false, column["IsAliased"]);
+					Assert.AreEqual(false, column["IsExpression"]);
+					Assert.AreEqual(false, column["IsAutoIncrement"]);
+					Assert.AreEqual(false, column["IsRowVersion"]);
+					Assert.AreEqual(false, column["IsHidden"]);
+					Assert.AreEqual(false, column["IsLong"]);
+					Assert.AreEqual(true, column["IsReadOnly"]);
+
+					Assert.AreEqual(index, column["ColumnOrdinal"]);
+
+				}
+			}
+
+		}
 
 		[Test()]
 		public void GetSchemaTableWithoutHeadersTest()
@@ -424,7 +489,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			{
 				IDataReader reader = csv;
 
-				DateTime value = new DateTime(2001, 1, 1);
+				DateTime value = new DateTime(2001, 11, 15);
 				while (reader.Read())
 				{
 					Assert.AreEqual(value, reader.GetDateTime(reader.GetOrdinal(typeof(DateTime).FullName)));
