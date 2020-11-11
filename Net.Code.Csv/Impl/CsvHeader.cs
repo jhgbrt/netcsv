@@ -10,12 +10,12 @@ namespace Net.Code.Csv.Impl
     {
         private readonly IReadOnlyDictionary<string, int> _fieldHeaderIndexes;
 
-        public CsvHeader(string[] fields, string defaultHeaderName)
-            : base(DefaultWhereEmpty(fields, defaultHeaderName).ToArray(), false)
+        public CsvHeader(string[] fields)
+            : base(DefaultWhereEmpty(fields).ToArray(), false)
             => _fieldHeaderIndexes = Fields.WithIndex().ToDictionary(x => x.item, x => x.index);
 
-        private static IEnumerable<string> DefaultWhereEmpty(IEnumerable<string> fields, string defaultHeaderName)
-            => fields.Select((f, i) => string.IsNullOrWhiteSpace(f) ? defaultHeaderName + i : f);
+        private static IEnumerable<string> DefaultWhereEmpty(IEnumerable<string> fields)
+            => fields.Select((f, i) => string.IsNullOrWhiteSpace(f) ? $"Column{i}" : f);
 
         public int this[string headerName] => _fieldHeaderIndexes[headerName];
 

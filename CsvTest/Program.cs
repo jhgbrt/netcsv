@@ -15,10 +15,10 @@ Console.WriteLine(SmartConvert.ToDateTime("2020_11_15"));
 
 var schema = new CsvSchemaBuilder()
     .AddString(nameof(MyItem.First))
-    .AddColumn(nameof(MyItem.Last), s => new Custom(s))
-    .AddDateTime(nameof(MyItem.BirthDate), SmartConvert.ToDateTime)
+    .Add(nameof(MyItem.Last), s => new Custom(s), true)
+    .AddDateTime(nameof(MyItem.BirthDate), "yyyyMMdd")
     .AddInt32(nameof(MyItem.Quantity))
-    .AddDecimal(nameof(MyItem.Price), s => decimal.Parse(s.Replace(",", "."), CultureInfo.InvariantCulture))
+    .AddDecimal(nameof(MyItem.Price))
     .Schema;
 
 Convert.ToString(new DateTime(), new MyFormatProvider());

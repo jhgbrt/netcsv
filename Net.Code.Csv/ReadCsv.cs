@@ -2,6 +2,7 @@
 
 using System;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -38,15 +39,15 @@ namespace Net.Code.Csv
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
             bool skipEmptyLines = true,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            IConverter converter = null,
-            CsvSchema schema = null)
+            CsvSchema schema = null,
+            CultureInfo cultureInfo = null)
         {
             // caller should dispose IDataReader, which will indirectly also close the stream
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
             var stream = File.OpenRead(path);
             var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null);
-            return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
+            return FromReader(reader, layout, behaviour, cultureInfo);
         }
 
         /// <summary>
@@ -79,13 +80,13 @@ namespace Net.Code.Csv
                 MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
                 bool skipEmptyLines = true,
                 QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-                IConverter converter = null,
-                CsvSchema schema = null)
+                CsvSchema schema = null,
+                CultureInfo cultureInfo = null)
         {
             var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, 1024, true);
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
-            return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
+            return FromReader(reader, layout, behaviour, cultureInfo);
         }
 
         /// <summary>
@@ -115,17 +116,17 @@ namespace Net.Code.Csv
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
             bool skipEmptyLines = true,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            IConverter converter = null,
-            CsvSchema schema = null)
+            CsvSchema schema = null,
+            CultureInfo cultureInfo = null)
         {
             var reader = new StringReader(input);
             var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
             var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
-            return FromReader(reader, layout, behaviour, converter ?? Converter.Default);
+            return FromReader(reader, layout, behaviour, cultureInfo);
         }
 
 
-        internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter) 
-            => new CsvDataReader(reader, csvLayout, csvBehaviour, converter);
+        internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, CultureInfo cultureInfo = null) 
+            => new CsvDataReader(reader, csvLayout, csvBehaviour, cultureInfo);
     }
 }

@@ -1127,7 +1127,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				string[] headers = csv.GetFieldHeaders();
 
 				Assert.IsNotNull(headers);
-				Assert.AreEqual(0, headers.Length);
+				Assert.AreEqual(6, headers.Length);
 			}
 		}
 
@@ -1169,15 +1169,10 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			}
 		}
 
-		[TestCase((string) null)]
-		[TestCase("")]
-		[TestCase("AnotherName")]
-		public void GetFieldHeaders_WithEmptyHeaderNames(string defaultHeaderName)
+		[Test]
+		public void GetFieldHeaders_WithEmptyHeaderNames()
 		{
-			if (defaultHeaderName == null)
-				defaultHeaderName = "Column";
-
-			using (var csv = new CsvReader(new StringReader(",  ,,aaa,\"   \",,,"), layout: new CsvLayout(HasHeaders: true), behaviour: CsvBehaviour.Default, defaultHeaderName: defaultHeaderName))
+			using (var csv = new CsvReader(new StringReader(",  ,,aaa,\"   \",,,"), layout: new CsvLayout(HasHeaders: true), behaviour: CsvBehaviour.Default))
 			{
 				Assert.IsFalse(csv.ReadNextRecord());
 				Assert.AreEqual(8, csv.FieldCount);
@@ -1187,7 +1182,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 				Assert.AreEqual("aaa", headers[3]);
 				foreach (var index in new int[] { 0, 1, 2, 4, 5, 6, 7 })
-					Assert.AreEqual(defaultHeaderName + index.ToString(), headers[index]);
+					Assert.AreEqual("Column" + index.ToString(), headers[index]);
 			}
 		}
 

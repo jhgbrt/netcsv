@@ -12,7 +12,7 @@ namespace Net.Code.Csv.Impl
         private bool _disposed;
         private readonly IDisposable _textReader;
 
-        public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour, string defaultHeaderName = "Column")
+        public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour)
         {
             _csvStateMachine = new CsvStateMachine(textReader, layOut, behaviour);
             _enumerator = _csvStateMachine.Lines().GetEnumerator();
@@ -20,14 +20,22 @@ namespace Net.Code.Csv.Impl
 
             var firstLine = Lines().FirstOrDefault();
 
-            if (layOut.HasHeaders && firstLine != null)
+            Header = (layOut, firstLine) switch
             {
-                Header = new CsvHeader(firstLine.Fields, defaultHeaderName ?? "Column");
-            }
-            else
-            {
+                ({ Schema: not null }, _) 
+                    => new CsvHeader(layOut.Schema.Columns.Select(s => s.Name).ToArray()),
+
+                ({ HasHeaders: true }, firstLine: not null)
+                    => new CsvHeader(firstLine.Fields),
+
+                (_, firstLine: not null) 
+                    => new CsvHeader(Enumerable.Repeat(string.Empty, firstLine.Fields.Length).ToArray()),
+                _
+                    => new CsvHeader(Array.Empty<string>())
+            };
+
+            if (!layOut.HasHeaders) 
                 _cachedLine = firstLine;
-            }
         }
 
         private CsvLine _cachedLine;

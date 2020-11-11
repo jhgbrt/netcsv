@@ -20,6 +20,9 @@
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Globalization;
+using System.Runtime.Serialization;
+
 using NUnit.Framework;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv
@@ -71,9 +74,18 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 ,Blankman,,SomeTown, SD, 00298
 ""Joan """"the bone"""", Anne"",Jet,""9th, at Terrace plc"",Desert City,CO,00123";
 
-		public static CsvSchema SampleTypedData1Schema = new CsvSchemaBuilder()
+		public static CsvSchema SampleData1Schema = new CsvSchemaBuilder()
+			.AddString("First Name")
+			.AddString("Last Name")
+			.AddString("Address")
+			.AddString("City")
+			.AddString("State")
+			.AddString("Zip Code")
+			.Schema;
+
+		public static CsvSchema SampleTypedData1Schema = new CsvSchemaBuilder(CultureInfo.InvariantCulture)
 			.AddBoolean(typeof(bool).FullName)
-			.AddDateTime(typeof(DateTime).FullName)
+			.AddDateTime(typeof(DateTime).FullName, "yyyy-MM-dd")
 			.AddSingle(typeof(float).FullName)
 			.AddDouble(typeof(double).FullName)
 			.AddDecimal(typeof(decimal).FullName)
@@ -88,12 +100,12 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 			.AddChar(typeof(char).FullName)
 			.AddString(typeof(string).FullName)
 			.AddGuid(typeof(Guid).FullName)
-			.AddColumn(typeof(System.DBNull).FullName, s => DBNull.Value)
+			.Add(typeof(System.DBNull).FullName, s => DBNull.Value, true)
 			.Schema;
 
 		public const string SampleTypedData1 = @"
 System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System.SByte,System.Int16,System.Int32,System.Int64,System.Byte,System.UInt16,System.UInt32,System.UInt64,System.Char,System.String,System.Guid,System.DBNull
-""true"",""2001-11-15"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""a"",""abc"",""{11111111-1111-1111-1111-111111111111}"",""""";
+""true"",""2001-11-15"",""1"",""1.1"",""1.10"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""a"",""abc"",""{11111111-1111-1111-1111-111111111111}"",""""";
 
 		#endregion
 
@@ -227,5 +239,17 @@ System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System
 		}
 
 		#endregion
+	}
+
+	[TestFixture]
+	public class SomeTests
+	{
+		[Test]
+		public void TestParseDouble()
+		{
+			var d = decimal.Parse("1005,1", new NumberFormatInfo { NumberDecimalSeparator = ",", NumberGroupSeparator = ""});
+			Assert.AreEqual(1005.1m, d);
+			Assert.AreEqual(1.1d, Convert.ToDouble("1.1", new NumberFormatInfo { NumberDecimalSeparator = ".", NumberGroupSeparator = "" }));
+		}
 	}
 }

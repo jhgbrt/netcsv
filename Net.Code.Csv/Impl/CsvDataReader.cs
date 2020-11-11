@@ -19,25 +19,31 @@ namespace Net.Code.Csv.Impl
         private readonly CsvSchema _schema;
         private bool _eof;
 
-        public CsvDataReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, IConverter converter)
+        public CsvDataReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, CultureInfo cultureInfo)
         {
             _parser = new CsvParser(reader, csvLayout, csvBehaviour);
             _header = _parser.Header;
             _line = null;
-            _converter = converter;
+            _converter = new Converter(cultureInfo ?? CultureInfo.InvariantCulture);
             _enumerator = _parser.GetEnumerator();
             _schema = csvLayout.Schema;
         }
 
         public string GetName(int i) => _header[i];
 
-        public string GetDataTypeName(int i) => typeof(string).FullName;
+        public string GetDataTypeName(int i) => GetFieldType(i).FullName;
 
-        public Type GetFieldType(int i) => typeof(string);
+        public Type GetFieldType(int i) => _schema?[i].Type ?? typeof(string);
 
-        public object GetValue(int i) => IsDBNull(i) 
-            ? DBNull.Value 
-            : _schema?.Columns[i].Convert(_line.Fields[i]) ?? _line.Fields[i];
+        public object GetValue(int i) => _schema switch
+        {
+            not null => _line.Fields[i] switch 
+            {
+                "" => null,
+                string s => _schema[i].Convert(s),
+            },
+            _ => _line.Fields[i]
+        };
 
         public int GetValues(object[] values)
         {
@@ -70,7 +76,6 @@ namespace Net.Code.Csv.Impl
         }
 
         public bool GetBoolean(int i) => GetValue(i, _converter.ToBoolean);
-
         public byte GetByte(int i) => GetValue(i, _converter.ToByte);
 
         public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferOffset, int length) => throw new NotImplementedException();
@@ -118,7 +123,7 @@ namespace Net.Code.Csv.Impl
 
         IDataReader IDataRecord.GetData(int i) => i == 0 ? this : null;
 
-        public bool IsDBNull(int i) => false;
+        public bool IsDBNull(int i) => GetValue(i) is null;
 
         public int FieldCount => _parser.FieldCount;
 
@@ -126,7 +131,12 @@ namespace Net.Code.Csv.Impl
 
         object IDataRecord.this[string name] => GetValue(GetOrdinal(name));
 
-        private T GetValue<T>(int fieldNumber, Func<string, T> convert) => convert(_line.Fields[fieldNumber]);
+        private T GetValue<T>(int i, Func<string, T> convert)
+        {
+            var value = GetValue(i);
+            if (value is T t) return t;
+            return convert((string)value);
+        }
 
         public void Dispose()
         {
@@ -194,23 +204,22 @@ namespace Net.Code.Csv.Impl
                                      {
                                          true, // 00- AllowDBNull
                                          null, // 01- BaseColumnName
-                                         string.Empty, // 02- BaseSchemaName
-                                         string.Empty, // 03- BaseTableName
+                                         null, // 02- BaseSchemaName
+                                         null, // 03- BaseTableName
                                          null, // 04- ColumnName
                                          null, // 05- ColumnOrdinal
                                          int.MaxValue, // 06- ColumnSize
-                                         typeof (string), // 07- DataType
+                                         null, // 07- DataType
                                          false, // 08- IsAliased
                                          false, // 09- IsExpression
                                          false, // 10- IsKey
                                          false, // 11- IsLong
                                          false, // 12- IsUnique
-                                         DBNull.Value, // 13- NumericPrecision
-                                         DBNull.Value, // 14- NumericScale
-                                         (int) DbType.String, // 15- ProviderType
-
-                                         string.Empty, // 16- BaseCatalogName
-                                         string.Empty, // 17- BaseServerName
+                                         null, // 13- NumericPrecision
+                                         null, // 14- NumericScale
+                                         0, // 15- ProviderType
+                                         null, // 16- BaseCatalogName
+                                         null, // 17- BaseServerName
                                          false, // 18- IsAutoIncrement
                                          false, // 19- IsHidden
                                          true, // 20- IsReadOnly
@@ -219,11 +228,10 @@ namespace Net.Code.Csv.Impl
 
                 for (var i = 0; i < columnNames.Length; i++)
                 {
-                    schemaRow[1] = columnNames[i]; // Base column name
+                    schemaRow[0] = _schema?[i].AllowNull;
                     schemaRow[4] = columnNames[i]; // Column name
                     schemaRow[5] = i; // Column ordinal
-                    schemaRow[7] = _schema?.Columns[i].Type ?? typeof(string);
-
+                    schemaRow[7] = _schema?[i].Type ?? typeof(string);
                     schema.Rows.Add(schemaRow);
                 }
             }

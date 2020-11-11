@@ -214,7 +214,7 @@ namespace Net.Code.Csv
 
             _csvLayout = layout;
             _behaviour = behaviour;
-            _parser = new CsvParser(reader, _csvLayout, _behaviour, defaultHeaderName);
+            _parser = new CsvParser(reader, _csvLayout, _behaviour);
             _enumerator = _parser.GetEnumerator();
         }
 
