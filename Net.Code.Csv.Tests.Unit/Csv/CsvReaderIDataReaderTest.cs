@@ -24,7 +24,6 @@ using NUnit.Framework;
 using System;
 using System.Data;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv

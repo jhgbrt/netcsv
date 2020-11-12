@@ -21,13 +21,12 @@
 
 using System;
 using System.Globalization;
-using System.Runtime.Serialization;
 
 using NUnit.Framework;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv
 {
-	public class CsvReaderSampleData
+    public class CsvReaderSampleData
 	{
 		#region Sample data
 

@@ -1,6 +1,4 @@
 ﻿using Net.Code.Csv.Impl;
-
-using System;
 using System.Data;
 using System.Globalization;
 using System.IO;

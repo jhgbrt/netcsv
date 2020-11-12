@@ -20,16 +20,15 @@
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Globalization;
 using System.Runtime.Serialization;
 using Net.Code.Csv.Impl;
 
 namespace Net.Code.Csv
 {
-	/// <summary>
-	/// Represents the exception that is thrown when a CSV file is malformed.
-	/// </summary>
-	[Serializable]
+    /// <summary>
+    /// Represents the exception that is thrown when a CSV file is malformed.
+    /// </summary>
+    [Serializable]
 	public class MalformedCsvException 
 		: Exception
 	{
