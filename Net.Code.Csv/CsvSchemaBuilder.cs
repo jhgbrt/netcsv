@@ -20,7 +20,7 @@ namespace Net.Code.Csv
         }
         public CsvSchemaBuilder(CultureInfo cultureInfo) 
         {
-            _cultureInfo = cultureInfo;
+            _cultureInfo = cultureInfo ?? CultureInfo.InvariantCulture;
         }
 
 
