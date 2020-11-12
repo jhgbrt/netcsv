@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace Net.Code.Csv
 {
-    public static class SmartConvert
+    public static class SmartCondvert
     {
         public static bool ToBool(string s) => s switch
         {

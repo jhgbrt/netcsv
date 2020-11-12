@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace Net.Code.Csv
+namespace Net.Code.Csv.Impl
 {
     /// <summary>
     /// String to primitive conversion class. By default, uses the Convert.ToXXX methods or,

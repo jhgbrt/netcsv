@@ -1,9 +1,9 @@
-namespace Net.Code.Csv
+namespace Net.Code.Csv.Impl
 {
     /// <summary>
     /// Describes a CSV file layout (quote character, delimiter, escape character, comment marker, does the CSV have headers or not)
     /// </summary>
-    public record CsvLayout(
+    internal record CsvLayout(
             /// <summary>
             /// The character used as a field quote
             /// </summary>

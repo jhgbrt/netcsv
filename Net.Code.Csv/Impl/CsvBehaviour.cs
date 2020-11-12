@@ -1,5 +1,4 @@
-﻿namespace System.Runtime.CompilerServices { public class IsExternalInit { } }
-namespace Net.Code.Csv
+﻿namespace Net.Code.Csv.Impl
 {
     /// <summary>
     /// Describes the way the CSV parser should behave

@@ -5,13 +5,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 
-Console.WriteLine(SmartConvert.ToBool("yes"));
-Console.WriteLine(SmartConvert.ToBool("1"));
-Console.WriteLine(SmartConvert.ToBool("Y"));
-Console.WriteLine(SmartConvert.ToBool("true"));
-Console.WriteLine(SmartConvert.ToDateTime("2020-11-15"));
-Console.WriteLine(SmartConvert.ToDateTime("20201115"));
-Console.WriteLine(SmartConvert.ToDateTime("2020_11_15"));
 
 var schema = new CsvSchemaBuilder()
     .AddString(nameof(MyItem.First))

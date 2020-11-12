@@ -24,6 +24,9 @@
 
 
 using System.IO;
+
+using Net.Code.Csv.Impl;
+
 using NUnit.Framework;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv

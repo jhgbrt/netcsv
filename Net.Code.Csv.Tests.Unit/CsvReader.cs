@@ -180,11 +180,10 @@ namespace Net.Code.Csv
         {
         }
 
-        public CsvReader(TextReader reader,
+        internal CsvReader(TextReader reader,
             int bufferSize = DefaultBufferSize,
             CsvLayout layout = null,
-            CsvBehaviour behaviour = null,
-            string defaultHeaderName = null)
+            CsvBehaviour behaviour = null)
         {
             if (layout == null) layout = CsvLayout.Default;
             if (behaviour == null) behaviour = CsvBehaviour.Default;

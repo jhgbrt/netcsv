@@ -53,7 +53,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         public void GetSchemaTableWithHeadersTest()
         {
             using (var reader = ReadCsv.FromString(
-                CsvReaderSampleData.SampleData1, hasHeaders: true)
+                CsvReaderSampleData.SampleData1, hasHeaders: true, trimmingOptions: ValueTrimmingOptions.UnquotedOnly)
             )
             {
                 DataTable schema = reader.GetSchemaTable();
@@ -665,7 +665,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         public void GetNameTest()
         {
             using (var reader = ReadCsv.FromString(
-                CsvReaderSampleData.SampleData1, hasHeaders: true)
+                CsvReaderSampleData.SampleData1, hasHeaders: true, trimmingOptions: ValueTrimmingOptions.UnquotedOnly)
                 )
             {
 
@@ -685,7 +685,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         public void GetOrdinalTest()
         {
             using (var reader = ReadCsv.FromString(
-                CsvReaderSampleData.SampleData1, hasHeaders: true)
+                CsvReaderSampleData.SampleData1, hasHeaders: true, trimmingOptions: ValueTrimmingOptions.UnquotedOnly)
                 )
             {
 
@@ -721,7 +721,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         public void GetValueTest()
         {
             using (var reader = ReadCsv.FromString(
-                CsvReaderSampleData.SampleData1, hasHeaders: true, schema: CsvReaderSampleData.SampleData1Schema)
+                CsvReaderSampleData.SampleData1, hasHeaders: true, schema: CsvReaderSampleData.SampleData1Schema, trimmingOptions: ValueTrimmingOptions.UnquotedOnly)
             )
             {
                 string[] values = new string[CsvReaderSampleData.SampleData1RecordCount];
@@ -745,7 +745,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         public void GetValuesTest()
         {
             using (var reader = ReadCsv.FromString(
-                CsvReaderSampleData.SampleData1, hasHeaders: true, schema: CsvReaderSampleData.SampleData1Schema)
+                CsvReaderSampleData.SampleData1, hasHeaders: true, schema: CsvReaderSampleData.SampleData1Schema, trimmingOptions: ValueTrimmingOptions.UnquotedOnly)
             )
             {
 
@@ -798,7 +798,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         public void IndexerByFieldNameTest()
         {
             using (var reader = ReadCsv.FromString(
-                CsvReaderSampleData.SampleData1, hasHeaders: true)
+                CsvReaderSampleData.SampleData1, hasHeaders: true, trimmingOptions: ValueTrimmingOptions.UnquotedOnly)
                 )
             {
                 string[] values = new string[CsvReaderSampleData.SampleData1RecordCount];
@@ -822,7 +822,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         public void IndexerByFieldIndexTest()
         {
             using (var reader = ReadCsv.FromString(
-                CsvReaderSampleData.SampleData1, hasHeaders: true, schema: CsvReaderSampleData.SampleData1Schema)
+                CsvReaderSampleData.SampleData1, hasHeaders: true, schema: CsvReaderSampleData.SampleData1Schema, trimmingOptions: ValueTrimmingOptions.UnquotedOnly)
             )
             {
                 string[] values = new string[CsvReaderSampleData.SampleData1RecordCount];
