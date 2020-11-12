@@ -169,8 +169,10 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 
     public class AmountConverter : TypeConverter
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string);
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => destinationType == typeof(Amount);
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) 
+            => sourceType == typeof(string) || sourceType == typeof(Amount);
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) 
+            => destinationType == typeof(string) || destinationType == typeof(Amount);
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
             if (value is string s) return Amount.Parse(s, culture);
