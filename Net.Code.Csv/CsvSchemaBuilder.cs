@@ -1,17 +1,16 @@
 ﻿
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 
 namespace Net.Code.Csv
 {
-    public record CsvSchema(params CsvColumn[] Columns)
+    public record CsvSchema(IList<CsvColumn> Columns)
     {
         public CsvColumn this[int i] => Columns[i];
     }
     
-    public record CsvColumn(string Name, string PropertyName, Type Type, Func<string, object> Convert, bool AllowNull);
+    public record CsvColumn(string Name, string PropertyName, Type Type, Func<string, object> FromString, bool AllowNull);
     
     public class CsvSchemaBuilder
     {
@@ -23,7 +22,6 @@ namespace Net.Code.Csv
             _converter = new Converter(cultureInfo ?? CultureInfo.InvariantCulture);
         }
 
-
         List<CsvColumn> _columns = new List<CsvColumn>();
         private Converter _converter;
 
@@ -32,12 +30,12 @@ namespace Net.Code.Csv
             _columns.Add(new CsvColumn(name, name, typeof(T), s => convert(s), allowNull));
             return this;
         }
-        public CsvSchemaBuilder Add<T>(string name, string format, Func<string, string, T> convert, bool allowNull)
+        private CsvSchemaBuilder Add<T>(string name, string format, Func<string, string, T> convert, bool allowNull)
         {
             _columns.Add(new CsvColumn(name, name, typeof(T), s => convert(format, s), allowNull));
             return this;
         }
-        public CsvSchemaBuilder Add(string name, Type type, bool allowNull)
+        private CsvSchemaBuilder Add(string name, Type type, bool allowNull)
         {
             _columns.Add(new CsvColumn(name, name, type, s => _converter.FromString(type, s), allowNull));
             return this;

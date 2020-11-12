@@ -19,7 +19,8 @@ namespace Net.Code.Csv
         public bool ToBoolean(string value) => Convert.ToBoolean(value, _cultureInfo);
         public byte ToByte(string value) => Convert.ToByte(value, _cultureInfo);
         public char ToChar(string value) => Convert.ToChar(value, _cultureInfo);
-        public DateTime ToDateTime(string value, string format = null) => format switch
+        public DateTime ToDateTime(string value) => ToDateTime(value, null);
+        public DateTime ToDateTime(string value, string format) => format switch
         {
             not null => DateTime.ParseExact(value, format, _cultureInfo),
             _ => DateTime.Parse(value, _cultureInfo)
