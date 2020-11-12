@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Dynamic;
 using System.Linq;
 
 namespace Net.Code.Csv
@@ -48,7 +49,8 @@ namespace Net.Code.Csv
                 T item = activator(reader);
                 yield return item;
             }
-
         }
+        public static string[] GetFieldHeaders(this IDataReader reader)
+            => reader.GetSchemaTable().Rows.OfType<DataRow>().Select(r => r["ColumnName"]).OfType<string>().ToArray();
     }
 }

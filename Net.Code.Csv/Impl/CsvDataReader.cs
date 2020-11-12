@@ -167,7 +167,8 @@ namespace Net.Code.Csv.Impl
             try
             {
                 schema.Locale = CultureInfo.InvariantCulture;
-                schema.MinimumCapacity = FieldCount;
+                if (FieldCount > 0)
+                    schema.MinimumCapacity = FieldCount;
                 schema.Columns.Add(AllowDBNull, typeof(bool)).ReadOnly = true;
                 schema.Columns.Add(BaseColumnName, typeof(string)).ReadOnly = true;
                 schema.Columns.Add(BaseSchemaName, typeof(string)).ReadOnly = true;

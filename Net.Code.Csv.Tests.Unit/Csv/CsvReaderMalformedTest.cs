@@ -23,15 +23,11 @@
 // A special thanks goes to "shriop" at CodeProject for providing many of the standard and Unicode parsing tests.
 
 
-using System.IO;
-
-using Net.Code.Csv.Impl;
-
 using NUnit.Framework;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv
 {
-	[TestFixture()]
+    [TestFixture()]
 	public class CsvReaderMalformedTest
 	{
 
@@ -45,12 +41,12 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data)))
+				using (var csv = ReadCsv.FromString(Data))
 				{
-					while (csv.ReadNextRecord())
+					while (csv.Read())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
-							string s = csv[i];
+							string s = csv.GetString(i);
 						}
 				}
 			}
@@ -70,12 +66,12 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data), false, 11))
+				using (var csv = ReadCsv.FromString(Data))
 				{
-					while (csv.ReadNextRecord())
+					while (csv.Read())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
-							string s = csv[i];
+							string s = csv.GetString(i);
 						}
 				}
 			}
@@ -95,12 +91,12 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data), false))
+				using (var csv = ReadCsv.FromString(Data))
 				{
-					while (csv.ReadNextRecord())
+					while (csv.Read())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
-							string s = csv[i];
+							string s = csv.GetString(i);
 						}
 				}
 			}
@@ -120,12 +116,12 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data), false, 16))
+				using (var csv = ReadCsv.FromString(Data))
 				{
-					while (csv.ReadNextRecord())
+					while (csv.Read())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
-							string s = csv[i];
+							string s = csv.GetString(i);
 						}
 				}
 			}
@@ -142,16 +138,11 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(
-                    new StringReader(Data),
-                    layout: new CsvLayout(Escape:'\\'), 
-                    behaviour: new CsvBehaviour(QuotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
+				using (var csv = ReadCsv.FromString(
+                    Data,
+                    escape: '\\' ,
+                    quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException))
 				{
-					while (csv.ReadNextRecord())
-						for (int i = 0; i < csv.FieldCount; i++)
-						{
-							string s = csv[i];
-						}
 				}
 			}
 			catch (MalformedCsvException ex)
@@ -168,13 +159,12 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 			try
 			{
-				using (CsvReader csv = new CsvReader(new StringReader(Data), 4096, new CsvLayout(Escape:'\\'), 
-                    new CsvBehaviour(QuotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.ThrowException)))
+				using (var csv = ReadCsv.FromString(Data, escape:'\\', quotesInsideQuotedFieldAction : QuotesInsideQuotedFieldAction.ThrowException))
 				{
-					while (csv.ReadNextRecord())
+					while (csv.Read())
 						for (int i = 0; i < csv.FieldCount; i++)
 						{
-							string s = csv[i];
+							string s = csv.GetString(i);
 						}
 				}
 			}
@@ -185,34 +175,18 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
         }
 
 		[Test()]
-		public void MoreFieldsTest()
+		public void TrailingFields_Are_Ignored()
 		{
 			const string Data = "ORIGIN,DESTINATION\nPHL,FLL,kjhkj kjhkjh,eg,fhgf\nNYC,LAX";
 
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(Data), false))
+			using (var csv = ReadCsv.FromString(Data, hasHeaders: true))
 			{
-				while (csv.ReadNextRecord())
+				while (csv.Read())
 				{
+					Assert.AreEqual(2, csv.FieldCount);
 					for (int i = 0; i < csv.FieldCount; i++)
 					{
-						string s = csv[i];
-					}
-				}
-			}
-		}
-
-		[Test()]
-		public void MoreFieldsMultilineTest()
-		{
-			const string Data = "ORIGIN,DESTINATION\nPHL,FLL,kjhkj kjhkjh,eg,fhgf\nNYC,LAX";
-
-			using (CsvReader csv = new CsvReader(new System.IO.StringReader(Data), false))
-			{
-				while (csv.ReadNextRecord())
-				{
-					for (int i = 0; i < csv.FieldCount; i++)
-					{
-						string s = csv[i];
+						string s = csv.GetString(i);
 					}
 				}
 			}
@@ -225,9 +199,9 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 			                    "\"15907\";\"\"BOLT TIL 2-05-405\";\"\";\"42,50\";\"4027816159070\"\n" +
 			                    "\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
 
-			using (var csv = new CsvReader(new System.IO.StringReader(Data), 4096, new CsvLayout(Delimiter:';'), new CsvBehaviour(QuotesInsideQuotedFieldAction:QuotesInsideQuotedFieldAction.AdvanceToNextLine)))
+			using (var csv = ReadCsv.FromString(Data, delimiter: ';', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine))
 			{
-				Assert.IsTrue(csv.ReadNextRecord());
+				Assert.IsTrue(csv.Read());
 
 				Assert.AreEqual("19324", csv[0]);
 				Assert.AreEqual("FJEDER TIL 2-05-405", csv[1]);
@@ -235,7 +209,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				Assert.AreEqual("14,50", csv[3]);
 				Assert.AreEqual("4027816193241", csv[4]);
 
-				Assert.IsFalse(csv.ReadNextRecord());
+				Assert.IsFalse(csv.Read());
 			}
 		}
 
@@ -246,24 +220,23 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				+ "\na,b,c,d,"
 				+ "\na,b,";
 
-			using (var csv = new CsvReader(new StringReader(Data), CsvReader.DefaultBufferSize, new CsvLayout(HasHeaders:false), 
-                new  CsvBehaviour(MissingFieldAction:MissingFieldAction.ReplaceByNull)))
+			using (var csv = ReadCsv.FromString(Data, missingFieldAction: MissingFieldAction.ReplaceByNull))
 			{
 				var record = new string[5];
 
-				Assert.IsTrue(csv.ReadNextRecord());
-				csv.CopyCurrentRecordTo(record);
+				Assert.IsTrue(csv.Read());
+				csv.GetValues(record);
 				CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "e" }, record);
 
-				Assert.IsTrue(csv.ReadNextRecord());
-				csv.CopyCurrentRecordTo(record);
+				Assert.IsTrue(csv.Read());
+				csv.GetValues(record);
 				CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "" }, record);
 
-				Assert.IsTrue(csv.ReadNextRecord());
-				csv.CopyCurrentRecordTo(record);
+				Assert.IsTrue(csv.Read());
+				csv.GetValues(record);
 				CollectionAssert.AreEqual(new string[] { "a", "b", "", null, null }, record);
 
-				Assert.IsFalse(csv.ReadNextRecord());
+				Assert.IsFalse(csv.Read());
 			}
 		}
 	}

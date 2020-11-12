@@ -20,6 +20,7 @@
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Data;
 using System.Globalization;
 
 using NUnit.Framework;
@@ -111,49 +112,41 @@ System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System
 
 		#region Sample data utility methods
 
-		public static void CheckSampleData1(CsvReader csv, bool readToEnd)
+
+		public static void CheckSampleData1(IDataReader csv, bool hasHeaders, bool nullIsEmpty)
 		{
-			if (readToEnd)
-			{
-				Assert.AreEqual(CsvReaderSampleData.SampleData1FieldCount, csv.FieldCount);
+			Assert.AreEqual(CsvReaderSampleData.SampleData1FieldCount, csv.FieldCount);
 
-				if (csv.HasHeaders)
-				{
-					Assert.AreEqual(0, csv.GetFieldIndex(SampleData1Header0));
-					Assert.AreEqual(1, csv.GetFieldIndex(SampleData1Header1));
-					Assert.AreEqual(2, csv.GetFieldIndex(SampleData1Header2));
-					Assert.AreEqual(3, csv.GetFieldIndex(SampleData1Header3));
-					Assert.AreEqual(4, csv.GetFieldIndex(SampleData1Header4));
-					Assert.AreEqual(5, csv.GetFieldIndex(SampleData1Header5));
-				}
-				
-				Assert.AreEqual(-1, csv.CurrentRecordIndex);
-
-				int recordCount = 0;
-
-				while (csv.ReadNextRecord())
-				{
-					CheckSampleData1(csv.CurrentRecordIndex, csv, true);
-					recordCount++;
-				}
-
-				if (csv.HasHeaders)
-					Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, recordCount);
-				else
-					Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount + 1, recordCount);
+			if (hasHeaders)
+            {
+				Assert.AreEqual(0, csv.GetOrdinal(SampleData1Header0));
+				Assert.AreEqual(1, csv.GetOrdinal(SampleData1Header1));
+				Assert.AreEqual(2, csv.GetOrdinal(SampleData1Header2));
+				Assert.AreEqual(3, csv.GetOrdinal(SampleData1Header3));
+				Assert.AreEqual(4, csv.GetOrdinal(SampleData1Header4));
+				Assert.AreEqual(5, csv.GetOrdinal(SampleData1Header5));
 			}
+
+			long recordCount = 0;
+			while (csv.Read())
+			{
+				CheckSampleData1(recordCount, csv, nullIsEmpty, hasHeaders);
+				recordCount++;
+			}
+
+			if (hasHeaders)
+				Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, recordCount);
 			else
-				CheckSampleData1(csv.CurrentRecordIndex, csv, true);
+				Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount + 1, recordCount);
 		}
 
-		public static void CheckSampleData1(long recordIndex, CsvReader csv, bool nullIsEmpty = false)
+		public static void CheckSampleData1(long recordIndex, IDataReader csv, bool nullIsEmpty, bool hasHeaders)
 		{
 			string[] fields = new string[6];
-			csv.CopyCurrentRecordTo(fields);
+			csv.GetValues(fields);
 
-			CheckSampleData1(csv.HasHeaders, recordIndex, fields, 0, nullIsEmpty);
+			CheckSampleData1(hasHeaders, recordIndex, fields, 0, nullIsEmpty);
 		}
-
 		public static void CheckSampleData1(bool hasHeaders, long recordIndex, string[] fields, bool nullIsEmpty = false)
 		{
 			CheckSampleData1(hasHeaders, recordIndex, fields, 0, nullIsEmpty);
