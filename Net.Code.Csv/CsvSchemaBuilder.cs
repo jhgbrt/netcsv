@@ -20,19 +20,14 @@ namespace Net.Code.Csv
         public CsvSchemaBuilder() : this(CultureInfo.InvariantCulture)
         {
         }
-        public CsvSchemaBuilder(CultureInfo cultureInfo) : this(cultureInfo.DateTimeFormat, cultureInfo.NumberFormat)
+        public CsvSchemaBuilder(CultureInfo cultureInfo) 
         {
-        }
-        public CsvSchemaBuilder(DateTimeFormatInfo dateTimeFormat, NumberFormatInfo numberFormat)
-        {
-            _numberFormatInfo = numberFormat;
-            _dateTimeFormat = dateTimeFormat;
+            _cultureInfo = cultureInfo;
         }
 
 
         List<CsvColumn> _columns = new List<CsvColumn>();
-        private NumberFormatInfo _numberFormatInfo;
-        private DateTimeFormatInfo _dateTimeFormat;
+        private CultureInfo _cultureInfo;
 
         public CsvSchemaBuilder Add<T>(string name, Func<string, T> convert, bool allowNull)
         {
@@ -55,25 +50,25 @@ namespace Net.Code.Csv
         public CsvSchemaBuilder AddUInt32(string name, bool allowNull = false) => Add(name, Convert.ToUInt32, allowNull);
         public CsvSchemaBuilder AddUInt64(string name, bool allowNull = false) => Add(name, Convert.ToUInt64, allowNull);
         public CsvSchemaBuilder AddSingle(string name, bool allowNull = false) => Add(name, ToSingle, allowNull);
-        private float ToSingle(string s) => Convert.ToSingle(s, _numberFormatInfo);
+        private float ToSingle(string s) => Convert.ToSingle(s, _cultureInfo.NumberFormat);
         public CsvSchemaBuilder AddDouble(string name, bool allowNull = false) => Add(name, ToDouble, allowNull);
-        private double ToDouble(string s) => Convert.ToDouble(s, _numberFormatInfo);
+        private double ToDouble(string s) => Convert.ToDouble(s, _cultureInfo.NumberFormat);
         public CsvSchemaBuilder AddDecimal(string name, bool allowNull = false) => Add(name, ToDecimal, allowNull);
-        private decimal ToDecimal(string s) => Convert.ToDecimal(s, _numberFormatInfo);
+        private decimal ToDecimal(string s) => Convert.ToDecimal(s, _cultureInfo.NumberFormat);
         public CsvSchemaBuilder AddChar(string name, bool allowNull = false) => Add(name, Convert.ToChar, allowNull);
         public CsvSchemaBuilder AddByte(string name, bool allowNull = false) => Add(name, Convert.ToByte, allowNull);
         public CsvSchemaBuilder AddSByte(string name, bool allowNull = false) => Add(name, Convert.ToSByte, allowNull);
         public CsvSchemaBuilder AddGuid(string name, bool allowNull = false) => Add(name, Guid.Parse, allowNull);
         public CsvSchemaBuilder AddDateTime(string name, string format = null, bool allowNull = false) => format switch
         {
-            not null => Add(name, s => DateTime.ParseExact(s, format, _dateTimeFormat), allowNull),
-            _ => Add(name, s => DateTime.Parse(s, _dateTimeFormat), allowNull)
+            not null => Add(name, s => DateTime.ParseExact(s, format, _cultureInfo.DateTimeFormat), allowNull),
+            _ => Add(name, s => DateTime.Parse(s, _cultureInfo.DateTimeFormat), allowNull)
         };
 
         public CsvSchemaBuilder AddDateTimeOffset(string name, string format = null, bool allowNull = false) => format switch
         {
-            not null => Add(name, s => DateTimeOffset.ParseExact(s, format, _dateTimeFormat), allowNull),
-            _ => Add(name, s => DateTimeOffset.Parse(s, _dateTimeFormat), allowNull)
+            not null => Add(name, s => DateTimeOffset.ParseExact(s, format, _cultureInfo.DateTimeFormat), allowNull),
+            _ => Add(name, s => DateTimeOffset.Parse(s, _cultureInfo.DateTimeFormat), allowNull)
         };
 
         public CsvSchemaBuilder From<T>()
@@ -143,7 +138,7 @@ namespace Net.Code.Csv
                 else
                 {
                     var converter = TypeDescriptor.GetConverter(p.PropertyType);
-                    _columns.Add(new CsvColumn(p.Name, p.Name, p.PropertyType, s => converter.ConvertFromString(null, CultureInfo.InvariantCulture, s), allowNull));
+                    _columns.Add(new CsvColumn(p.Name, p.Name, p.PropertyType, s => converter.ConvertFromString(null, _cultureInfo, s), allowNull));
                 }
             }
             return this;

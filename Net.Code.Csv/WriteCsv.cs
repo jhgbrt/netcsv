@@ -1,5 +1,4 @@
 ﻿
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -29,7 +28,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             Encoding encoding = null,
             char delimiter = ',', 
             char quote= '"',
-            char escape = '\\', 
+            char escape = '"',
             bool hasHeaders = false,
             bool append = false,
             CultureInfo cultureInfo = null
@@ -58,7 +57,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             Encoding encoding = null,
             char delimiter = ',',
             char quote = '"',
-            char escape = '\\',
+            char escape = '"',
             bool hasHeaders = false,
             CultureInfo cultureInfo = null
             )
@@ -81,7 +80,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             IEnumerable<T> items,
             char delimiter = ',',
             char quote = '"',
-            char escape = '\\',
+            char escape = '"',
             bool hasHeaders = false,
             CultureInfo cultureInfo = null
             )
@@ -97,12 +96,14 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             TextWriter writer,
             char delimiter = ',',
             char quote = '"',
-            char escape = '\\',
+            char escape = '"',
             bool hasHeaders = false,
             CultureInfo cultureInfo = null
             )
         {
             cultureInfo ??= CultureInfo.InvariantCulture;
+            var converter = new Converter(cultureInfo);
+
             var escapedQuote = $"{escape}{quote}";
             var unescapedQuote = $"{quote}";
             var properties = typeof(T).GetPropertiesWithCsvFormat();
@@ -114,20 +115,10 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 
             foreach (var item in items)
             {
-                var values = from tuple in properties
-                             let prop = tuple.property
-                             let format = tuple.format
-                             let value = prop.GetValue(item)
-                             let s = value switch
-                             {
-                                 DateTime d => d.ToString(format ?? "O", cultureInfo),
-                                 DateTimeOffset d => d.ToString(format ?? "O", cultureInfo),
-                                 object o => Convert.ToString(o, cultureInfo),
-                                 null => string.Empty
-                             }
-                             select prop.PropertyType.IsValueType
-                                ? sb.Clear().Append(s).Replace(unescapedQuote, escapedQuote)
-                                : sb.Clear().Append(s).Replace(unescapedQuote, escapedQuote).Insert(0, quote).Append(quote);
+                var values = from pf in properties
+                             let value = pf.property.GetValue(item)
+                             let s = converter.ToString(value, pf.format)
+                             select sb.Clear().Append(s).QuoteIfNecessary(quote, delimiter, escape);
 
                 bool writeDelimiter = false;
                 foreach (var v in values)
@@ -142,4 +133,33 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         }
     }
 
+    static class StringBuilderExtension
+    {
+        public static StringBuilder QuoteIfNecessary(this StringBuilder sb, char quote, char delimiter, char escape)
+        {
+            for (int i = 0; i < sb.Length; i++)
+            {
+                if (sb[i] == quote || sb[i] == delimiter || sb[i] == '\n' || sb[i] == '\r')
+                {
+                    return sb.EscapeQuotes(quote, escape).Insert(0, quote).Append(quote);
+                }
+            }
+            return sb;
+        }
+
+        public static StringBuilder EscapeQuotes(this StringBuilder sb, char quote, char escape)
+        {
+            int i = 0;
+            while (i < sb.Length)
+            {
+                if (sb[i] == quote)
+                {
+                    sb.Insert(i++, escape);
+                }
+                i++;
+            }
+            return sb;
+        }
+
+    }
 }

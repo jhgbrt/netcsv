@@ -1211,7 +1211,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				for (int i = 0; i < CsvReaderSampleData.SampleData1RecordCount; i++)
 				{
 					Assert.IsTrue(csv.MoveTo(i));
-					CsvReaderSampleData.CheckSampleData1(i, csv);
+					CsvReaderSampleData.CheckSampleData1(i, csv, true);
 				}
 			}
 		}
@@ -1271,7 +1271,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 
 				foreach (string[] record in csv)
 				{
-					CsvReaderSampleData.CheckSampleData1(csv.HasHeaders, index, record);
+					CsvReaderSampleData.CheckSampleData1(csv.HasHeaders, index, record, true);
 					index++;
 				}
 			}
@@ -1305,7 +1305,7 @@ namespace Net.Code.Csv.Tests.Unit.IO.Csv
 				for (int i = 0; i < CsvReaderSampleData.SampleData1RecordCount; i++)
 				{
 					string s = csv[i, 0];
-					CsvReaderSampleData.CheckSampleData1(i, csv);
+					CsvReaderSampleData.CheckSampleData1(i, csv, true);
 				}
 			}
 		}

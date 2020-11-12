@@ -11,7 +11,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
     {
         string expected =
                 "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset\r\n" +
-                "\"John\";Peters;19701115;123;5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
+                "John;Peters;19701115;123;5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
         MyClass[] classItems = new[]
         {
                 new MyClass
@@ -68,16 +68,44 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 
         class Item { public decimal Value { get; set; } }
         [Test]
-        public void WriteCsv_()
+        public void WriteCsv_ReadBack_ReturnsExpectedResult()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("be");
             var schema = new CsvSchemaBuilder(cultureInfo).From<Item>().Schema;
-            var result = WriteCsv.ToString(new[] { new Item { Value = 123.5m } }, delimiter: ';', cultureInfo: cultureInfo);
-            Assert.AreEqual("123,5\r\n", result);
-            var readback = ReadCsv.FromString("\"123,5\"\r\n", schema: schema).AsEnumerable<Item>().Single().Value;
+            var result = WriteCsv.ToString(new[] { new Item { Value = 123.5m } }, cultureInfo: cultureInfo);
+            Assert.AreEqual("\"123,5\"\r\n", result);
+            var readback = ReadCsv.FromString(result, schema: schema).AsEnumerable<Item>().Single().Value;
             Assert.AreEqual(123.5m, readback);
         }
+    }
+    [TestFixture]
+    public class WriteCsvByDefaultConformsToRFC4180
+    { 
+        [Test]
+        public void Fields_Containing_Quote_Should_Be_Quoted_And_Quotes_In_Field_Should_Be_Escaped()
+        {
+            var result = WriteCsv.ToString(new[] { new { Value = "abc\"def" } });
+            Assert.AreEqual("\"abc\"\"def\"\r\n", result);
+        }
 
+        [Test]
+        public void Fields_Containing_Delimiter_Should_Be_Quoted()
+        {
+            var result = WriteCsv.ToString(new[] { new { Value = "abc,def" } });
+            Assert.AreEqual("\"abc,def\"\r\n", result);
+        }
+        [Test]
+        public void WriteCsv_StringWithQuotesAndDelimiters_GetsQuotedAndEscapesQuotes()
+        {
+            var result = WriteCsv.ToString(new[] { new { Value = "ab\"c,def" } });
+            Assert.AreEqual("\"ab\"\"c,def\"\r\n", result);
+        }
+        [Test]
+        public void Fields_Containing_LineBreak_Should_Be_Quoted()
+        {
+            var result = WriteCsv.ToString(new[] { new { Value = "abc\r\ndef" } });
+            Assert.AreEqual("\"abc\r\ndef\"\r\n", result);
+        }
     }
 
 }

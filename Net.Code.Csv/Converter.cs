@@ -7,7 +7,7 @@ namespace Net.Code.Csv
     /// String to primitive conversion class. By default, uses the Convert.ToXXX methods or,
     /// if not available, the [Primitive].Parse method.
     /// </summary>
-    class Converter : IConverter
+    class Converter
     {
         CultureInfo _cultureInfo;
         public Converter(CultureInfo cultureInfo)
@@ -35,5 +35,12 @@ namespace Net.Code.Csv
         public ushort ToUInt16(string value) => Convert.ToUInt16(value, _cultureInfo);
         public uint ToUInt32(string value) => Convert.ToUInt32(value, _cultureInfo);
         public ulong ToUInt64(string value) => Convert.ToUInt64(value, _cultureInfo);
+        internal object ToString(object value, string format) => value switch
+        {
+            DateTime d => d.ToString(format ?? "O", _cultureInfo),
+            DateTimeOffset d => d.ToString(format ?? "O", _cultureInfo),
+            object o => Convert.ToString(o, _cultureInfo),
+            null => string.Empty
+        };
     }
 }

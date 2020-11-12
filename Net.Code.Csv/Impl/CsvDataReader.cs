@@ -13,7 +13,7 @@ namespace Net.Code.Csv.Impl
         private readonly CsvHeader _header;
         private CsvLine _line;
         private CsvParser _parser;
-        private readonly IConverter _converter;
+        private readonly Converter _converter;
         private bool _isDisposed;
         private readonly IEnumerator<CsvLine> _enumerator;
         private readonly CsvSchema _schema;
@@ -78,29 +78,37 @@ namespace Net.Code.Csv.Impl
         public bool GetBoolean(int i) => GetValue(i, _converter.ToBoolean);
         public byte GetByte(int i) => GetValue(i, _converter.ToByte);
 
-        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferOffset, int length) => throw new NotImplementedException();
+        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferOffset, int length)
+        {
+            var value = Convert.FromBase64String(GetString(i));
+
+            int copied = 0;
+            for (var j = 0; j < length; j++)
+            {
+                if (j + fieldOffset >= value.Length) break;
+                if (j + bufferOffset >= buffer.Length) break;
+                buffer[j + bufferOffset] = value[j + (int)fieldOffset];
+                copied++;
+            }
+
+            return copied;
+        }
 
         public char GetChar(int i) => GetValue(i, _converter.ToChar);
 
         public long GetChars(int i, long fieldOffset, char[] buffer, int bufferOffset, int length)
         {
-            if (buffer == null)
-            {
-                throw new ArgumentNullException(nameof(buffer));
-            }
-
-            if (fieldOffset < 0 || fieldOffset >= int.MaxValue)
-            {
-                throw new ArgumentOutOfRangeException(nameof(fieldOffset));
-            }
-
             var value = GetString(i);
+            int copied = 0;
             for (var j = 0; j < length; j++)
             {
-                buffer[j + bufferOffset] = value[(int)fieldOffset];
+                if (j + fieldOffset >= value.Length) break;
+                if (j + bufferOffset >= buffer.Length) break;
+                buffer[j + bufferOffset] = value[j + (int)fieldOffset];
+                copied++;
             }
 
-            return length;
+            return copied;
         }
 
         public Guid GetGuid(int i) => GetValue(i, _converter.ToGuid);
@@ -183,21 +191,7 @@ namespace Net.Code.Csv.Impl
                 schema.Columns.Add(IsReadOnly, typeof(bool)).ReadOnly = true;
                 schema.Columns.Add(IsRowVersion, typeof(bool)).ReadOnly = true;
 
-                string[] columnNames;
-
-                if (_header != null)
-                {
-                    columnNames = _parser.Header.Fields;
-                }
-                else
-                {
-                    columnNames = new string[FieldCount];
-
-                    for (var i = 0; i < FieldCount; i++)
-                    {
-                        columnNames[i] = "Column" + i.ToString(CultureInfo.InvariantCulture);
-                    }
-                }
+                string[] columnNames = _parser.Header.Fields;
 
                 // null marks columns that will change for each row
                 var schemaRow = new object[]
@@ -228,7 +222,7 @@ namespace Net.Code.Csv.Impl
 
                 for (var i = 0; i < columnNames.Length; i++)
                 {
-                    schemaRow[0] = _schema?[i].AllowNull;
+                    schemaRow[0] = _schema?[i].AllowNull ?? true;
                     schemaRow[4] = columnNames[i]; // Column name
                     schemaRow[5] = i; // Column ordinal
                     schemaRow[7] = _schema?[i].Type ?? typeof(string);

@@ -101,11 +101,12 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 			.AddString(typeof(string).FullName)
 			.AddGuid(typeof(Guid).FullName)
 			.Add(typeof(System.DBNull).FullName, s => DBNull.Value, true)
+			.Add(typeof(System.Byte[]).FullName, s => Convert.FromBase64String(s), true)
 			.Schema;
 
 		public const string SampleTypedData1 = @"
-System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System.SByte,System.Int16,System.Int32,System.Int64,System.Byte,System.UInt16,System.UInt32,System.UInt64,System.Char,System.String,System.Guid,System.DBNull
-""true"",""2001-11-15"",""1"",""1.1"",""1.10"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""a"",""abc"",""{11111111-1111-1111-1111-111111111111}"",""""";
+System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System.SByte,System.Int16,System.Int32,System.Int64,System.Byte,System.UInt16,System.UInt32,System.UInt64,System.Char,System.String,System.Guid,System.DBNull,System.Byte[]
+""true"",""2001-11-15"",""1"",""1.1"",""1.10"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""a"",""abc"",""{11111111-1111-1111-1111-111111111111}"","""",""AQIDBAUGBwgJ""";
 
 		#endregion
 
@@ -133,7 +134,7 @@ System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System
 
 				while (csv.ReadNextRecord())
 				{
-					CheckSampleData1(csv.CurrentRecordIndex, csv);
+					CheckSampleData1(csv.CurrentRecordIndex, csv, true);
 					recordCount++;
 				}
 
@@ -143,23 +144,23 @@ System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System
 					Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount + 1, recordCount);
 			}
 			else
-				CheckSampleData1(csv.CurrentRecordIndex, csv);
+				CheckSampleData1(csv.CurrentRecordIndex, csv, true);
 		}
 
-		public static void CheckSampleData1(long recordIndex, CsvReader csv)
+		public static void CheckSampleData1(long recordIndex, CsvReader csv, bool nullIsEmpty = false)
 		{
 			string[] fields = new string[6];
 			csv.CopyCurrentRecordTo(fields);
 
-			CheckSampleData1(csv.HasHeaders, recordIndex, fields, 0);
+			CheckSampleData1(csv.HasHeaders, recordIndex, fields, 0, nullIsEmpty);
 		}
 
-		public static void CheckSampleData1(bool hasHeaders, long recordIndex, string[] fields)
+		public static void CheckSampleData1(bool hasHeaders, long recordIndex, string[] fields, bool nullIsEmpty = false)
 		{
-			CheckSampleData1(hasHeaders, recordIndex, fields, 0);
+			CheckSampleData1(hasHeaders, recordIndex, fields, 0, nullIsEmpty);
 		}
 
-		public static void CheckSampleData1(bool hasHeaders, long recordIndex, string[] fields, int startIndex)
+		public static void CheckSampleData1(bool hasHeaders, long recordIndex, string[] fields, int startIndex, bool nullIsEmpty = false)
 		{
 			Assert.IsTrue(fields.Length - startIndex >= 6);
 
@@ -216,9 +217,11 @@ System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System
 					break;
 
 				case 5:
-					Assert.AreEqual("", fields[startIndex]);
+					if (nullIsEmpty) Assert.AreEqual(string.Empty, fields[startIndex]);
+					else Assert.IsNull(fields[startIndex]);
 					Assert.AreEqual("Blankman", fields[startIndex + 1]);
-					Assert.AreEqual("", fields[startIndex + 2]);
+					if (nullIsEmpty) Assert.AreEqual(string.Empty, fields[startIndex + 2]);
+					else Assert.IsNull(fields[startIndex + 2]);
 					Assert.AreEqual("SomeTown", fields[startIndex + 3]);
 					Assert.AreEqual("SD", fields[startIndex + 4]);
 					Assert.AreEqual("00298", fields[startIndex + 5]);
