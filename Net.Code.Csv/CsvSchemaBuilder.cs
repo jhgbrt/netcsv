@@ -32,7 +32,7 @@ namespace Net.Code.Csv
         }
         private CsvSchemaBuilder Add<T>(string name, string format, Func<string, string, T> convert, bool allowNull)
         {
-            _columns.Add(new CsvColumn(name, name, typeof(T), s => convert(format, s), allowNull));
+            _columns.Add(new CsvColumn(name, name, typeof(T), s => convert(s, format), allowNull));
             return this;
         }
         private CsvSchemaBuilder Add(string name, Type type, bool allowNull)
