@@ -26,31 +26,26 @@ You need to add this using statement:
 
 Now you can use code like this:
 
-    var myFileName = "path/to/csvfile";
-    
-    using (var reader = ReadCsv.FromFile(myFileName)) {
-        while (reader.Read()) {
-            var record = new { 
-                Name = reader["Name"];
-                BirthDate = DateTime.Parse(reader["BirthDate"]);
-            }
+```csharp
+var myFileName = "path/to/csvfile";
+
+using (var reader = ReadCsv.FromFile(myFileName)) {
+    while (reader.Read()) {
+        var record = new { 
+            Name = reader["Name"];
+            BirthDate = DateTime.Parse(reader["BirthDate"]);
         }
     }
+}
+```
 
-If you have a string that actually contains the CSV content already, use this:
+You can also read from a stream or a string.
 
-    void ParseCsv(string content) {
-        using (var reader = ReadCsv.FromString(content)) {
-        // ...
-        }
-    }
-    
- Finally, you can also use the ReadCsv.FromStream() method.
- 
- The examples assume some common defaults about the actual CSV layout
- and behaviour. You can of course change those through parameters.
- 
- Parameters that specify the CSV format include the encoding, the quote character, the field delimiter, a.o.
- Other parameters specify the 'behaviour' of the CSV reader: what to do with empty lines or missing fields, 
- whether fields should be trimmed or not, etc.
- 
+The example above assume some common defaults about the actual CSV layout
+and behaviour. You can of course change those through parameters.
+
+Parameters that specify the CSV format include the encoding, the quote character, the field delimiter, a.o.
+Other parameters specify the 'behaviour' of the CSV reader: what to do with empty lines or missing fields, 
+whether fields should be trimmed or not, etc.
+
+Form more documentation, check the [wiki](https://github.com/jhgbrt/netcsv/wiki)
