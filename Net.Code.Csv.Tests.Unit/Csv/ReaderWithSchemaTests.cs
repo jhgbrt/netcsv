@@ -64,15 +64,15 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 
             Verify(item);
         }
-        //[Test]
-        //public void WhenSchemaImplicitlyCreatedFromRecord_ExpectedValuesAreReturned()
-        //{
-        //    var item = ReadCsv
-        //        .FromString<MyRecord>(input, delimiter: ';', hasHeaders: true)
-        //        .Single();
+        [Test]
+        public void WhenSchemaImplicitlyCreatedFromRecord_ExpectedValuesAreReturned()
+        {
+            var item = ReadCsv
+                .FromString<MyRecord>(input, delimiter: ';', hasHeaders: true)
+                .Single();
 
-        //    Verify(item);
-        //}
+            Verify(item);
+        }
         [Test]
         public void WhenSchemaCreatedFromClass_ExpectedValuesAreReturned()
         {
@@ -85,15 +85,15 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 
             Verify(item);
         }
-        //[Test]
-        //public void WhenSchemaImplicitlyCreatedFromClass_ExpectedValuesAreReturned()
-        //{
-        //    var item = ReadCsv
-        //        .FromString<MyClass>(input, delimiter: ';', hasHeaders: true)
-        //        .Single();
+        [Test]
+        public void WhenSchemaImplicitlyCreatedFromClass_ExpectedValuesAreReturned()
+        {
+            var item = ReadCsv
+                .FromString<MyClass>(input, delimiter: ';', hasHeaders: true)
+                .Single();
 
-        //    Verify(item);
-        //}
+            Verify(item);
+        }
     }
     public class CustomTypeConverter : TypeConverter
     {
