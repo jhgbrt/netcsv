@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Net.Code.Csv.Tests.Unit.Csv
+namespace Net.Code.Csv
 {
     public class WriteCsv
     {

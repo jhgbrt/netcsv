@@ -15,7 +15,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
     {
         string input =
                 "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset\r\n" +
-                "\"John\";Peters;19701115;123;5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
+                "\"John\";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
 
         static void Verify(IMyItem item)
         {
@@ -23,7 +23,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             Assert.AreEqual("Peters", item.Last.Value.Value);
             Assert.AreEqual(new DateTime(1970, 11, 15), item.BirthDate);
             Assert.AreEqual(123, item.Quantity);
-            Assert.AreEqual(5.98m, item.Price);
+            Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
             Assert.AreEqual(null, item.Count);
             Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
 
@@ -37,7 +37,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
                 .Add(nameof(MyRecord.Last), s => new Custom(s), true)
                 .AddDateTime(nameof(MyRecord.BirthDate), "yyyyMMdd")
                 .AddInt32(nameof(MyRecord.Quantity))
-                .AddDecimal(nameof(MyRecord.Price))
+                .Add(nameof(MyRecord.Price), s => Amount.Parse(s, CultureInfo.InvariantCulture), false)
                 .AddInt16(nameof(MyRecord.Count))
                 .AddDecimal(nameof(MyRecord.LargeValue))
                 .AddDateTimeOffset(nameof(MyRecord.SomeDateTimeOffset))
@@ -65,6 +65,15 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             Verify(item);
         }
         [Test]
+        public void WhenSchemaImplicitlyCreatedFromRecord_ExpectedValuesAreReturned()
+        {
+            var item = ReadCsv
+                .FromString<MyRecord>(input, delimiter: ';', hasHeaders: true)
+                .Single();
+
+            Verify(item);
+        }
+        [Test]
         public void WhenSchemaCreatedFromClass_ExpectedValuesAreReturned()
         {
             CsvSchema schema = new CsvSchemaBuilder().From<MyClass>().Schema;
@@ -72,6 +81,15 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             var item = ReadCsv
                 .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
                 .AsEnumerable<MyClass>()
+                .Single();
+
+            Verify(item);
+        }
+        [Test]
+        public void WhenSchemaImplicitlyCreatedFromClass_ExpectedValuesAreReturned()
+        {
+            var item = ReadCsv
+                .FromString<MyClass>(input, delimiter: ';', hasHeaders: true)
                 .Single();
 
             Verify(item);
@@ -95,7 +113,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public Custom? Last { get; }
         public DateTime BirthDate { get; }
         public int Quantity { get; }
-        public decimal Price { get; }
+        public Amount Price { get; }
         public int? Count { get; }
         public decimal LargeValue { get; }
         public DateTimeOffset SomeDateTimeOffset { get; }
@@ -106,7 +124,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         Custom? Last, 
         [CsvFormat("yyyyMMdd")]DateTime BirthDate, 
         int Quantity, 
-        decimal Price, 
+        Amount Price, 
         int? Count,
         decimal LargeValue,
         DateTimeOffset SomeDateTimeOffset) : IMyItem;
@@ -118,10 +136,52 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         [CsvFormat("yyyyMMdd")]
         public DateTime BirthDate { get; set; }
         public int Quantity { get; set; }
-        public decimal Price { get; set; }
+        public Amount Price { get; set; }
         public int? Count { get; set; }
         public decimal LargeValue { get; set; }
         public DateTimeOffset SomeDateTimeOffset { get; set;}
     }
 
+    [TypeConverter(typeof(AmountConverter))]
+    public struct Amount
+    {
+        public Amount(string currency, decimal value)
+        {
+            Currency = currency;
+            Value = value;
+        }
+        public string Currency { get; set; }
+        public decimal Value { get; set; }
+        public static Amount Parse(string s, IFormatProvider provider)
+        {
+            var parts = s.Split(' ');
+            var currency = parts[0];
+            var decimalValue = decimal.Parse(parts[1], provider);
+            return new Amount { Currency = currency, Value = decimalValue };
+        }
+        public string ToString(IFormatProvider provider)
+        {
+            return $"{Currency} {Value.ToString(provider)}";
+        }
+
+        public override string ToString() => ToString(CultureInfo.CurrentCulture);
+    }
+
+    public class AmountConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) 
+            => sourceType == typeof(string) || sourceType == typeof(Amount);
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) 
+            => destinationType == typeof(string) || destinationType == typeof(Amount);
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            if (value is string s) return Amount.Parse(s, culture);
+            return base.ConvertFrom(context, culture, value);
+        }
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            if (value is Amount a && destinationType == typeof(string)) return a.ToString(culture);
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
 }

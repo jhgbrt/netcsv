@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Net.Code.Csv.Tests.Unit.Csv
+namespace Net.Code.Csv
 {
     static class StringBuilderExtension
     {
