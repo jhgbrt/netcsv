@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Globalization;
 
 namespace Net.Code.Csv
@@ -39,7 +40,7 @@ namespace Net.Code.Csv
         {
             DateTime d => d.ToString(format ?? "O", _cultureInfo),
             DateTimeOffset d => d.ToString(format ?? "O", _cultureInfo),
-            object o => Convert.ToString(o, _cultureInfo),
+            object o => TypeDescriptor.GetConverter(o)?.ConvertToString(null, _cultureInfo, o) ?? Convert.ToString(o, _cultureInfo),
             null => string.Empty
         };
     }

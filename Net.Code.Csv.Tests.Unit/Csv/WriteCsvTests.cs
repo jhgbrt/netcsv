@@ -11,7 +11,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
     {
         string expected =
                 "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset\r\n" +
-                "John;Peters;19701115;123;5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
+                "John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
         MyClass[] classItems = new[]
         {
                 new MyClass
@@ -20,7 +20,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
                     Last = new Custom("Peters"),
                     BirthDate = new DateTime(1970,11,15),
                     Quantity = 123,
-                    Price = 5.98m ,
+                    Price = new Amount("US$", 5.98m) ,
                     Count = null,
                     LargeValue = int.MaxValue,
                     SomeDateTimeOffset = new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2))
@@ -34,7 +34,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
                     Last: new Custom("Peters"),
                     BirthDate: new DateTime(1970,11,15),
                     Quantity: 123,
-                    Price: 5.98m,
+                    Price: new Amount("US$", 5.98m),
                     Count: null,
                     LargeValue: int.MaxValue,
                     SomeDateTimeOffset: new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2))
@@ -45,14 +45,16 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         [Test]
         public void WriteCsv_Class_ToString()
         {
-            var result = WriteCsv.ToString(classItems, ';', '"', '\\', true);
+            var cultureInfo = CultureInfo.CreateSpecificCulture("be");
+            var result = WriteCsv.ToString(classItems, ';', '"', '\\', true, cultureInfo);
             Assert.AreEqual(expected, result);
         }
 
         [Test]
         public void WriteCsv_Record_ToString()
         {
-            var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true);
+            var cultureInfo = CultureInfo.CreateSpecificCulture("be");
+            var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo);
             Assert.AreEqual(expected, result);
         }
 
@@ -60,8 +62,6 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public void WriteCsv_Record_WithCultureInfo_ToString()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("be");
-            // be uses ',' as decimal separator, which can be overriden like so:
-            cultureInfo.NumberFormat.NumberDecimalSeparator = ".";
             var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo);
             Assert.AreEqual(expected, result);
         }
