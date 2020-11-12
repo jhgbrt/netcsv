@@ -12,7 +12,12 @@ namespace Net.Code.Csv
         public CsvColumn this[int i] => Columns[i];
     }
     
-    public record CsvColumn(string Name, string PropertyName, Type Type, Func<string, object> FromString, bool AllowNull);
+    public record CsvColumn(
+        string Name, 
+        string PropertyName, 
+        Type Type, 
+        Func<string, object> FromString, 
+        bool AllowNull);
     
     public class CsvSchemaBuilder
     {
@@ -45,12 +50,9 @@ namespace Net.Code.Csv
         public CsvSchemaBuilder AddString(string name, bool allowNull = false) => Add(name, s => s, allowNull);
         public CsvSchemaBuilder AddBoolean(string name, bool allowNull = false) => Add(name, _converter.ToBoolean, allowNull);
         public CsvSchemaBuilder AddBoolean(string name, string @true, string @false, bool allowNull = false) 
-            => Add(name, s => s switch 
-            {
-                string v when v == @true => true,
-                string v when v == @false => false, 
-                _ => throw new FormatException($"Unrecognized value '{s}' for true/false. Expected {@true} or {@false}.") 
-            }, allowNull);
+            => Add(name, $"{@true}|{@false}", _converter.ToBoolean, allowNull);
+        public CsvSchemaBuilder AddBoolean(string name, string format, bool allowNull = false)
+            => Add(name, format, _converter.ToBoolean, allowNull);
         public CsvSchemaBuilder AddInt16(string name, bool allowNull = false) => Add(name, _converter.ToInt16, allowNull);
         public CsvSchemaBuilder AddInt32(string name, bool allowNull = false) => Add(name, _converter.ToInt32, allowNull);
         public CsvSchemaBuilder AddInt64(string name, bool allowNull = false) => Add(name, _converter.ToInt64, allowNull);
@@ -130,6 +132,10 @@ namespace Net.Code.Csv
                 {
                     AddUInt16(p.Name, allowNull);
                 }
+                else if (underlyingType == typeof(bool))
+                {
+                    AddBoolean(p.Name, format, allowNull);
+                }
                 else
                 {
                     Add(p.Name, underlyingType, allowNull);
@@ -141,6 +147,10 @@ namespace Net.Code.Csv
         public CsvSchema Schema => new(_columns.ToArray());
     }
 
+    /// <summary>
+    /// Use this attribute to specify the format for boolean values (form: "True|False", e.g. "yes|no")
+    /// or DateTime or DateTimeOffset values (form: .Net format string)
+    /// </summary>
     public class CsvFormatAttribute : Attribute
     {
         public string Format { get; set; }

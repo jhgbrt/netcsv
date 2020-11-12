@@ -236,15 +236,4 @@ System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System
 		#endregion
 	}
 
-	[TestFixture]
-	public class SomeTests
-	{
-		[Test]
-		public void TestParseDouble()
-		{
-			var d = decimal.Parse("1005,1", new NumberFormatInfo { NumberDecimalSeparator = ",", NumberGroupSeparator = ""});
-			Assert.AreEqual(1005.1m, d);
-			Assert.AreEqual(1.1d, Convert.ToDouble("1.1", new NumberFormatInfo { NumberDecimalSeparator = ".", NumberGroupSeparator = "" }));
-		}
-	}
 }

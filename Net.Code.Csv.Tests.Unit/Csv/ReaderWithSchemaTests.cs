@@ -14,8 +14,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
     public class ReaderWithSchemaTests
     {
         string input =
-                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset\r\n" +
-                "\"John\";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
+                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive\r\n" +
+                "\"John\";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes\r\n";
 
         static void Verify(IMyItem item)
         {
@@ -26,7 +26,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
             Assert.AreEqual(null, item.Count);
             Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
-
+            Assert.IsTrue(item.IsActive);
         }
 
         [Test]
@@ -41,6 +41,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
                 .AddInt16(nameof(MyRecord.Count))
                 .AddDecimal(nameof(MyRecord.LargeValue))
                 .AddDateTimeOffset(nameof(MyRecord.SomeDateTimeOffset))
+                .AddBoolean(nameof(MyRecord.IsActive), "yes", "no")
                 .Schema;
 
 
@@ -117,6 +118,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public int? Count { get; }
         public decimal LargeValue { get; }
         public DateTimeOffset SomeDateTimeOffset { get; }
+        public bool IsActive { get; }
 
     }
     public record MyRecord (
@@ -127,7 +129,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         Amount Price, 
         int? Count,
         decimal LargeValue,
-        DateTimeOffset SomeDateTimeOffset) : IMyItem;
+        DateTimeOffset SomeDateTimeOffset,
+        [CsvFormat("yes|no")]bool IsActive) : IMyItem;
 
     public class MyClass : IMyItem
     {
@@ -140,6 +143,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public int? Count { get; set; }
         public decimal LargeValue { get; set; }
         public DateTimeOffset SomeDateTimeOffset { get; set;}
+        [CsvFormat("yes|no")]
+        public bool IsActive { get; set; }
     }
 
     [TypeConverter(typeof(AmountConverter))]

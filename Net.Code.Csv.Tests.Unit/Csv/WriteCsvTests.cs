@@ -10,8 +10,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
     public class WriteCsvTests
     {
         string expected =
-                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset\r\n" +
-                "John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00\r\n";
+                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive\r\n" +
+                "John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes\r\n";
         MyClass[] classItems = new[]
         {
                 new MyClass
@@ -23,7 +23,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
                     Price = new Amount("US$", 5.98m) ,
                     Count = null,
                     LargeValue = int.MaxValue,
-                    SomeDateTimeOffset = new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2))
+                    SomeDateTimeOffset = new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)),
+                    IsActive = true
                 }
             };
 
@@ -37,7 +38,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
                     Price: new Amount("US$", 5.98m),
                     Count: null,
                     LargeValue: int.MaxValue,
-                    SomeDateTimeOffset: new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2))
+                    SomeDateTimeOffset: new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)),
+                    IsActive: true
                     )
             };
 
@@ -46,7 +48,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public void WriteCsv_Class_ToString()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("be");
-            var result = WriteCsv.ToString(classItems, ';', '"', '\\', true, cultureInfo);
+            var result = WriteCsv.ToString(classItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
             Assert.AreEqual(expected, result);
         }
 
@@ -54,7 +56,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public void WriteCsv_Record_ToString()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("be");
-            var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo);
+            var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
             Assert.AreEqual(expected, result);
         }
 
@@ -62,7 +64,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public void WriteCsv_Record_WithCultureInfo_ToString()
         {
             var cultureInfo = CultureInfo.CreateSpecificCulture("be");
-            var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo);
+            var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
             Assert.AreEqual(expected, result);
         }
 
@@ -77,6 +79,40 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             var readback = ReadCsv.FromString(result, schema: schema).AsEnumerable<Item>().Single().Value;
             Assert.AreEqual(123.5m, readback);
         }
+
+        [Test]
+        public void BooleanValue_SerializedAsYesOrNo_WhenYes_IsTrue()
+        {
+            var data = "yes";
+            var reader = ReadCsv.FromString(data, schema: new CsvSchemaBuilder().AddBoolean("BooleanColumn", "yes", "no", false).Schema);
+            reader.Read();
+            Assert.AreEqual(true, reader[0]);
+        }
+        [Test]
+        public void BooleanValue_SerializedAsYesOrNo_WhenNo_IsFalse()
+        {
+            var data = "no";
+            var reader = ReadCsv.FromString(data, schema: new CsvSchemaBuilder().AddBoolean("BooleanColumn", "yes", "no", false).Schema);
+            reader.Read();
+            Assert.AreEqual(false, reader[0]);
+        }
+        [Test]
+        public void BooleanValue_SerializedAsYesOrNo_WhenInvalid_Throws()
+        {
+            var data = "foo";
+            var reader = ReadCsv.FromString(data, schema: new CsvSchemaBuilder().AddBoolean("BooleanColumn", "yes", "no", false).Schema);
+            reader.Read();
+            Assert.Throws<FormatException>(() => _ = reader[0]);
+        }
+
+        //[Test]
+        public void BooleanValue_True_CanBeSerializedAsYesNo()
+        {
+            var expected = "yes\r\n";
+            var result = WriteCsv.ToString(new[] { new { BooleanColumn = true } });
+            Assert.AreEqual(expected, result);
+        }
+
     }
     [TestFixture]
     public class WriteCsvByDefaultConformsToRFC4180

@@ -17,6 +17,26 @@ namespace Net.Code.Csv.Impl
         }
 
         public bool ToBoolean(string value) => Convert.ToBoolean(value, _cultureInfo);
+        public bool ToBoolean(string value, string format)
+        {
+            var (@true, @false) = GetBooleanFormats(format);
+            return value switch
+            {
+                string v when v == @true => true,
+                string v when v == @false => false,
+                _ => throw new FormatException($"Unrecognized value '{value}' for true/false. Expected {@true} or {@false}.")
+            };
+        }
+
+        (string @true, string @false) GetBooleanFormats(string format)
+        {
+            var i = format.IndexOf('|');
+            if (i <= 0 || i == format.Length - 1)
+                throw new FormatException($"Invalid format string '{format}' for Boolean. Should be of the form \"[true]|[false]\", for example \"yes|no\"");
+            var @true = format.Substring(0, format.IndexOf('|'));
+            var @false = format.Substring(format.IndexOf('|') + 1);
+            return (@true, @false);
+        }
         public byte ToByte(string value) => Convert.ToByte(value, _cultureInfo);
         public char ToChar(string value) => Convert.ToChar(value, _cultureInfo);
         public DateTime ToDateTime(string value) => ToDateTime(value, null);
@@ -50,6 +70,11 @@ namespace Net.Code.Csv.Impl
         {
             DateTime d => d.ToString(format ?? "O", _cultureInfo),
             DateTimeOffset d => d.ToString(format ?? "O", _cultureInfo),
+            bool b => format switch
+            {
+                null or "" => b.ToString(),
+                _ => b ? GetBooleanFormats(format).@true : GetBooleanFormats(format).@false
+            },
             object o => TryToConvertToString(value) ?? Convert.ToString(o, _cultureInfo),
             null => string.Empty
         };

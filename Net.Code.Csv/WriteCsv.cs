@@ -33,12 +33,13 @@ namespace Net.Code.Csv
             char escape = '"',
             bool hasHeaders = false,
             bool append = false,
+            CsvSchema schema = null,
             CultureInfo cultureInfo = null
             )
         {
             using var stream = File.Open(path, append ? FileMode.Append : FileMode.Create, FileAccess.Write);
             var writeHeader = hasHeaders && (!append || stream.Position == 0);
-            ToStream(items, stream, encoding, delimiter, quote, escape, writeHeader, cultureInfo);
+            ToStream(items, stream, encoding, delimiter, quote, escape, writeHeader, schema, cultureInfo);
         }
 
         /// <summary>
@@ -61,11 +62,12 @@ namespace Net.Code.Csv
             char quote = '"',
             char escape = '"',
             bool hasHeaders = false,
+            CsvSchema schema = null,
             CultureInfo cultureInfo = null
             )
         {
             using var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8);
-            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, cultureInfo);
+            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, schema, cultureInfo);
         }
 
         /// <summary>
@@ -84,12 +86,13 @@ namespace Net.Code.Csv
             char quote = '"',
             char escape = '"',
             bool hasHeaders = false,
+            CsvSchema schema = null,
             CultureInfo cultureInfo = null
             )
         {
             var sb = new StringBuilder();
             using var writer = new StringWriter(sb);
-            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, cultureInfo);
+            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, schema, cultureInfo);
             return sb.ToString();
         }
 
@@ -100,6 +103,7 @@ namespace Net.Code.Csv
             char quote = '"',
             char escape = '"',
             bool hasHeaders = false,
+            CsvSchema schema = null,
             CultureInfo cultureInfo = null
             )
         {
