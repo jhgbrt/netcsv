@@ -105,11 +105,16 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             Assert.Throws<FormatException>(() => _ = reader[0]);
         }
 
-        //[Test]
+        class ItemWithBoolean
+        {
+            [CsvFormat("yes|no")]
+            public bool BooleanProperty { get; set; }
+        }
+        [Test]
         public void BooleanValue_True_CanBeSerializedAsYesNo()
         {
             var expected = "yes\r\n";
-            var result = WriteCsv.ToString(new[] { new { BooleanColumn = true } });
+            var result = WriteCsv.ToString(new[]  { new ItemWithBoolean { BooleanProperty = true } });
             Assert.AreEqual(expected, result);
         }
 

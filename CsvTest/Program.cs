@@ -4,8 +4,6 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
-using System;
-using Net.Code.Csv;
 
 //record Person(string FirstName, string LastName, [CsvFormat("yyyy-MM-dd")] DateTime BirthDate);
 
