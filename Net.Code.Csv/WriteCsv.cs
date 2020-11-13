@@ -33,13 +33,12 @@ namespace Net.Code.Csv
             char escape = '"',
             bool hasHeaders = false,
             bool append = false,
-            CsvSchema schema = null,
             CultureInfo cultureInfo = null
             )
         {
             using var stream = File.Open(path, append ? FileMode.Append : FileMode.Create, FileAccess.Write);
             var writeHeader = hasHeaders && (!append || stream.Position == 0);
-            ToStream(items, stream, encoding, delimiter, quote, escape, writeHeader, schema, cultureInfo);
+            ToStream(items, stream, encoding, delimiter, quote, escape, writeHeader, cultureInfo);
         }
 
         /// <summary>
@@ -62,12 +61,11 @@ namespace Net.Code.Csv
             char quote = '"',
             char escape = '"',
             bool hasHeaders = false,
-            CsvSchema schema = null,
             CultureInfo cultureInfo = null
             )
         {
             using var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8);
-            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, schema, cultureInfo);
+            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, cultureInfo);
         }
 
         /// <summary>
@@ -92,7 +90,7 @@ namespace Net.Code.Csv
         {
             var sb = new StringBuilder();
             using var writer = new StringWriter(sb);
-            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, schema, cultureInfo);
+            ToWriter(items, writer, delimiter, quote, escape, hasHeaders, cultureInfo);
             return sb.ToString();
         }
 
@@ -103,13 +101,11 @@ namespace Net.Code.Csv
             char quote = '"',
             char escape = '"',
             bool hasHeaders = false,
-            CsvSchema schema = null,
             CultureInfo cultureInfo = null
             )
         {
             cultureInfo ??= CultureInfo.InvariantCulture;
             var converter = new Converter(cultureInfo);
-
             var escapedQuote = $"{escape}{quote}";
             var unescapedQuote = $"{quote}";
             var properties = typeof(T).GetPropertiesWithCsvFormat();
