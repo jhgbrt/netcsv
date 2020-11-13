@@ -11,11 +11,11 @@ namespace Net.Code.Csv.Tests.Unit.Csv
 {
 
     [TestFixture]
-    public class ReaderWithSchemaTests
+    public class ReadCsvWithSchemaTests
     {
         string input =
-                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive\r\n" +
-                "\"John\";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes\r\n";
+                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
+                "\"John\";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
 
         static void Verify(IMyItem item)
         {
@@ -27,7 +27,21 @@ namespace Net.Code.Csv.Tests.Unit.Csv
             Assert.AreEqual(null, item.Count);
             Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
             Assert.IsTrue(item.IsActive);
+            Assert.Null(item.NullableCustom);
         }
+        static void Verify(dynamic item)
+        {
+            Assert.AreEqual("John", item.First);
+            Assert.AreEqual("Peters", item.Last.Value);
+            Assert.AreEqual(new DateTime(1970, 11, 15), item.BirthDate);
+            Assert.AreEqual(123, item.Quantity);
+            Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
+            Assert.AreEqual(null, item.Count);
+            Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
+            Assert.IsTrue(item.IsActive);
+            Assert.Null(item.NullableCustom);
+        }
+
 
         [Test]
         public void WhenSchemaIsManuallyCreated_ExpectedValuesAreReturned()
@@ -42,12 +56,85 @@ namespace Net.Code.Csv.Tests.Unit.Csv
                 .AddDecimal(nameof(MyRecord.LargeValue))
                 .AddDateTimeOffset(nameof(MyRecord.SomeDateTimeOffset))
                 .AddBoolean(nameof(MyRecord.IsActive), "yes", "no")
+                .Add(nameof(MyRecord.NullableCustom), s => new Custom(s), true)
                 .Schema;
 
 
             var item = ReadCsv
                 .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
                 .AsEnumerable<MyRecord>()
+                .Single();
+
+            Verify(item);
+        }
+
+        [Test]
+        public void WithSchema_CanReturnAsDynamicAndAllPropertiesAreTyped()
+        {
+            CsvSchema schema = new CsvSchemaBuilder()
+                .AddString(nameof(MyRecord.First))
+                .Add(nameof(MyRecord.Last), s => new Custom(s), false)
+                .AddDateTime(nameof(MyRecord.BirthDate), "yyyyMMdd")
+                .AddInt32(nameof(MyRecord.Quantity))
+                .Add(nameof(MyRecord.Price), s => Amount.Parse(s, CultureInfo.InvariantCulture), false)
+                .AddInt16(nameof(MyRecord.Count))
+                .AddDecimal(nameof(MyRecord.LargeValue))
+                .AddDateTimeOffset(nameof(MyRecord.SomeDateTimeOffset))
+                .AddBoolean(nameof(MyRecord.IsActive), "yes", "no")
+                .Add(nameof(MyRecord.NullableCustom), s => new Custom(s), true)
+                .Schema;
+
+            var item = ReadCsv
+                .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+                .AsEnumerable()
+                .Single();
+
+            Verify(item);
+        }
+
+        [Test]
+        public void WithoutSchema_AllPropertiesAreStrings()
+        {
+            var item = ReadCsv
+                .FromString(input, delimiter: ';', hasHeaders: true)
+                .AsEnumerable()
+                .Single();
+
+            Assert.AreEqual("John", item.First);
+            Assert.AreEqual("Peters", item.Last);
+            Assert.AreEqual("19701115", item.BirthDate);
+            Assert.AreEqual("123", item.Quantity);
+            Assert.AreEqual("US$ 5.98", item.Price);
+            Assert.AreEqual(string.Empty, item.Count);
+            Assert.AreEqual("2020-11-13T10:20:30.0000000+02:00", item.SomeDateTimeOffset);
+            Assert.AreEqual("yes", item.IsActive);
+            Assert.AreEqual(string.Empty, item.NullableCustom);
+        }
+        [Test]
+        public void WithSchemaFromRecord_CanReturnAsDynamicWithType()
+        {
+            CsvSchema schema = new CsvSchemaBuilder()
+                .From<MyRecord>()
+                .Schema;
+
+            var item = ReadCsv
+                .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+                .AsEnumerable(typeof(MyRecord))
+                .Single();
+
+            Verify(item);
+        }
+
+        [Test]
+        public void WithSchemaFromClass_CanReturnAsDynamicWithType()
+        {
+            CsvSchema schema = new CsvSchemaBuilder()
+                .From<MyClass>()
+                .Schema;
+
+            var item = ReadCsv
+                .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+                .AsEnumerable(typeof(MyClass))
                 .Single();
 
             Verify(item);
@@ -119,6 +206,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public decimal LargeValue { get; }
         public DateTimeOffset SomeDateTimeOffset { get; }
         public bool IsActive { get; }
+        public Custom? NullableCustom { get; }
 
     }
     public record MyRecord (
@@ -130,7 +218,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         int? Count,
         decimal LargeValue,
         DateTimeOffset SomeDateTimeOffset,
-        [CsvFormat("yes|no")]bool IsActive) : IMyItem;
+        [CsvFormat("yes|no")]bool IsActive,
+        Custom? NullableCustom = null) : IMyItem;
 
     public class MyClass : IMyItem
     {
@@ -145,6 +234,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv
         public DateTimeOffset SomeDateTimeOffset { get; set;}
         [CsvFormat("yes|no")]
         public bool IsActive { get; set; }
+        public Custom? NullableCustom { get; set; }
     }
 
     [TypeConverter(typeof(AmountConverter))]

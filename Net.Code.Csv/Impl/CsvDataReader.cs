@@ -40,7 +40,7 @@ namespace Net.Code.Csv.Impl
             not null => _line.Fields[i] switch 
             {
                 "" => null,
-                string s => _schema[i].FromString(s),
+                string s => _schema[i].FromString(s)
             },
             _ => _line.Fields[i]
         };

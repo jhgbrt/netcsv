@@ -10,8 +10,8 @@ namespace Net.Code.Csv.Tests.Unit.Csv
     public class WriteCsvTests
     {
         string expected =
-                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive\r\n" +
-                "John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes\r\n";
+                "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
+                "John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
         MyClass[] classItems = new[]
         {
                 new MyClass

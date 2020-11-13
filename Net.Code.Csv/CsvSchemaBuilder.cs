@@ -17,7 +17,9 @@ namespace Net.Code.Csv
         string PropertyName, 
         Type Type, 
         Func<string, object> FromString, 
-        bool AllowNull);
+        bool AllowNull)
+    {
+    }
     
     public class CsvSchemaBuilder
     {
