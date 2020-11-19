@@ -1,0 +1,19 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+    - name: build
+      run: dotnet build --configuration Release
+    - name: test
+      run: dotnet test --no-build --configuration Release Net.Code.Csv.Tests.Unit
