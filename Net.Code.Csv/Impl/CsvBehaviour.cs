@@ -26,5 +26,5 @@ public record CsvBehaviour(
     /// throw exception when a line contains too little fields, 
     /// skip empty lines and ignore quotes inside quoted fields.
     /// </summary>
-    public static CsvBehaviour Default => new CsvBehaviour();
+    public static CsvBehaviour Default => new();
 }

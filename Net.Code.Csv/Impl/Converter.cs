@@ -8,7 +8,7 @@ namespace Net.Code.Csv.Impl;
 /// </summary>
 class Converter
 {
-    CultureInfo _cultureInfo;
+    private readonly CultureInfo _cultureInfo;
     public Converter(CultureInfo cultureInfo)
     {
         _cultureInfo = cultureInfo ?? CultureInfo.InvariantCulture;

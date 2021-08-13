@@ -166,9 +166,9 @@ internal class CsvStateMachine
             // - ignore the situation and consider the quote as part of the field
             => behaviour.QuotesInsideQuotedFieldAction switch
             {
-                QuotesInsideQuotedFieldAction.ThrowException => throw new MalformedCsvException(state.RawData, state.Location, state.Fields.Count),
                 QuotesInsideQuotedFieldAction.AdvanceToNextLine => new(ParseError, state),
-                QuotesInsideQuotedFieldAction.Ignore => new(InsideQuotedField, state.AcceptTentative().AddToField())
+                QuotesInsideQuotedFieldAction.Ignore => new(InsideQuotedField, state.AcceptTentative().AddToField()),
+                _ => throw new MalformedCsvException(state.RawData, state.Location, state.Fields.Count)
             }
     };
 

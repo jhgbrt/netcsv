@@ -6,10 +6,10 @@ internal class CsvLineBuilder
     private bool _quoted;
     private Location _location = Location.Origin().NextLine();
 
-    readonly StringBuilder _field = new StringBuilder();
-    readonly StringBuilder _tentative = new StringBuilder();
-    readonly StringBuilder _rawData = new StringBuilder();
-    private List<string> _fields = new List<string>();
+    private readonly StringBuilder _field = new();
+    private readonly StringBuilder _tentative = new();
+    private readonly StringBuilder _rawData = new();
+    private readonly List<string> _fields = new();
 
     private readonly CsvLayout _layout;
     private readonly CsvBehaviour _behaviour;

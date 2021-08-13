@@ -35,7 +35,7 @@ internal record CsvLayout(
     /// The default CSV layout. Uses double quote, comma as separator,
     /// backslash as escape character, hash (#) as a comment marker and assumes no header.
     /// </summary>
-    public static CsvLayout Default => new CsvLayout();
+    public static CsvLayout Default => new();
 
     internal bool IsEscape(char currentChar, char? nextChar)
         => currentChar == Escape && (nextChar == Quote || nextChar == Escape);

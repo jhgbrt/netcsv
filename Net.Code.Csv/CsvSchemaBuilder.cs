@@ -5,7 +5,7 @@ public record CsvSchema(IList<CsvColumn> Columns)
     public CsvColumn this[int i] => Columns[i];
 }
 
-public record CsvColumn(
+public record struct CsvColumn(
     string Name,
     string PropertyName,
     Type Type,
@@ -24,8 +24,8 @@ public class CsvSchemaBuilder
         _converter = new Converter(cultureInfo ?? CultureInfo.InvariantCulture);
     }
 
-    List<CsvColumn> _columns = new List<CsvColumn>();
-    private Converter _converter;
+    private readonly List<CsvColumn> _columns = new();
+    private readonly Converter _converter;
 
     public CsvSchemaBuilder Add<T>(string name, Func<string, T> convert, bool allowNull)
     {

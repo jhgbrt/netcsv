@@ -9,7 +9,7 @@ record CsvLine(string[] Fields, bool IsEmpty)
     /// <summary>
     /// An empty CSV line
     /// </summary>
-    public static readonly CsvLine Empty = new CsvLine(Array.Empty<string>(), true);
+    public static readonly CsvLine Empty = new(Array.Empty<string>(), true);
 
     public override string ToString() => string.Join(";", Fields);
 
