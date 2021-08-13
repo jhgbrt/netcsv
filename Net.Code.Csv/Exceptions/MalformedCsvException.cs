@@ -19,98 +19,95 @@
 //	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System;
 using System.Runtime.Serialization;
-using Net.Code.Csv.Impl;
 
-namespace Net.Code.Csv
+namespace Net.Code.Csv;
+
+/// <summary>
+/// Represents the exception that is thrown when a CSV file is malformed.
+/// </summary>
+[Serializable]
+public class MalformedCsvException
+    : Exception
 {
+
     /// <summary>
-    /// Represents the exception that is thrown when a CSV file is malformed.
+    /// Initializes a new instance of the MalformedCsvException class.
     /// </summary>
-    [Serializable]
-	public class MalformedCsvException 
-		: Exception
-	{
+    /// <param name="rawData">The raw data when the error occured.</param>
+    /// <param name="columnNumber">The current position in the raw data.</param>
+    /// <param name="lineNumber">The current record index.</param>
+    /// <param name="fieldNumber">The current field index.</param>
+    internal MalformedCsvException(string rawData, Location location, int fieldNumber)
+        : base(String.Empty)
+    {
+        RawData = (rawData ?? string.Empty);
+        ColumnNumber = location.Column;
+        LineNumber = location.Line;
+        FieldNumber = fieldNumber;
+        Message = $"The CSV appears to be corrupt on line {LineNumber}, field '{FieldNumber}' at position {ColumnNumber}. Current raw data : '{RawData}'.";
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the MalformedCsvException class.
-        /// </summary>
-        /// <param name="rawData">The raw data when the error occured.</param>
-        /// <param name="columnNumber">The current position in the raw data.</param>
-        /// <param name="lineNumber">The current record index.</param>
-        /// <param name="fieldNumber">The current field index.</param>
-        internal MalformedCsvException(string rawData, Location location, int fieldNumber)
-			: base(String.Empty)
-		{
-			RawData = (rawData ?? string.Empty);
-			ColumnNumber = location.Column;
-			LineNumber = location.Line;
-			FieldNumber = fieldNumber;
-			Message = $"The CSV appears to be corrupt on line {LineNumber}, field '{FieldNumber}' at position {ColumnNumber}. Current raw data : '{RawData}'.";
-		}
+    /// <summary>
+    /// Initializes a new instance of the MalformedCsvException class with serialized data.
+    /// </summary>
+    /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+    /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
+    protected MalformedCsvException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
+        Message = info.GetString("MyMessage");
 
-		/// <summary>
-		/// Initializes a new instance of the MalformedCsvException class with serialized data.
-		/// </summary>
-		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-		/// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
-		protected MalformedCsvException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-			Message = info.GetString("MyMessage");
+        RawData = info.GetString("RawData");
+        ColumnNumber = info.GetInt32("ColumnNumber");
+        LineNumber = info.GetInt64("LineNumber");
+        FieldNumber = info.GetInt32("FieldNumber");
+    }
 
-			RawData = info.GetString("RawData");
-			ColumnNumber = info.GetInt32("ColumnNumber");
-			LineNumber = info.GetInt64("LineNumber");
-			FieldNumber = info.GetInt32("FieldNumber");
-		}
+    /// <summary>
+    /// Gets the raw data when the error occured.
+    /// </summary>
+    /// <value>The raw data when the error occured.</value>
+    public string RawData { get; }
 
-	    /// <summary>
-		/// Gets the raw data when the error occured.
-		/// </summary>
-		/// <value>The raw data when the error occured.</value>
-		public string RawData { get; }
+    /// <summary>
+    /// Gets the current position in the raw data.
+    /// </summary>
+    /// <value>The current position in the raw data.</value>
+    public int ColumnNumber { get; }
 
-	    /// <summary>
-		/// Gets the current position in the raw data.
-		/// </summary>
-		/// <value>The current position in the raw data.</value>
-		public int ColumnNumber { get; }
+    /// <summary>
+    /// Gets the current record index.
+    /// </summary>
+    /// <value>The current record index.</value>
+    public long LineNumber { get; }
 
-	    /// <summary>
-		/// Gets the current record index.
-		/// </summary>
-		/// <value>The current record index.</value>
-		public long LineNumber { get; }
+    /// <summary>
+    /// Gets the current field index.
+    /// </summary>
+    /// <value>The current record index.</value>
+    public int FieldNumber { get; }
 
-	    /// <summary>
-		/// Gets the current field index.
-		/// </summary>
-		/// <value>The current record index.</value>
-		public int FieldNumber { get; }
+    /// <summary>
+    /// Gets a message that describes the current exception.
+    /// </summary>
+    /// <value>A message that describes the current exception.</value>
+    public override string Message { get; }
 
-	    /// <summary>
-		/// Gets a message that describes the current exception.
-		/// </summary>
-		/// <value>A message that describes the current exception.</value>
-		public override string Message { get; }
+    /// <summary>
+    /// When overridden in a derived class, sets the <see cref="SerializationInfo"/> with information about the exception.
+    /// </summary>
+    /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+    /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
+    public override void GetObjectData(
+        SerializationInfo info, StreamingContext context)
+    {
+        base.GetObjectData(info, context);
 
-	    /// <summary>
-		/// When overridden in a derived class, sets the <see cref="SerializationInfo"/> with information about the exception.
-		/// </summary>
-		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-		/// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
-		public override void GetObjectData(
-            SerializationInfo info, StreamingContext context)
-		{
-			base.GetObjectData(info, context);
-
-			info.AddValue("MyMessage", Message);
-			info.AddValue("RawData", RawData);
-			info.AddValue("ColumnNumber", ColumnNumber);
-			info.AddValue("LineNumber", LineNumber);
-			info.AddValue("FieldNumber", FieldNumber);
-		}
-	}
+        info.AddValue("MyMessage", Message);
+        info.AddValue("RawData", RawData);
+        info.AddValue("ColumnNumber", ColumnNumber);
+        info.AddValue("LineNumber", LineNumber);
+        info.AddValue("FieldNumber", FieldNumber);
+    }
 }

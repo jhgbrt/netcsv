@@ -4,8 +4,8 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <SignAssembly>False</SignAssembly>
     <Title>Net.Code.Csv</Title>
-    <Version>4.0.0</Version>
-    <Copyright>Copyright 2010 Sébastien Loron, 2020 Jeroen Haegebaert</Copyright>
+    <Version>5.0.0-preview.1</Version>
+    <Copyright>Copyright 2010 Sébastien Loron, 2021 Jeroen Haegebaert</Copyright>
     <Description>.net library used for csv reading and writing.</Description>
     <Authors>Jeroen Haegebaert</Authors>
     <Company></Company>

@@ -19,42 +19,39 @@
 //	FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 //	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Net.Code.Csv.Impl;
-using System;
 using System.Runtime.Serialization;
 
-namespace Net.Code.Csv
-{
-	/// <summary>
-	/// Represents the exception that is thrown when a there is a missing field in a record of the CSV file.
-	/// </summary>
-	/// <remarks>
-	/// MissingFieldException would have been a better name, but there is already a <see cref="T:System.MissingFieldException"/>.
-	/// </remarks>
-	[Serializable]
-	public class MissingFieldCsvException
-		: MalformedCsvException
-	{
-		/// <summary>
-		/// Initializes a new instance of the MissingFieldCsvException class.
-		/// </summary>
-		/// <param name="rawData">The raw data when the error occured.</param>
-		/// <param name="columnNumber">The current position in the raw data.</param>
-		/// <param name="lineNumber">The current record index.</param>
-		/// <param name="fieldNumber">The current field index.</param>
-		internal MissingFieldCsvException(string rawData, Location location, int fieldNumber)
-			: base(rawData, location, fieldNumber)
-		{
-		}
+namespace Net.Code.Csv;
 
-		/// <summary>
-		/// Initializes a new instance of the MissingFieldCsvException class with serialized data.
-		/// </summary>
-		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-		/// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
-		protected MissingFieldCsvException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-		}
-	}
+/// <summary>
+/// Represents the exception that is thrown when a there is a missing field in a record of the CSV file.
+/// </summary>
+/// <remarks>
+/// MissingFieldException would have been a better name, but there is already a <see cref="T:System.MissingFieldException"/>.
+/// </remarks>
+[Serializable]
+public class MissingFieldCsvException
+    : MalformedCsvException
+{
+    /// <summary>
+    /// Initializes a new instance of the MissingFieldCsvException class.
+    /// </summary>
+    /// <param name="rawData">The raw data when the error occured.</param>
+    /// <param name="columnNumber">The current position in the raw data.</param>
+    /// <param name="lineNumber">The current record index.</param>
+    /// <param name="fieldNumber">The current field index.</param>
+    internal MissingFieldCsvException(string rawData, Location location, int fieldNumber)
+        : base(rawData, location, fieldNumber)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the MissingFieldCsvException class with serialized data.
+    /// </summary>
+    /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+    /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
+    protected MissingFieldCsvException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
+    }
 }
