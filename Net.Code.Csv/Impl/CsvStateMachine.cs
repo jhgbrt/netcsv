@@ -1,4 +1,5 @@
 namespace Net.Code.Csv.Impl;
+using ProcessStateFunc = Func<CsvLineBuilder, CsvBehaviour, ProcessingResult>;
 
 internal class CsvStateMachine
 {
@@ -18,30 +19,24 @@ internal class CsvStateMachine
     public IEnumerable<CsvLine> Lines() => LinesImpl().Where(line => !line.IsEmpty || !_behaviour.SkipEmptyLines);
     private IEnumerable<CsvLine> LinesImpl()
     {
-        Func<CsvLineBuilder, CsvBehaviour, ProcessingResult> ProcessCharacter = BeginningOfLine;
+        ProcessStateFunc ProcessState = BeginningOfLine;
         var state = new CsvLineBuilder(_csvLayout, _behaviour);
         while (state.ReadNext(_textReader))
         {
-            var result = ProcessCharacter(state, _behaviour);
+            var result = ProcessState(state, _behaviour);
             var line = result.Line;
             if (line.HasValue)
             {
                 FieldCount = state.FieldCount;
                 yield return line.Value;
             }
-            ProcessCharacter = result.Next;
+            ProcessState = result.Next;
             state = result.State;
         }
 
         var finalLine = state.NextField().ToLine();
         FieldCount = state.FieldCount;
         yield return finalLine;
-    }
-
-    record ProcessingResult(Option<CsvLine> Line, Func<CsvLineBuilder, CsvBehaviour, ProcessingResult> Next, CsvLineBuilder State)
-    {
-        public ProcessingResult(Func<CsvLineBuilder, CsvBehaviour, ProcessingResult> Next, CsvLineBuilder state, CsvLine line = null)
-            : this(new Option<CsvLine>(line), Next, state) { }
     }
 
     // begin of line can be newline, comment, quote or other 
@@ -182,4 +177,10 @@ internal class CsvStateMachine
             // As long as we're not on the EOL, ignore any read characters
             => new(ParseError, state.Ignore())
     };
+}
+
+record ProcessingResult(Option<CsvLine> Line, ProcessStateFunc Next, CsvLineBuilder State)
+{
+    public ProcessingResult(ProcessStateFunc Next, CsvLineBuilder state, CsvLine line = null)
+        : this(new Option<CsvLine>(line), Next, state) { }
 }

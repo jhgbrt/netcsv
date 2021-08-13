@@ -1,5 +1,4 @@
 ﻿namespace Net.Code.Csv.Impl;
-
 internal class CsvLineBuilder
 {
     private CsvChar _currentChar;
@@ -66,24 +65,19 @@ internal class CsvLineBuilder
 
     internal CsvLineBuilder NextField()
     {
-        var result = _field.ToString();
-        if (ShouldTrim(_quoted, _behaviour.TrimmingOptions))
+        var result = _behaviour.TrimmingOptions switch
         {
-            result = result.Trim();
-        }
+            ValueTrimmingOptions.All => _field.Trim(),
+            ValueTrimmingOptions.QuotedOnly when _quoted => _field.Trim(),
+            ValueTrimmingOptions.UnquotedOnly when !_quoted=> _field.Trim(),
+            _ => _field.ToString()
+        };
+
         _field.Clear();
         _fields.Add(result);
         _quoted = false;
         return this;
     }
-    internal bool ShouldTrim(bool quoted, ValueTrimmingOptions trimmingOptions)
-        => trimmingOptions switch
-        {
-            ValueTrimmingOptions.All => true,
-            ValueTrimmingOptions.QuotedOnly => quoted,
-            ValueTrimmingOptions.UnquotedOnly => !quoted,
-            _ => false
-        };
 
     internal CsvLineBuilder MarkQuoted()
     {
