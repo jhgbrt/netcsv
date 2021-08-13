@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
+using CsvTest;
 
 //record Person(string FirstName, string LastName, [CsvFormat("yyyy-MM-dd")] DateTime BirthDate);
 
@@ -41,68 +42,72 @@ using var reader = ReadCsv.FromFile(
 foreach (var item in reader.AsEnumerable<MyItem>())
     Console.WriteLine(item);
 
-class MyFormatProvider : IFormatProvider
+
+namespace CsvTest
 {
-    public object GetFormat(Type formatType) => formatType == typeof(DateTimeFormatInfo) ? this : null;
+    class MyFormatProvider : IFormatProvider
+    {
+        public object GetFormat(Type formatType) => formatType == typeof(DateTimeFormatInfo) ? this : null;
+    }
+
+    public class CustomTypeConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            if (value is string s) return new Custom(s);
+            return base.ConvertFrom(context, culture, value);
+        }
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            if (value is Custom c) return c.Value;
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
+
+    [TypeConverter(typeof(CustomTypeConverter))]
+    public struct Custom
+    {
+        public Custom(string value) { Value = value; }
+        public string Value { get; set; }
+        public override string ToString() => Value;
+    }
+
+    [TypeConverter(typeof(AmountConverter))]
+    public struct Amount
+    {
+        public string Currency { get; set; }
+        public decimal Value { get; set; }
+        public static Amount Parse(string s, IFormatProvider provider)
+        {
+            var parts = s.Split(' ');
+            var currency = parts[0];
+            var decimalValue = decimal.Parse(parts[1], provider);
+            return new Amount { Currency = currency, Value = decimalValue };
+        }
+        public string ToString(IFormatProvider provider)
+        {
+            return $"{Currency} {Value.ToString(provider)}";
+        }
+
+        public override string ToString() => ToString(CultureInfo.CurrentCulture);
+    }
+
+    public class AmountConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string);
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => destinationType == typeof(Amount);
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            if (value is string s) return Amount.Parse(s, culture);
+            return base.ConvertFrom(context, culture, value);
+        }
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            if (value is Amount a && destinationType == typeof(string)) return a.ToString(culture);
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
+
+    public record MyItem(string First, Custom Last, DateTime BirthDate, int Quantity, decimal Price);
 }
-
-public class CustomTypeConverter : TypeConverter
-{
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-        if (value is string s) return new Custom(s);
-        return base.ConvertFrom(context, culture, value);
-    }
-    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-    {
-        if (value is Custom c) return c.Value;
-        return base.ConvertTo(context, culture, value, destinationType);
-    }
-}
-
-[TypeConverter(typeof(CustomTypeConverter))]
-public struct Custom
-{
-    public Custom(string value) { Value = value; }
-    public string Value { get; set; }
-    public override string ToString() => Value;
-}
-
-[TypeConverter(typeof(AmountConverter))]
-public struct Amount
-{
-    public string Currency { get; set; }
-    public decimal Value { get; set; }
-    public static Amount Parse(string s, IFormatProvider provider)
-    {
-        var parts = s.Split(' ');
-        var currency = parts[0];
-        var decimalValue = decimal.Parse(parts[1], provider);
-        return new Amount { Currency = currency, Value = decimalValue } ;
-    }
-    public string ToString(IFormatProvider provider)
-    {
-        return $"{Currency} {Value.ToString(provider)}";
-    }
-
-    public override string ToString() => ToString(CultureInfo.CurrentCulture);
-}
-
-public class AmountConverter : TypeConverter
-{
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => sourceType == typeof(string);
-    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => destinationType == typeof(Amount);
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-        if (value is string s) return Amount.Parse(s, culture);
-        return base.ConvertFrom(context, culture, value);
-    }
-    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-    {
-        if (value is Amount a && destinationType == typeof(string)) return a.ToString(culture);
-        return base.ConvertTo(context, culture, value, destinationType);
-    }
-}
-
-public record MyItem(string First, Custom Last, DateTime BirthDate, int Quantity, decimal Price);
