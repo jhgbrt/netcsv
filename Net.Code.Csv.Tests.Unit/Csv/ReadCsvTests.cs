@@ -3,7 +3,7 @@
 [TestFixture]
 public class ReadCsvTests
 {
-    private string[] Read(string data,
+    private static string[] Read(string data,
         char quote = '"',
         char delimiter = ',',
         char escape = '"',
@@ -159,6 +159,6 @@ public class ReadCsvTests
     {
         var data = "\r\n";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { }, result);
+        CollectionAssert.AreEqual(Array.Empty<string>(), result);
     }
 }

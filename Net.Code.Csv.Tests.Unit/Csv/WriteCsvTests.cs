@@ -6,10 +6,10 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 [TestFixture]
 public class WriteCsvTests
 {
-    string expected =
+    private readonly string expected =
             $"First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom{NewLine}" +
             $"John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;{NewLine}";
-    MyClass[] classItems = new[]
+    private readonly MyClass[] classItems = new[]
     {
                 new MyClass
                 {
@@ -25,7 +25,7 @@ public class WriteCsvTests
                 }
             };
 
-    MyRecord[] recordItems = new[]
+    private readonly MyRecord[] recordItems = new[]
     {
                 new MyRecord(
                     First: "John",

@@ -70,7 +70,7 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 ,Blankman,,SomeTown, SD, 00298
 ""Joan """"the bone"""", Anne"",Jet,""9th, at Terrace plc"",Desert City,CO,00123";
 
-    public static CsvSchema SampleData1Schema = new CsvSchemaBuilder()
+    public static readonly CsvSchema SampleData1Schema = new CsvSchemaBuilder()
         .AddString("First Name")
         .AddString("Last Name")
         .AddString("Address")
@@ -79,7 +79,7 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
         .AddString("Zip Code")
         .Schema;
 
-    public static CsvSchema SampleTypedData1Schema = new CsvSchemaBuilder(CultureInfo.InvariantCulture)
+    public static readonly CsvSchema SampleTypedData1Schema = new CsvSchemaBuilder(CultureInfo.InvariantCulture)
         .AddBoolean(typeof(bool).FullName)
         .AddDateTime(typeof(DateTime).FullName, "yyyy-MM-dd")
         .AddSingle(typeof(float).FullName)

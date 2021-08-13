@@ -77,11 +77,9 @@ public class CsvReaderTest
     {
         Assert.Throws<IndexOutOfRangeException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1))
-            {
-                csv.Read();
-                var s = csv[-1];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1);
+            csv.Read();
+            var s = csv[-1];
         });
     }
 
@@ -90,11 +88,9 @@ public class CsvReaderTest
     {
         Assert.Throws<IndexOutOfRangeException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1))
-            {
-                csv.Read();
-                var s = csv[CsvReaderSampleData.SampleData1RecordCount];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1);
+            csv.Read();
+            var s = csv[CsvReaderSampleData.SampleData1RecordCount];
         });
     }
 
@@ -103,11 +99,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1))
-            {
-                csv.Read();
-                var s = csv["asdf"];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1);
+            csv.Read();
+            var s = csv["asdf"];
         });
     }
 
@@ -116,11 +110,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: false))
-            {
-                csv.Read();
-                var s = csv[CsvReaderSampleData.SampleData1Header0];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: false);
+            csv.Read();
+            var s = csv[CsvReaderSampleData.SampleData1Header0];
         });
     }
 
@@ -129,11 +121,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: false))
-            {
-                csv.Read();
-                var s = csv[null];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: false);
+            csv.Read();
+            var s = csv[null];
         });
     }
 
@@ -142,11 +132,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: false))
-            {
-                csv.Read();
-                var s = csv[string.Empty];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: false);
+            csv.Read();
+            var s = csv[string.Empty];
         });
     }
 
@@ -155,11 +143,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true))
-            {
-                csv.Read();
-                var s = csv[null];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true);
+            csv.Read();
+            var s = csv[null];
         });
     }
 
@@ -168,11 +154,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true))
-            {
-                csv.Read();
-                var s = csv[string.Empty];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true);
+            csv.Read();
+            var s = csv[string.Empty];
         });
     }
 
@@ -181,11 +165,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true))
-            {
-                csv.Read();
-                var s = csv["asdf"];
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true);
+            csv.Read();
+            var s = csv["asdf"];
         });
     }
 
@@ -198,11 +180,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1))
-            {
-                csv.Read();
-                csv.GetValues(null);
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1);
+            csv.Read();
+            csv.GetValues(null);
         });
     }
 
@@ -211,11 +191,9 @@ public class CsvReaderTest
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1))
-            {
-                csv.Read();
-                csv.GetValues(new string[CsvReaderSampleData.SampleData1RecordCount - 1]);
-            }
+            using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1);
+            csv.Read();
+            csv.GetValues(new string[CsvReaderSampleData.SampleData1RecordCount - 1]);
         });
     }
 
@@ -231,16 +209,14 @@ public class CsvReaderTest
     {
         const string data = "1\r\n\r\n1";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -275,16 +251,14 @@ public class CsvReaderTest
     {
         const string data = "1\r2\n";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("2", csv[0]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("2", csv[0]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -292,19 +266,17 @@ public class CsvReaderTest
     {
         const string data = "\"\n\r\n\n\r\r\",,\t,\n";
 
-        using (var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly))
-        {
-            Assert.IsTrue(csv.Read());
+        using var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
+        Assert.IsTrue(csv.Read());
 
-            Assert.AreEqual(4, csv.FieldCount);
+        Assert.AreEqual(4, csv.FieldCount);
 
-            Assert.AreEqual("\n\r\n\n\r\r", csv[0]);
-            Assert.AreEqual("", csv[1]);
-            Assert.AreEqual("", csv[2]);
-            Assert.AreEqual("", csv[3]);
+        Assert.AreEqual("\n\r\n\n\r\r", csv[0]);
+        Assert.AreEqual("", csv[1]);
+        Assert.AreEqual("", csv[2]);
+        Assert.AreEqual("", csv[3]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
 
@@ -312,27 +284,23 @@ public class CsvReaderTest
     public void ParsingTest6()
     {
         const string data = "1,2";
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual("2", csv[1]);
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual("2", csv[1]);
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void ParsingTest7()
     {
         const string data = "\r\n1\r\n";
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.AreEqual("1", csv[0]);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.AreEqual("1", csv[0]);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -340,15 +308,13 @@ public class CsvReaderTest
     {
         const string data = "\"bob said, \"\"Hey!\"\"\",2, 3 ";
 
-        using (var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("bob said, \"Hey!\"", csv[0]);
-            Assert.AreEqual("2", csv[1]);
-            Assert.AreEqual("3", csv[2]);
-            Assert.AreEqual(3, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("bob said, \"Hey!\"", csv[0]);
+        Assert.AreEqual("2", csv[1]);
+        Assert.AreEqual("3", csv[2]);
+        Assert.AreEqual(3, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -356,13 +322,11 @@ public class CsvReaderTest
     {
         const string data = ",";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(String.Empty, csv[0]);
-            Assert.AreEqual(String.Empty, csv[1]);
-            Assert.AreEqual(2, csv.FieldCount);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(String.Empty, csv[0]);
+        Assert.AreEqual(String.Empty, csv[1]);
+        Assert.AreEqual(2, csv.FieldCount);
     }
 
     [Test]
@@ -370,16 +334,14 @@ public class CsvReaderTest
     {
         const string data = "1\r2";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("2", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("2", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -387,16 +349,14 @@ public class CsvReaderTest
     {
         const string data = "1\n2";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("2", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("2", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -404,16 +364,14 @@ public class CsvReaderTest
     {
         const string data = "1\r\n2";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("2", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("2", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -421,13 +379,11 @@ public class CsvReaderTest
     {
         const string data = "1\r";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -435,13 +391,11 @@ public class CsvReaderTest
     {
         const string data = "1\n";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -449,13 +403,11 @@ public class CsvReaderTest
     {
         const string data = "1\r\n";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -463,14 +415,12 @@ public class CsvReaderTest
     {
         const string data = "1\r2\n";
 
-        using (var csv = ReadCsv.FromString(data, delimiter: '\r', trimmingOptions: ValueTrimmingOptions.UnquotedOnly))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual("2", csv[1]);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data, delimiter: '\r', trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual("2", csv[1]);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -478,11 +428,9 @@ public class CsvReaderTest
     {
         const string data = "\"July 4th, 2005\"";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("July 4th, 2005", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("July 4th, 2005", csv[0]);
     }
 
     [Test]
@@ -490,11 +438,9 @@ public class CsvReaderTest
     {
         const string data = " 1";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(" 1", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(" 1", csv[0]);
     }
 
     [Test]
@@ -502,10 +448,8 @@ public class CsvReaderTest
     {
         string data = String.Empty;
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -513,16 +457,14 @@ public class CsvReaderTest
     {
         const string data = "user_id,name\r\n1,Bruce";
 
-        using (var csv = ReadCsv.FromString(data, hasHeaders: true))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual("Bruce", csv[1]);
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.AreEqual("1", csv["user_id"]);
-            Assert.AreEqual("Bruce", csv["name"]);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data, hasHeaders: true);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual("Bruce", csv[1]);
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.AreEqual("1", csv["user_id"]);
+        Assert.AreEqual("Bruce", csv["name"]);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -530,11 +472,9 @@ public class CsvReaderTest
     {
         const string data = "\"data \r\n here\"";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("data \r\n here", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("data \r\n here", csv[0]);
     }
 
     [Test]
@@ -542,21 +482,19 @@ public class CsvReaderTest
     {
         const string data = ",,\n1,";
 
-        using (var csv = ReadCsv.FromString(data, delimiter: ',', skipEmptyLines: false, missingFieldAction: MissingFieldAction.ReplaceByNull))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(3, csv.FieldCount);
+        using var csv = ReadCsv.FromString(data, delimiter: ',', skipEmptyLines: false, missingFieldAction: MissingFieldAction.ReplaceByNull);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(3, csv.FieldCount);
 
-            Assert.AreEqual(String.Empty, csv[0]);
-            Assert.AreEqual(String.Empty, csv[1]);
-            Assert.AreEqual(String.Empty, csv[2]);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(String.Empty, csv[1]);
-            Assert.IsNull(csv[2]);
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.AreEqual(String.Empty, csv[0]);
+        Assert.AreEqual(String.Empty, csv[1]);
+        Assert.AreEqual(String.Empty, csv[2]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(String.Empty, csv[1]);
+        Assert.IsNull(csv[2]);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -564,11 +502,9 @@ public class CsvReaderTest
     {
         const string data = "\"double\"\"\"\"double quotes\"";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("double\"\"double quotes", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("double\"\"double quotes", csv[0]);
     }
 
     [Test]
@@ -576,11 +512,9 @@ public class CsvReaderTest
     {
         const string data = "1\r";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
     }
 
     [Test]
@@ -588,11 +522,9 @@ public class CsvReaderTest
     {
         const string data = "1\r\n";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
     }
 
     [Test]
@@ -600,11 +532,9 @@ public class CsvReaderTest
     {
         const string data = "1\n";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
     }
 
     [Test]
@@ -612,13 +542,11 @@ public class CsvReaderTest
     {
         const string data = "'bob said, ''Hey!''',2, 3 ";
 
-        using (var csv = ReadCsv.FromString(data, quote: '\'', escape: '\'', trimmingOptions: ValueTrimmingOptions.UnquotedOnly))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("bob said, 'Hey!'", csv[0]);
-            Assert.AreEqual("2", csv[1]);
-            Assert.AreEqual("3", csv[2]);
-        }
+        using var csv = ReadCsv.FromString(data, quote: '\'', escape: '\'', trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("bob said, 'Hey!'", csv[0]);
+        Assert.AreEqual("2", csv[1]);
+        Assert.AreEqual("3", csv[2]);
     }
 
     [Test]
@@ -626,11 +554,9 @@ public class CsvReaderTest
     {
         const string data = "\"data \"\" here\"";
 
-        using (var csv = ReadCsv.FromString(data, quote: '\0', escape: '\\'))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("\"data \"\" here\"", csv[0]);
-        }
+        using var csv = ReadCsv.FromString(data, quote: '\0', escape: '\\');
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("\"data \"\" here\"", csv[0]);
     }
 
     [Test]
@@ -638,14 +564,12 @@ public class CsvReaderTest
     {
         string data = new String('a', 75) + "," + new String('b', 75);
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(new String('a', 75), csv[0]);
-            Assert.AreEqual(new String('b', 75), csv[1]);
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(new String('a', 75), csv[0]);
+        Assert.AreEqual(new String('b', 75), csv[1]);
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -653,16 +577,14 @@ public class CsvReaderTest
     {
         const string data = "1\r\n\r\n1";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -670,15 +592,13 @@ public class CsvReaderTest
     {
         const string data = "1\r\n# bunch of crazy stuff here\r\n1";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
     }
 
     [Test]
@@ -686,22 +606,20 @@ public class CsvReaderTest
     {
         const string data = "\"1\",Bruce\r\n\"2\n\",Toni\r\n\"3\",Brian\r\n";
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("1", csv[0]);
-            Assert.AreEqual("Bruce", csv[1]);
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("2\n", csv[0]);
-            Assert.AreEqual("Toni", csv[1]);
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("3", csv[0]);
-            Assert.AreEqual("Brian", csv[1]);
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("1", csv[0]);
+        Assert.AreEqual("Bruce", csv[1]);
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("2\n", csv[0]);
+        Assert.AreEqual("Toni", csv[1]);
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("3", csv[0]);
+        Assert.AreEqual("Brian", csv[1]);
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -709,13 +627,11 @@ public class CsvReaderTest
     {
         const string data = "\"double\\\\\\\\double backslash\"";
 
-        using (var csv = ReadCsv.FromString(data, escape: '\\'))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("double\\\\double backslash", csv[0]);
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data, escape: '\\');
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("double\\\\double backslash", csv[0]);
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -724,164 +640,143 @@ public class CsvReaderTest
         const string data = "\"Chicane\", \"Love on the Run\", \"Knight Rider\", \"This field contains a comma, but it doesn't matter as the field is quoted\"\r\n" +
                   "\"Samuel Barber\", \"Adagio for Strings\", \"Classical\", \"This field contains a double quote character, \"\", but it doesn't matter as it is escaped\"";
 
-        using (var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("Chicane", csv[0]);
-            Assert.AreEqual("Love on the Run", csv[1]);
-            Assert.AreEqual("Knight Rider", csv[2]);
-            Assert.AreEqual("This field contains a comma, but it doesn't matter as the field is quoted", csv[3]);
-            Assert.AreEqual(4, csv.FieldCount);
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("Samuel Barber", csv[0]);
-            Assert.AreEqual("Adagio for Strings", csv[1]);
-            Assert.AreEqual("Classical", csv[2]);
-            Assert.AreEqual("This field contains a double quote character, \", but it doesn't matter as it is escaped", csv[3]);
-            Assert.AreEqual(4, csv.FieldCount);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("Chicane", csv[0]);
+        Assert.AreEqual("Love on the Run", csv[1]);
+        Assert.AreEqual("Knight Rider", csv[2]);
+        Assert.AreEqual("This field contains a comma, but it doesn't matter as the field is quoted", csv[3]);
+        Assert.AreEqual(4, csv.FieldCount);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("Samuel Barber", csv[0]);
+        Assert.AreEqual("Adagio for Strings", csv[1]);
+        Assert.AreEqual("Classical", csv[2]);
+        Assert.AreEqual("This field contains a double quote character, \", but it doesn't matter as it is escaped", csv[3]);
+        Assert.AreEqual(4, csv.FieldCount);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void ParsingTest35()
     {
         var data = "\t";
-        using (var csv = ReadCsv.FromString(data, delimiter: '\t'))
-        {
-            Assert.AreEqual(2, csv.FieldCount);
+        using var csv = ReadCsv.FromString(data, delimiter: '\t');
+        Assert.AreEqual(2, csv.FieldCount);
 
-            Assert.IsTrue(csv.Read());
+        Assert.IsTrue(csv.Read());
 
-            Assert.AreEqual(string.Empty, csv[0]);
-            Assert.AreEqual(string.Empty, csv[1]);
+        Assert.AreEqual(string.Empty, csv[0]);
+        Assert.AreEqual(string.Empty, csv[1]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void ParsingTest36()
     {
-        using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true))
-        {
-        }
+        using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, hasHeaders: true);
     }
 
     [Test]
     public void ParsingTest37()
     {
-        using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1,
+        using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1,
             hasHeaders: true,
             trimmingOptions: ValueTrimmingOptions.UnquotedOnly,
-            schema: CsvReaderSampleData.SampleData1Schema))
-        {
-            CsvReaderSampleData.CheckSampleData1(csv, true, false);
-        }
+            schema: CsvReaderSampleData.SampleData1Schema);
+        CsvReaderSampleData.CheckSampleData1(csv, true, false);
     }
 
     [Test]
     public void ParsingTest38()
     {
-        using (var reader = ReadCsv.FromString("abc,def,ghi\n"))
-        {
-            int fieldCount = reader.FieldCount;
+        using var reader = ReadCsv.FromString("abc,def,ghi\n");
+        int fieldCount = reader.FieldCount;
 
-            Assert.IsTrue(reader.Read());
-            Assert.AreEqual("abc", reader[0]);
-            Assert.AreEqual("def", reader[1]);
-            Assert.AreEqual("ghi", reader[2]);
+        Assert.IsTrue(reader.Read());
+        Assert.AreEqual("abc", reader[0]);
+        Assert.AreEqual("def", reader[1]);
+        Assert.AreEqual("ghi", reader[2]);
 
-            Assert.IsFalse(reader.Read());
-        }
+        Assert.IsFalse(reader.Read());
     }
 
     [Test]
     public void ParsingTest39()
     {
-        using (var csv = ReadCsv.FromString("00,01,   \n10,11,   ", trimmingOptions: ValueTrimmingOptions.UnquotedOnly))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("00", csv[0]);
-            Assert.AreEqual("01", csv[1]);
-            Assert.AreEqual("", csv[2]);
+        using var csv = ReadCsv.FromString("00,01,   \n10,11,   ", trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("00", csv[0]);
+        Assert.AreEqual("01", csv[1]);
+        Assert.AreEqual("", csv[2]);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("10", csv[0]);
-            Assert.AreEqual("11", csv[1]);
-            Assert.AreEqual("", csv[2]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("10", csv[0]);
+        Assert.AreEqual("11", csv[1]);
+        Assert.AreEqual("", csv[2]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void ParsingTest40()
     {
         const string data = "\"00\",\n\"10\",";
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.AreEqual(2, csv.FieldCount);
+        using var csv = ReadCsv.FromString(data);
+        Assert.AreEqual(2, csv.FieldCount);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("00", csv[0]);
-            Assert.AreEqual(string.Empty, csv[1]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("00", csv[0]);
+        Assert.AreEqual(string.Empty, csv[1]);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("10", csv[0]);
-            Assert.AreEqual(string.Empty, csv[1]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("10", csv[0]);
+        Assert.AreEqual(string.Empty, csv[1]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void UnquotedValuesShouldBeTrimmed()
     {
         const string data = "First record          ,Second record";
-        using (var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly))
-        {
-            Assert.AreEqual(2, csv.FieldCount);
+        using var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
+        Assert.AreEqual(2, csv.FieldCount);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("First record", csv[0]);
-            Assert.AreEqual("Second record", csv[1]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("First record", csv[0]);
+        Assert.AreEqual("Second record", csv[1]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void SpaceBecomesEmptyField()
     {
         var data = " ";
-        using (var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly, skipEmptyLines: false))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(1, csv.FieldCount);
-            Assert.AreEqual(string.Empty, csv[0]);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly, skipEmptyLines: false);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(1, csv.FieldCount);
+        Assert.AreEqual(string.Empty, csv[0]);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void ParsingTest43()
     {
         var data = "a,b\n   ";
-        using (var csv = ReadCsv.FromString(data,
+        using var csv = ReadCsv.FromString(data,
             missingFieldAction: MissingFieldAction.ReplaceByNull,
             trimmingOptions: ValueTrimmingOptions.All,
-            skipEmptyLines: false))
+            skipEmptyLines: false);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(2, csv.FieldCount);
+        Assert.AreEqual("a", csv[0]);
+        Assert.AreEqual("b", csv[1]);
 
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(2, csv.FieldCount);
-            Assert.AreEqual("a", csv[0]);
-            Assert.AreEqual("b", csv[1]);
-
-            csv.Read();
-            Assert.AreEqual(string.Empty, csv[0]);
-            Assert.AreEqual(null, csv[1]);
-        }
+        csv.Read();
+        Assert.AreEqual(string.Empty, csv[0]);
+        Assert.AreEqual(null, csv[1]);
     }
 
     #endregion
@@ -900,27 +795,23 @@ public class CsvReaderTest
 
         raw[44 - 14] = ' '; // skip comma
 
-        string data = new string(raw);
+        var data = new string(raw);
 
-        using (var csv = ReadCsv.FromString(data))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(data, csv[0]);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromString(data);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(data, csv[0]);
+        Assert.IsFalse(csv.Read());
     }
 
-    byte[] ToByteArray(string s)
+    static byte[] ToByteArray(string s)
     {
-        using (MemoryStream stream = new MemoryStream())
+        using MemoryStream stream = new();
+        using (TextWriter writer = new StreamWriter(stream, Encoding.Unicode))
         {
-            using (TextWriter writer = new StreamWriter(stream, Encoding.Unicode))
-            {
-                writer.WriteLine(s);
-            }
-
-            return stream.ToArray();
+            writer.WriteLine(s);
         }
+
+        return stream.ToArray();
     }
 
     [Test]
@@ -928,12 +819,10 @@ public class CsvReaderTest
     {
         var test = "München";
         var buffer = ToByteArray(test);
-        using (var csv = ReadCsv.FromStream(new MemoryStream(buffer), encoding: Encoding.Unicode))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(test, csv[0]);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromStream(new MemoryStream(buffer), encoding: Encoding.Unicode);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(test, csv[0]);
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -941,12 +830,10 @@ public class CsvReaderTest
     {
         var test = "München";
         var buffer = ToByteArray(test);
-        using (var csv = ReadCsv.FromStream(new MemoryStream(buffer), encoding: Encoding.Unicode))
-        {
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(test, csv[0]);
-            Assert.IsFalse(csv.Read());
-        }
+        using var csv = ReadCsv.FromStream(new MemoryStream(buffer), encoding: Encoding.Unicode);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(test, csv[0]);
+        Assert.IsFalse(csv.Read());
     }
 
     #endregion
@@ -956,12 +843,10 @@ public class CsvReaderTest
     [Test]
     public void FieldCountTest1()
     {
-        using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1,
+        using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1,
             trimmingOptions: ValueTrimmingOptions.UnquotedOnly
-            ))
-        {
-            CsvReaderSampleData.CheckSampleData1(csv, false, true);
-        }
+            );
+        CsvReaderSampleData.CheckSampleData1(csv, false, true);
     }
 
     #endregion
@@ -971,52 +856,46 @@ public class CsvReaderTest
     [Test]
     public void GetFieldHeadersTest1()
     {
-        using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1))
-        {
-            string[] headers = csv.GetFieldHeaders();
+        using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1);
+        string[] headers = csv.GetFieldHeaders();
 
-            Assert.IsNotNull(headers);
-            Assert.AreEqual(6, headers.Length);
-        }
+        Assert.IsNotNull(headers);
+        Assert.AreEqual(6, headers.Length);
     }
 
     [Test]
     public void GetFieldHeadersTest2()
     {
-        using (var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, schema: CsvReaderSampleData.SampleData1Schema))
-        {
-            string[] headers = csv.GetFieldHeaders();
+        using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1, schema: CsvReaderSampleData.SampleData1Schema);
+        string[] headers = csv.GetFieldHeaders();
 
-            Assert.IsNotNull(headers);
-            Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, headers.Length);
+        Assert.IsNotNull(headers);
+        Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, headers.Length);
 
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header0, headers[0]);
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header1, headers[1]);
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header2, headers[2]);
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header3, headers[3]);
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header4, headers[4]);
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header5, headers[5]);
+        Assert.AreEqual(CsvReaderSampleData.SampleData1Header0, headers[0]);
+        Assert.AreEqual(CsvReaderSampleData.SampleData1Header1, headers[1]);
+        Assert.AreEqual(CsvReaderSampleData.SampleData1Header2, headers[2]);
+        Assert.AreEqual(CsvReaderSampleData.SampleData1Header3, headers[3]);
+        Assert.AreEqual(CsvReaderSampleData.SampleData1Header4, headers[4]);
+        Assert.AreEqual(CsvReaderSampleData.SampleData1Header5, headers[5]);
 
-            Assert.AreEqual(0, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header0));
-            Assert.AreEqual(1, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header1));
-            Assert.AreEqual(2, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header2));
-            Assert.AreEqual(3, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header3));
-            Assert.AreEqual(4, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header4));
-            Assert.AreEqual(5, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header5));
-        }
+        Assert.AreEqual(0, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header0));
+        Assert.AreEqual(1, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header1));
+        Assert.AreEqual(2, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header2));
+        Assert.AreEqual(3, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header3));
+        Assert.AreEqual(4, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header4));
+        Assert.AreEqual(5, csv.GetOrdinal(CsvReaderSampleData.SampleData1Header5));
     }
 
     [Test]
     public void OnlyComments()
     {
         var data = "#asdf\n\n#asdf,asdf";
-        using (var csv = ReadCsv.FromString(data, hasHeaders: true))
-        {
-            string[] headers = csv.GetFieldHeaders();
+        using var csv = ReadCsv.FromString(data, hasHeaders: true);
+        string[] headers = csv.GetFieldHeaders();
 
-            Assert.IsNotNull(headers);
-            Assert.AreEqual(0, headers.Length);
-        }
+        Assert.IsNotNull(headers);
+        Assert.AreEqual(0, headers.Length);
     }
 
     [Test]
@@ -1024,18 +903,16 @@ public class CsvReaderTest
     {
         var data = ",  ,,aaa,\"   \",,,";
 
-        using (var csv = ReadCsv.FromString(data, hasHeaders: true))
-        {
-            Assert.IsFalse(csv.Read());
-            Assert.AreEqual(8, csv.FieldCount);
+        using var csv = ReadCsv.FromString(data, hasHeaders: true);
+        Assert.IsFalse(csv.Read());
+        Assert.AreEqual(8, csv.FieldCount);
 
-            string[] headers = csv.GetFieldHeaders();
-            Assert.AreEqual(csv.FieldCount, headers.Length);
+        string[] headers = csv.GetFieldHeaders();
+        Assert.AreEqual(csv.FieldCount, headers.Length);
 
-            Assert.AreEqual("aaa", headers[3]);
-            foreach (var index in new int[] { 0, 1, 2, 4, 5, 6, 7 })
-                Assert.AreEqual("Column" + index.ToString(), headers[index]);
-        }
+        Assert.AreEqual("aaa", headers[3]);
+        foreach (var index in new int[] { 0, 1, 2, 4, 5, 6, 7 })
+            Assert.AreEqual("Column" + index.ToString(), headers[index]);
     }
 
     #endregion
@@ -1046,39 +923,35 @@ public class CsvReaderTest
     public void SkipEmptyLinesTest1()
     {
         var data = "00\n\n10";
-        using (var csv = ReadCsv.FromString(data, skipEmptyLines: false))
-        {
-            Assert.AreEqual(1, csv.FieldCount);
+        using var csv = ReadCsv.FromString(data, skipEmptyLines: false);
+        Assert.AreEqual(1, csv.FieldCount);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("00", csv[0]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("00", csv[0]);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual(string.Empty, csv[0]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual(string.Empty, csv[0]);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("10", csv[0]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("10", csv[0]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
     public void SkipEmptyLinesTest2()
     {
         var data = "00\n\n10";
-        using (var csv = ReadCsv.FromString(data, skipEmptyLines: true))
-        {
-            Assert.AreEqual(1, csv.FieldCount);
+        using var csv = ReadCsv.FromString(data, skipEmptyLines: true);
+        Assert.AreEqual(1, csv.FieldCount);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("00", csv[0]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("00", csv[0]);
 
-            Assert.IsTrue(csv.Read());
-            Assert.AreEqual("10", csv[0]);
+        Assert.IsTrue(csv.Read());
+        Assert.AreEqual("10", csv[0]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     #endregion
@@ -1101,15 +974,13 @@ public class CsvReaderTest
     [TestCase(" aaa , bbb ,\" ccc \"", ValueTrimmingOptions.UnquotedOnly, new string[] { "aaa", "bbb", " ccc " })]
     public void TrimFieldValuesTest(string data, ValueTrimmingOptions trimmingOptions, params string[] expected)
     {
-        using (var csv = ReadCsv.FromString(data, trimmingOptions: trimmingOptions))
+        using var csv = ReadCsv.FromString(data, trimmingOptions: trimmingOptions);
+        while (csv.Read())
         {
-            while (csv.Read())
-            {
-                var actual = new string[csv.FieldCount];
-                csv.GetValues(actual);
+            var actual = new string[csv.FieldCount];
+            csv.GetValues(actual);
 
-                CollectionAssert.AreEqual(expected, actual);
-            }
+            CollectionAssert.AreEqual(expected, actual);
         }
     }
 

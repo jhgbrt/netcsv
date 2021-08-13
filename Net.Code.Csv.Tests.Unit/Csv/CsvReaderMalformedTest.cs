@@ -38,14 +38,12 @@ public class CsvReaderMalformedTest
 
         try
         {
-            using (var csv = ReadCsv.FromString(Data))
-            {
-                while (csv.Read())
-                    for (int i = 0; i < csv.FieldCount; i++)
-                    {
-                        string s = csv.GetString(i);
-                    }
-            }
+            using var csv = ReadCsv.FromString(Data);
+            while (csv.Read())
+                for (int i = 0; i < csv.FieldCount; i++)
+                {
+                    string s = csv.GetString(i);
+                }
         }
         catch (MissingFieldCsvException ex)
         {
@@ -63,14 +61,12 @@ public class CsvReaderMalformedTest
 
         try
         {
-            using (var csv = ReadCsv.FromString(Data))
-            {
-                while (csv.Read())
-                    for (int i = 0; i < csv.FieldCount; i++)
-                    {
-                        string s = csv.GetString(i);
-                    }
-            }
+            using var csv = ReadCsv.FromString(Data);
+            while (csv.Read())
+                for (int i = 0; i < csv.FieldCount; i++)
+                {
+                    string s = csv.GetString(i);
+                }
         }
         catch (MissingFieldCsvException ex)
         {
@@ -88,14 +84,12 @@ public class CsvReaderMalformedTest
 
         try
         {
-            using (var csv = ReadCsv.FromString(Data))
-            {
-                while (csv.Read())
-                    for (int i = 0; i < csv.FieldCount; i++)
-                    {
-                        string s = csv.GetString(i);
-                    }
-            }
+            using var csv = ReadCsv.FromString(Data);
+            while (csv.Read())
+                for (int i = 0; i < csv.FieldCount; i++)
+                {
+                    string s = csv.GetString(i);
+                }
         }
         catch (MissingFieldCsvException ex)
         {
@@ -113,14 +107,12 @@ public class CsvReaderMalformedTest
 
         try
         {
-            using (var csv = ReadCsv.FromString(Data))
-            {
-                while (csv.Read())
-                    for (int i = 0; i < csv.FieldCount; i++)
-                    {
-                        string s = csv.GetString(i);
-                    }
-            }
+            using var csv = ReadCsv.FromString(Data);
+            while (csv.Read())
+                for (int i = 0; i < csv.FieldCount; i++)
+                {
+                    string s = csv.GetString(i);
+                }
         }
         catch (MissingFieldCsvException ex)
         {
@@ -135,12 +127,10 @@ public class CsvReaderMalformedTest
 
         try
         {
-            using (var csv = ReadCsv.FromString(
+            using var csv = ReadCsv.FromString(
                 Data,
                 escape: '\\',
-                quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException))
-            {
-            }
+                quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException);
         }
         catch (MalformedCsvException ex)
         {
@@ -156,14 +146,12 @@ public class CsvReaderMalformedTest
 
         try
         {
-            using (var csv = ReadCsv.FromString(Data, escape: '\\', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException))
-            {
-                while (csv.Read())
-                    for (int i = 0; i < csv.FieldCount; i++)
-                    {
-                        string s = csv.GetString(i);
-                    }
-            }
+            using var csv = ReadCsv.FromString(Data, escape: '\\', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException);
+            while (csv.Read())
+                for (int i = 0; i < csv.FieldCount; i++)
+                {
+                    string s = csv.GetString(i);
+                }
         }
         catch (MalformedCsvException ex)
         {
@@ -176,15 +164,13 @@ public class CsvReaderMalformedTest
     {
         const string Data = "ORIGIN,DESTINATION\nPHL,FLL,kjhkj kjhkjh,eg,fhgf\nNYC,LAX";
 
-        using (var csv = ReadCsv.FromString(Data, hasHeaders: true))
+        using var csv = ReadCsv.FromString(Data, hasHeaders: true);
+        while (csv.Read())
         {
-            while (csv.Read())
+            Assert.AreEqual(2, csv.FieldCount);
+            for (int i = 0; i < csv.FieldCount; i++)
             {
-                Assert.AreEqual(2, csv.FieldCount);
-                for (int i = 0; i < csv.FieldCount; i++)
-                {
-                    string s = csv.GetString(i);
-                }
+                _ = csv.GetString(i);
             }
         }
     }
@@ -196,18 +182,16 @@ public class CsvReaderMalformedTest
                             "\"15907\";\"\"BOLT TIL 2-05-405\";\"\";\"42,50\";\"4027816159070\"\n" +
                             "\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
 
-        using (var csv = ReadCsv.FromString(Data, delimiter: ';', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine))
-        {
-            Assert.IsTrue(csv.Read());
+        using var csv = ReadCsv.FromString(Data, delimiter: ';', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine);
+        Assert.IsTrue(csv.Read());
 
-            Assert.AreEqual("19324", csv[0]);
-            Assert.AreEqual("FJEDER TIL 2-05-405", csv[1]);
-            Assert.AreEqual("", csv[2]);
-            Assert.AreEqual("14,50", csv[3]);
-            Assert.AreEqual("4027816193241", csv[4]);
+        Assert.AreEqual("19324", csv[0]);
+        Assert.AreEqual("FJEDER TIL 2-05-405", csv[1]);
+        Assert.AreEqual("", csv[2]);
+        Assert.AreEqual("14,50", csv[3]);
+        Assert.AreEqual("4027816193241", csv[4]);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 
     [Test]
@@ -217,23 +201,21 @@ public class CsvReaderMalformedTest
             + "\na,b,c,d,"
             + "\na,b,";
 
-        using (var csv = ReadCsv.FromString(Data, missingFieldAction: MissingFieldAction.ReplaceByNull))
-        {
-            var record = new string[5];
+        using var csv = ReadCsv.FromString(Data, missingFieldAction: MissingFieldAction.ReplaceByNull);
+        var record = new string[5];
 
-            Assert.IsTrue(csv.Read());
-            csv.GetValues(record);
-            CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "e" }, record);
+        Assert.IsTrue(csv.Read());
+        csv.GetValues(record);
+        CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "e" }, record);
 
-            Assert.IsTrue(csv.Read());
-            csv.GetValues(record);
-            CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "" }, record);
+        Assert.IsTrue(csv.Read());
+        csv.GetValues(record);
+        CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "" }, record);
 
-            Assert.IsTrue(csv.Read());
-            csv.GetValues(record);
-            CollectionAssert.AreEqual(new string[] { "a", "b", "", null, null }, record);
+        Assert.IsTrue(csv.Read());
+        csv.GetValues(record);
+        CollectionAssert.AreEqual(new string[] { "a", "b", "", null, null }, record);
 
-            Assert.IsFalse(csv.Read());
-        }
+        Assert.IsFalse(csv.Read());
     }
 }

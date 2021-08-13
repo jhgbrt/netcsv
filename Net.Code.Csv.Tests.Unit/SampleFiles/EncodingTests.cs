@@ -30,7 +30,9 @@ public class EncodingTests
     [Test]
     public void Utf7()
     {
+#pragma warning disable SYSLIB0001 // Type or member is obsolete
         Test("utf7", Encoding.UTF7, "België");
+#pragma warning restore SYSLIB0001 // Type or member is obsolete
     }
 
     private static void Test(string encodingName, Encoding encoding, string expected)
@@ -38,11 +40,9 @@ public class EncodingTests
         var assembly = Assembly.GetExecutingAssembly();
         var resourceName = "Net.Code.Csv.Tests.Unit.SampleFiles." + encodingName + ".txt";
 
-        using (var stream = assembly.GetManifestResourceStream(resourceName))
-        using (var reader = ReadCsv.FromStream(stream, encoding: encoding, delimiter: ';', hasHeaders: true))
-        {
-            reader.Read();
-            Assert.AreEqual(expected, reader[1]);
-        }
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        using var reader = ReadCsv.FromStream(stream, encoding: encoding, delimiter: ';', hasHeaders: true);
+        reader.Read();
+        Assert.AreEqual(expected, reader[1]);
     }
 }

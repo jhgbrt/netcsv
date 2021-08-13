@@ -5,7 +5,7 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 [TestFixture]
 public class ReadCsvWithSchemaTests
 {
-    string input =
+    readonly string input =
             "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
             "\"John\";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
 
