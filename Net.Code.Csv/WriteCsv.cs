@@ -96,8 +96,6 @@ public class WriteCsv
     {
         cultureInfo ??= CultureInfo.InvariantCulture;
         var converter = new Converter(cultureInfo);
-        var escapedQuote = $"{escape}{quote}";
-        var unescapedQuote = $"{quote}";
         var properties = typeof(T).GetPropertiesWithCsvFormat();
         var sb = new StringBuilder();
         if (hasHeaders)
