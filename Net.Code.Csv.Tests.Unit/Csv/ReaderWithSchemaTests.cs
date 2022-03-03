@@ -133,6 +133,44 @@ public class ReadCsvWithSchemaTests
     }
 
     [Test]
+    public void WithSchemaFromClassWithIncompleteColumns_CanReturnAsDynamicWithType()
+    {
+        CsvSchema schema = new CsvSchemaBuilder()
+            .From<MyClass>()
+            .Schema;
+        var input =
+            "First;Ignored;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
+            "\"John\";SomeIgnoredValue;Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
+
+
+        var item = ReadCsv
+            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .AsEnumerable(typeof(MyClass))
+            .Single();
+
+        Verify(item);
+    }
+
+    [Test]
+    public void WithSchemaFromClassWithColumnsInOtherOrder_CanReturnAsDynamicWithType()
+    {
+        CsvSchema schema = new CsvSchemaBuilder()
+            .From<MyClass>()
+            .Schema;
+        var input =
+            "Last;First;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
+            "\"Peters\";John;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
+
+
+        var item = ReadCsv
+            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .AsEnumerable(typeof(MyClass))
+            .Single();
+
+        Verify(item);
+    }
+
+    [Test]
     public void WhenSchemaCreatedFromRecord_ExpectedValuesAreReturned()
     {
         CsvSchema schema = new CsvSchemaBuilder().From<MyRecord>().Schema;

@@ -1,5 +1,7 @@
 namespace Net.Code.Csv.Impl;
 
+// The parser takes care of processing the actual content of the file
+// It does not take into account schema information, so it only works with strings
 class CsvParser : IEnumerable<CsvLine>, IDisposable
 {
     private readonly CsvStateMachine _csvStateMachine;
@@ -16,15 +18,13 @@ class CsvParser : IEnumerable<CsvLine>, IDisposable
 
         Header = (layOut, firstLine) switch
         {
-            ({ Schema: not null }, _)
-                => new CsvHeader(layOut.Schema.Columns.Select(s => s.Name).ToArray()),
-
             ({ HasHeaders: true }, firstLine: not null)
                 => new CsvHeader(firstLine.Fields),
 
-            (_, firstLine: not null)
+            ({ HasHeaders: false }, firstLine: not null)
                 => new CsvHeader(Enumerable.Repeat(string.Empty, firstLine.Fields.Length).ToArray()),
-            _
+
+            (_, firstLine: null)
                 => new CsvHeader(Array.Empty<string>())
         };
 

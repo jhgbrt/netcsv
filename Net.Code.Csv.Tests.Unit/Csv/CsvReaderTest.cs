@@ -86,7 +86,7 @@ public class CsvReaderTest
     [Test]
     public void Indexer_BeyondRecordSize_Throws()
     {
-        Assert.Throws<IndexOutOfRangeException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             using var csv = ReadCsv.FromString(CsvReaderSampleData.SampleData1);
             csv.Read();

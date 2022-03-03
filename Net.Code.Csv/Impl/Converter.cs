@@ -64,7 +64,7 @@ class Converter
         var converter = TypeDescriptor.GetConverter(destinationType);
         return converter.ConvertFromString(null, _cultureInfo, value);
     }
-    public object ToString(object value, string format) => value switch
+    public string ToString(object value, string format) => value switch
     {
         DateTime d => d.ToString(format ?? "O", _cultureInfo),
         DateTimeOffset d => d.ToString(format ?? "O", _cultureInfo),

@@ -3,6 +3,8 @@
 public record CsvSchema(IList<CsvColumn> Columns)
 {
     public CsvColumn this[int i] => Columns[i];
+    public string GetName(int i) => Columns[i].Name;
+    public int GetOrdinal(string name) => Columns.WithIndex().First(x => x.item.Name == name).index;
 }
 
 public record struct CsvColumn(
@@ -26,6 +28,12 @@ public class CsvSchemaBuilder
 
     private readonly List<CsvColumn> _columns = new();
     private readonly Converter _converter;
+
+    public CsvSchemaBuilder Add(CsvColumn column)
+    {
+        _columns.Add(column);
+        return this;
+    }
 
     public CsvSchemaBuilder Add<T>(string name, Func<string, T> convert, bool allowNull)
     {
@@ -71,6 +79,7 @@ public class CsvSchemaBuilder
             var (p, format) = x;
             bool allowNull = p.PropertyType.IsNullableType() || !p.PropertyType.IsValueType;
             var underlyingType = p.PropertyType.GetUnderlyingType();
+
             if (underlyingType == typeof(DateTime))
             {
                 AddDateTime(p.Name, format, allowNull);

@@ -24,7 +24,14 @@ internal class CsvDataReader : IDataReader
         _schema = csvLayout.Schema;
     }
 
-    public string GetName(int i) => _header[i];
+    private int GetIndex(int i) => _schema switch
+    {
+        null => i,
+        not null => _header.TryGetIndex(GetName(i), out var j) ? j : i
+    };
+    private string GetRawValue(int i) => _line[GetIndex(i)];
+
+    public string GetName(int i) => _schema?.GetName(i) ?? _header[i];
 
     public string GetDataTypeName(int i) => GetFieldType(i).FullName;
 
@@ -32,12 +39,12 @@ internal class CsvDataReader : IDataReader
 
     public object GetValue(int i) => _schema switch
     {
-        not null => _line.Fields[i] switch
+        not null => GetRawValue(i) switch
         {
             "" => null,
             string s => _schema[i].FromString(s)
         },
-        _ => _line.Fields[i]
+        _ => GetRawValue(i)
     };
 
     public int GetValues(object[] values)
@@ -47,21 +54,27 @@ internal class CsvDataReader : IDataReader
             throw new ArgumentNullException(nameof(values));
         }
 
-        if (values.Length < _line.Fields.Length)
+        if (values.Length < _line.Length)
         {
-            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "input array is too small. Expected at least {0}", _line.Fields.Length), nameof(values));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "input array is too small. Expected at least {0}", _line.Length), nameof(values));
         }
 
-        for (var i = 0; i < _line.Fields.Length; i++)
+        var n = _schema is not null ? _schema.Columns.Count : _line.Length;
+
+        for (var i = 0; i < n; i++)
         {
             values[i] = GetValue(i);
         }
 
-        return _line.Fields.Length;
+        return _line.Length;
     }
 
     public int GetOrdinal(string name)
     {
+        if (_schema != null)
+        {
+            return _schema.GetOrdinal(name);
+        }
         if (!_header.TryGetIndex(name, out var index))
         {
             throw new ArgumentException($"'{name}' field header not found", nameof(name));
@@ -75,7 +88,7 @@ internal class CsvDataReader : IDataReader
 
     public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferOffset, int length)
     {
-        var value = Convert.FromBase64String(GetString(i));
+        var value = Convert.FromBase64String(GetRawValue(i));
 
         int copied = 0;
         for (var j = 0; j < length; j++)
@@ -118,7 +131,7 @@ internal class CsvDataReader : IDataReader
 
     public double GetDouble(int i) => GetValue(i, _converter.ToDouble);
 
-    public string GetString(int i) => _line.Fields[i];
+    public string GetString(int i) => GetValue(i, s => s);
 
     public decimal GetDecimal(int i) => GetValue(i, _converter.ToDecimal);
 
@@ -187,7 +200,8 @@ internal class CsvDataReader : IDataReader
             schema.Columns.Add(IsReadOnly, typeof(bool)).ReadOnly = true;
             schema.Columns.Add(IsRowVersion, typeof(bool)).ReadOnly = true;
 
-            string[] columnNames = _parser.Header.Fields;
+            string[] columnNames =
+                _schema is null ? _header.Fields : _schema.Columns.Select(c => c.Name).ToArray();
 
             // null marks columns that will change for each row
             var schemaRow = new object[]

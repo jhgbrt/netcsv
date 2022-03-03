@@ -12,7 +12,7 @@ record CsvLine(string[] Fields, bool IsEmpty)
     public static readonly CsvLine Empty = new(Array.Empty<string>(), true);
 
     public override string ToString() => string.Join(";", Fields);
-
+    public int Length => Fields.Length;
     public string this[int field]
     {
         get
