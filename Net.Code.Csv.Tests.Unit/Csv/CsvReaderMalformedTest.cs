@@ -22,6 +22,8 @@
 
 // A special thanks goes to "shriop" at CodeProject for providing many of the standard and Unicode parsing tests.
 
+using System.Diagnostics;
+
 namespace Net.Code.Csv.Tests.Unit.IO.Csv;
 
 [TestFixture()]
@@ -218,4 +220,69 @@ public class CsvReaderMalformedTest
 
         Assert.IsFalse(csv.Read());
     }
+}
+
+[TestFixture]
+public class CsvMultiResultSetTest
+{
+    [Test]
+    public void CanReadMultiResult()
+    {
+        var input = """"
+            a,b,c
+            1,2,3
+
+            d,e
+            "x","y"
+            """";
+
+
+        var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true);
+
+        while (reader.Read())
+        {
+            Assert.AreEqual("1", reader["a"]);
+            Assert.AreEqual("2", reader["b"]);
+            Assert.AreEqual("3", reader["c"]);
+        }
+
+        Assert.IsTrue(reader.NextResult());
+
+        while (reader.Read())
+        {
+            Assert.AreEqual("x", reader["d"]);
+            Assert.AreEqual("y", reader["e"]);
+        }
+    }
+    [Test]
+    public void CanReadMultiResultWithSchemas()
+    {
+        var input = """"
+            a,b,c
+            1,2,3
+
+            d,e
+            "x","y"
+            """";
+
+
+        var schemas = new[]
+        {
+            new CsvSchemaBuilder().From<Part1>().Schema,
+            new CsvSchemaBuilder().From<Part2>().Schema
+        };
+
+        var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, schema: schemas);
+
+        var first = reader.AsEnumerable<Part1>().Single();
+        Assert.AreEqual(new Part1(1,2,3), first);
+        Assert.IsTrue(reader.NextResult());
+
+        var second = reader.AsEnumerable<Part2>().Single();
+        Assert.AreEqual(new Part2("x", "y"), second);
+        Assert.IsFalse(reader.NextResult());
+    }
+
+    record Part1(int a, int b, int c);
+    record Part2(string d, string e);
 }

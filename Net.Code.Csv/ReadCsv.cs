@@ -14,9 +14,9 @@ public static class ReadCsv
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
-    /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
+    /// <param name="emptyLineAction">What should happen when an empty line is encountered?</param>
     /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
-    /// <param name="schema">The CSV schema.</param>
+    /// <param name="schema">The CSV schema (or schema's, if the file contains multiple result sets).</param>
     /// <param name="cultureInfo">Culture info to be used for parsing culture-sensitive data (such as date/time and decimal numbers)</param>
     /// <returns>a DataReader instance to read the contents of the CSV file</returns>
     public static IDataReader FromFile(
@@ -29,14 +29,14 @@ public static class ReadCsv
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
-        bool skipEmptyLines = true,
+        EmptyLineAction emptyLineAction = EmptyLineAction.Skip,
         QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-        CsvSchema schema = null,
+        OneOf<CsvSchema,CsvSchema[]> schema = null,
         CultureInfo cultureInfo = null)
     {
         // caller should dispose IDataReader, which will indirectly also close the stream
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
-        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
+        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         var stream = File.OpenRead(path);
         var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null);
         return FromReader(reader, layout, behaviour, cultureInfo);
@@ -55,9 +55,9 @@ public static class ReadCsv
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
-    /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
+    /// <param name="emptyLineAction">What should happen when an empty line is found?</param>
     /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
-    /// <param name="schema">The CSV schema.</param>
+    /// <param name="schema">The CSV schema (or schema's, if the file contains multiple result sets).</param>
     /// <param name="cultureInfo">Culture info to be used for parsing culture-sensitive data (such as date/time and decimal numbers)</param>
     /// <returns>a DataReader instance to read the contents of the CSV file</returns>
     public static IDataReader FromStream(
@@ -70,14 +70,14 @@ public static class ReadCsv
             bool hasHeaders = false,
             ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.None,
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
-            bool skipEmptyLines = true,
+            EmptyLineAction emptyLineAction = EmptyLineAction.Skip,
             QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            CsvSchema schema = null,
+            OneOf<CsvSchema,CsvSchema[]> schema = null,
             CultureInfo cultureInfo = null)
     {
         var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, 1024, true);
-        var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
-        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
+        var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders,  schema);
+        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         return FromReader(reader, layout, behaviour, cultureInfo);
     }
 
@@ -92,9 +92,9 @@ public static class ReadCsv
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
-    /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
+    /// <param name="emptyLineAction">What to do when an empty line is encountered?</param>
     /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
-    /// <param name="schema">The CSV schema.</param>
+    /// <param name="schema">The CSV schema (or schema's, if the file contains multiple result sets).</param>
     /// <param name="cultureInfo">Culture info to be used for parsing culture-sensitive data (such as date/time and decimal numbers)</param>
     /// <returns>a DataReader instance to read the contents of the CSV file</returns>
     public static IDataReader FromString(
@@ -106,16 +106,17 @@ public static class ReadCsv
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.None,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
-        bool skipEmptyLines = true,
+        EmptyLineAction emptyLineAction = EmptyLineAction.Skip,
         QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-        CsvSchema schema = null,
+        OneOf<CsvSchema,CsvSchema[]> schema = default,
         CultureInfo cultureInfo = null)
     {
         var reader = new StringReader(input);
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
-        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, skipEmptyLines, quotesInsideQuotedFieldAction);
+        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         return FromReader(reader, layout, behaviour, cultureInfo);
     }
+
 
     /// <summary>
     /// Read a file as CSV, using specific behaviour, layout and conversion options. 
@@ -129,7 +130,7 @@ public static class ReadCsv
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
-    /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
+    /// <param name="emptyLineAction">What should happen when an empty line is found?</param>
     /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
     /// <param name="cultureInfo">Culture info to be used for parsing culture-sensitive data (such as date/time and decimal numbers)</param>
     /// <returns>a DataReader instance to read the contents of the CSV file</returns>
@@ -143,7 +144,7 @@ public static class ReadCsv
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
-        bool skipEmptyLines = true,
+        EmptyLineAction emptyLineAction = EmptyLineAction.Skip,
         QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
         CultureInfo cultureInfo = null)
     {
@@ -158,7 +159,7 @@ public static class ReadCsv
                 hasHeaders,
                 trimmingOptions,
                 missingFieldAction,
-                skipEmptyLines,
+                emptyLineAction,
                 quotesInsideQuotedFieldAction,
                 schema,
                 cultureInfo)
@@ -178,7 +179,7 @@ public static class ReadCsv
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
-    /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
+    /// <param name="emptyLineAction">What should happen when an empty line is found?</param>
     /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
     /// <param name="cultureInfo">Culture info to be used for parsing culture-sensitive data (such as date/time and decimal numbers)</param>
     /// <returns>a DataReader instance to read the contents of the CSV file</returns>
@@ -192,7 +193,7 @@ public static class ReadCsv
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
-        bool skipEmptyLines = true,
+        EmptyLineAction emptyLineAction = EmptyLineAction.Skip,
         QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
         CultureInfo cultureInfo = null)
     {
@@ -207,12 +208,14 @@ public static class ReadCsv
                 hasHeaders,
                 trimmingOptions,
                 missingFieldAction,
-                skipEmptyLines,
+                emptyLineAction,
                 quotesInsideQuotedFieldAction,
                 schema,
                 cultureInfo)
             .AsEnumerable<T>();
     }
+
+   
     /// <summary>
     /// Read a file as CSV, using specific behaviour, layout and conversion options. 
     /// </summary>
@@ -225,7 +228,7 @@ public static class ReadCsv
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
-    /// <param name="skipEmptyLines">Should empty lines be skipped?</param>
+    /// <param name="emptyLineAction">What should happen when an empty line is found?</param>
     /// <param name="quotesInsideQuotedFieldAction">What should happen when a quote is found inside a quoted field?</param>
     /// <param name="cultureInfo">Culture info to be used for parsing culture-sensitive data (such as date/time and decimal numbers)</param>
     /// <returns>a DataReader instance to read the contents of the CSV file</returns>
@@ -238,7 +241,7 @@ public static class ReadCsv
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
-        bool skipEmptyLines = true,
+        EmptyLineAction emptyLineAction = EmptyLineAction.Skip,
         QuotesInsideQuotedFieldAction quotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
         CultureInfo cultureInfo = null)
     {
@@ -252,7 +255,7 @@ public static class ReadCsv
                 hasHeaders,
                 trimmingOptions,
                 missingFieldAction,
-                skipEmptyLines,
+                emptyLineAction,
                 quotesInsideQuotedFieldAction,
                 schema,
                 cultureInfo)

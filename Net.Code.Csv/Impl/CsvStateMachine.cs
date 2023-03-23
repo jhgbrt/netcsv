@@ -1,4 +1,7 @@
 namespace Net.Code.Csv.Impl;
+
+using System.Diagnostics;
+
 using ProcessStateFunc = Func<CsvLineBuilder, CsvBehaviour, ProcessingResult>;
 
 internal class CsvStateMachine
@@ -16,13 +19,15 @@ internal class CsvStateMachine
 
     public int? FieldCount { get; set; }
 
-    public IEnumerable<CsvLine> Lines() => LinesImpl().Where(line => !line.IsEmpty || !_behaviour.SkipEmptyLines);
+    public IEnumerable<CsvLine> Lines() => LinesImpl().Where(line
+        => !line.IsEmpty || _behaviour.EmptyLineAction != EmptyLineAction.Skip);
     private IEnumerable<CsvLine> LinesImpl()
     {
         ProcessStateFunc ProcessState = BeginningOfLine;
         var state = new CsvLineBuilder(_csvLayout, _behaviour);
         while (state.ReadNext(_textReader))
         {
+            Trace.TraceInformation("");
             var result = ProcessState(state, _behaviour);
             var line = result.Line;
             if (line.HasValue)
@@ -42,6 +47,8 @@ internal class CsvStateMachine
     // begin of line can be newline, comment, quote or other 
     private static ProcessingResult BeginningOfLine(CsvLineBuilder state, CsvBehaviour behaviour) => state.CurrentChar switch
     {
+        { IsCarriageReturn: true }
+            => new ProcessingResult(BeginningOfLine, state),
         { IsNewLine: true }
             // We are at the beginnig of the line and immediately find a newline, so this was an empty line
             // Stay on Beginning of line and prepare for the next 
@@ -64,6 +71,8 @@ internal class CsvStateMachine
     // When we encounter a newline character we simply start a new line.
     private static ProcessingResult InComment(CsvLineBuilder state, CsvBehaviour behaviour) => state.CurrentChar switch
     {
+        { IsCarriageReturn: true }
+            => new ProcessingResult(InComment, state),
         { IsNewLine: true }
             => new(BeginningOfLine, state.PrepareNextLine()),
         _
@@ -74,6 +83,9 @@ internal class CsvStateMachine
     // or a new line. Otherwise, we accumulate the character for the current field.
     private static ProcessingResult InsideField(CsvLineBuilder state, CsvBehaviour behaviour) => state.CurrentChar switch
     {
+        { IsCarriageReturn: true }
+            // ignore 
+            => new ProcessingResult(InsideField, state),
         { IsDelimiter: true }
             // end of field because delimiter
             => new(OutsideField, state.NextField()),
@@ -91,6 +103,8 @@ internal class CsvStateMachine
     // if the next field is quoted, whitespace has to be skipped in any case
     private static ProcessingResult OutsideField(CsvLineBuilder state, CsvBehaviour behaviour) => state.CurrentChar switch
     {
+        { IsCarriageReturn: true }
+            => new(OutsideField, state.Ignore()), 
         { IsNewLine: true }
             // Found newline. Accumulated whitespace belongs to last field.
             // yield line and transition to next
@@ -103,7 +117,7 @@ internal class CsvStateMachine
             // Found the next delimiter. We found an empty field.
             // Accumulated whitespace should be added to this current field
             => new(OutsideField, state.AcceptTentative().NextField()),
-        { IsWhiteSpace: true }
+        { IsWhiteSpace: true } or { IsCarriageReturn: true }
             // Found whitespace, accumulate until we find a non-whitespace character
             => new(OutsideField, state.AddToTentative()),
         _
@@ -148,7 +162,7 @@ internal class CsvStateMachine
             => new(BeginningOfLine, state.DiscardTentative().NextField(), state.ToLine()),
         { IsQuote: true }
             => new(AfterSecondQuote, state.AcceptTentative().AddToTentative()),
-        { IsWhiteSpace: true }
+        { IsWhiteSpace: true } or { IsCarriageReturn: true }
             // as long as we encounter white space, keep accumulating
             => new(AfterSecondQuote, state.AddToTentative()),
         _

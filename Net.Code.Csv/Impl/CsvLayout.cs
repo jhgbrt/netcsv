@@ -27,7 +27,7 @@ internal record CsvLayout(
             /// <summary>
             /// Represents the schema of the file
             /// </summary>
-            CsvSchema Schema = null
+            OneOf<CsvSchema, CsvSchema[]> Schema = default
     )
 
 {
@@ -36,6 +36,8 @@ internal record CsvLayout(
     /// backslash as escape character, hash (#) as a comment marker and assumes no header.
     /// </summary>
     public static CsvLayout Default => new();
+
+    public IEnumerable<CsvSchema> Schemas => Schema == null ? Array.Empty<CsvSchema>() : Schema.Match(schema => new[] { schema }, schemas => schemas);
 
     internal bool IsEscape(char currentChar, char? nextChar)
         => currentChar == Escape && (nextChar == Quote || nextChar == Escape);

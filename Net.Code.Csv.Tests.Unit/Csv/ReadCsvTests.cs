@@ -22,7 +22,7 @@ public class ReadCsvTests
             hasHeaders,
             trimmingOptions,
             missingFieldAction,
-            skipEmptyLines,
+            skipEmptyLines ? EmptyLineAction.Skip : EmptyLineAction.None,
             quoteInsideQuotedFieldAction);
         reader.Read();
         string[] results = new string[reader.FieldCount];
@@ -48,7 +48,7 @@ public class ReadCsvTests
     public void EmptyString_WhenSkipEmptyLinesIsTrue_EmptyStringIsNotRead()
     {
         var data = "";
-        var result = ReadCsv.FromString(data, skipEmptyLines: true);
+        var result = ReadCsv.FromString(data, emptyLineAction: EmptyLineAction.Skip);
         Assert.IsFalse(result.Read());
     }
 

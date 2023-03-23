@@ -1,4 +1,6 @@
-﻿namespace Net.Code.Csv.Impl;
+﻿using System.Diagnostics;
+
+namespace Net.Code.Csv.Impl;
 internal class CsvLineBuilder
 {
     private CsvChar _currentChar;
@@ -93,10 +95,11 @@ internal class CsvLineBuilder
     {
         var isEmpty = _fields.Count == 0 || (_fields.Count == 1 && string.IsNullOrEmpty(_fields[0]));
 
-        if (!FieldCount.HasValue && (!isEmpty || !_behaviour.SkipEmptyLines))
+        if (!FieldCount.HasValue && (!isEmpty || _behaviour.EmptyLineAction != EmptyLineAction.Skip))
         {
             FieldCount = _fields.Count;
         }
+
 
         var count = _fields.Count;
         if (!isEmpty && count < FieldCount && _behaviour.MissingFieldAction == MissingFieldAction.ParseError)
@@ -104,7 +107,10 @@ internal class CsvLineBuilder
             throw new MissingFieldCsvException(RawData, Location, _fields.Count);
         }
 
-        if (count < FieldCount)
+        if (FieldCount.HasValue && isEmpty && _behaviour.EmptyLineAction == EmptyLineAction.NextResult)
+        {
+        }
+        else if (count < FieldCount)
         {
             var s = _behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : "";
             _fields.AddRange(Enumerable.Repeat(s, FieldCount.Value - count));

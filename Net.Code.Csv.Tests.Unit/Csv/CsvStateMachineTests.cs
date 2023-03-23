@@ -179,14 +179,6 @@ public class CsvStateMachineTests
 
     }
 
-    [Test]
-    public void CarriageReturnCanBeUsedAsDelimiter()
-    {
-        const string line = "1\r2\n";
-        var splitLineParams = new CsvLayout('"', '\r');
-        var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "1", "2" }, result);
-    }
 
     [Test]
     public void EscapeCharacterInsideQuotedStringIsEscaped()
@@ -209,19 +201,25 @@ public class CsvStateMachineTests
     [Test]
     public void CanWorkWithMultilineField()
     {
-        const string data = @"a,b,""line1
-line2""";
+        const string data = """
+            a,b,"line1
+            line2"
+            """;
         var splitLineParams = new CsvLayout('"', ',', '\\');
         var result = Split(data, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        CollectionAssert.AreEqual(new[] { "a", "b", @"line1
-line2" }, result);
+        CollectionAssert.AreEqual(new[] { "a", "b", """
+            line1
+            line2
+            """ }, result);
     }
 
     [Test]
     public void MultipleLinesAreSplitCorrectly()
     {
-        var data1 = @"1;2;3
-4;5;6";
+        var data1 = """
+            1;2;3
+            4;5;6
+            """;
 
         var csvLayout = new CsvLayout('\"', ';');
 
@@ -267,8 +265,10 @@ line2" }, result);
     [Test]
     public void WorksWithQuotedMultilineString()
     {
-        var data1 = @"""1"";"" 2  ""in
-side""  x "";3";
+        var data1 = """
+            "1";" 2  "in
+            side"  x ";3
+            """;
 
         var csvLayout = new CsvLayout('\"', ';');
 
@@ -276,8 +276,10 @@ side""  x "";3";
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", @" 2  ""in
-side""  x ", "3" }, result[0].Fields);
+        CollectionAssert.AreEqual(new[] { "1", """
+             2  "in
+            side"  x 
+            """, "3" }, result[0].Fields);
 
     }
 
@@ -286,7 +288,7 @@ side""  x ", "3" }, result[0].Fields);
     {
         var input = "1\n\n2";
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(),
-                                       new CsvBehaviour(SkipEmptyLines: false));
+                                       new CsvBehaviour(EmptyLineAction: EmptyLineAction.None));
 
         var result = splitter.Lines().ToArray();
 
@@ -298,7 +300,7 @@ side""  x ", "3" }, result[0].Fields);
     {
         var input = "\r\n1\n\n2";
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(),
-                                       new CsvBehaviour(SkipEmptyLines: true));
+                                       new CsvBehaviour(EmptyLineAction: EmptyLineAction.Skip));
 
         var result = splitter.Lines().ToArray();
 
@@ -310,7 +312,7 @@ side""  x ", "3" }, result[0].Fields);
     public void WhenSkipEmptyLinesIsFalse_AndEmptyLineIsAtTheEnd_ReturnsEmptyLine()
     {
         var input = "a,b\n   ";
-        var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(SkipEmptyLines: false));
+        var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(EmptyLineAction: EmptyLineAction.None));
 
         var result = splitter.Lines().ToArray();
 

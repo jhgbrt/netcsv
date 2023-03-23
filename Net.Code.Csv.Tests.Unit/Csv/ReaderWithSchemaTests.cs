@@ -6,13 +6,15 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 public class ReadCsvWithSchemaTests
 {
     readonly string input =
-            "First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
-            "\"John\";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
+            """
+            First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom
+            "John";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
+            """;
 
     static void Verify(IMyItem item)
     {
         Assert.AreEqual("John", item.First);
-        Assert.AreEqual("Peters", item.Last.Value.Value);
+        Assert.AreEqual("Peters", item.Last.Value);
         Assert.AreEqual(new DateTime(1970, 11, 15), item.BirthDate);
         Assert.AreEqual(123, item.Quantity);
         Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
@@ -139,8 +141,11 @@ public class ReadCsvWithSchemaTests
             .From<MyClass>()
             .Schema;
         var input =
-            "First;Ignored;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
-            "\"John\";SomeIgnoredValue;Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
+            """
+            First;Ignored;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom
+            "John";SomeIgnoredValue;Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
+
+            """;
 
 
         var item = ReadCsv
@@ -215,11 +220,11 @@ public class ReadCsvWithSchemaTests
 }
 public class CustomTypeConverter : TypeConverter
 {
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) => new Custom((string)value);
+    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) => value is string v && !string.IsNullOrEmpty(v) ? new Custom(v) : null;
 }
 
 [TypeConverter(typeof(CustomTypeConverter))]
-public struct Custom
+public class Custom
 {
     public Custom(string value) { Value = value; }
     public string Value { get; set; }
@@ -228,7 +233,7 @@ public struct Custom
 public interface IMyItem
 {
     public string First { get; }
-    public Custom? Last { get; }
+    public Custom Last { get; }
     public DateTime BirthDate { get; }
     public int Quantity { get; }
     public Amount Price { get; }
@@ -236,12 +241,12 @@ public interface IMyItem
     public decimal LargeValue { get; }
     public DateTimeOffset SomeDateTimeOffset { get; }
     public bool IsActive { get; }
-    public Custom? NullableCustom { get; }
+    public Custom NullableCustom { get; }
 
 }
 public record MyRecord(
     string First,
-    Custom? Last,
+    Custom Last,
     [CsvFormat("yyyyMMdd")] DateTime BirthDate,
     int Quantity,
     Amount Price,
@@ -249,12 +254,12 @@ public record MyRecord(
     decimal LargeValue,
     DateTimeOffset SomeDateTimeOffset,
     [CsvFormat("yes|no")] bool IsActive,
-    Custom? NullableCustom = null) : IMyItem;
+    Custom NullableCustom = null) : IMyItem;
 
 public class MyClass : IMyItem
 {
     public string First { get; set; }
-    public Custom? Last { get; set; }
+    public Custom Last { get; set; }
     [CsvFormat("yyyyMMdd")]
     public DateTime BirthDate { get; set; }
     public int Quantity { get; set; }
@@ -264,7 +269,7 @@ public class MyClass : IMyItem
     public DateTimeOffset SomeDateTimeOffset { get; set; }
     [CsvFormat("yes|no")]
     public bool IsActive { get; set; }
-    public Custom? NullableCustom { get; set; }
+    public Custom NullableCustom { get; set; }
 }
 
 [TypeConverter(typeof(AmountConverter))]

@@ -46,29 +46,18 @@ public class CsvReaderSampleData
     public const string SampleData1Header4 = "State";
     public const string SampleData1Header5 = "Zip Code";
 
-    // <blank>
-    // # This is a comment
-    // "First Name", "Last Name", Address, City, State, "Zip Code"<tab>
-    // John,Doe,120 jefferson st.,Riverside, NJ, 08075
-    // Jack,McGinnis,220 hobo Av.,Phila<tab>, PA,09119
-    // "John ""Da Man""",Repici,120 Jefferson St.,Riverside, NJ,08075
-    // <blank>
-    // # This is a comment
-    // Stephen,Tyler,"7452 Terrace ""At the Plaza"" road",SomeTown,SD, 91234
-    // ,Blankman,,SomeTown, SD, 00298
-    // "Joan ""the bone"", Anne",Jet,"9th, at Terrace plc",Desert City,CO,00123
+    public const string SampleData1 = """"
+        # This is a comment
+        "First Name", "Last Name", Address, City, State, "Zip Code"	
+        John,Doe,120 jefferson st.,Riverside, NJ, 08075
+        Jack,McGinnis,220 hobo Av.,Phila	, PA,09119
+        "John ""Da Man""",Repici,120 Jefferson St.,Riverside, NJ,08075
 
-    public const string SampleData1 = @"
-# This is a comment
-""First Name"", ""Last Name"", Address, City, State, ""Zip Code""	
-John,Doe,120 jefferson st.,Riverside, NJ, 08075
-Jack,McGinnis,220 hobo Av.,Phila	, PA,09119
-""John """"Da Man"""""",Repici,120 Jefferson St.,Riverside, NJ,08075
-
-# This is a comment
-Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
-,Blankman,,SomeTown, SD, 00298
-""Joan """"the bone"""", Anne"",Jet,""9th, at Terrace plc"",Desert City,CO,00123";
+        # This is a comment
+        Stephen,Tyler,"7452 Terrace ""At the Plaza"" road",SomeTown,SD, 91234
+        ,Blankman,,SomeTown, SD, 00298
+        "Joan ""the bone"", Anne",Jet,"9th, at Terrace plc",Desert City,CO,00123
+        """";
 
     public static readonly CsvSchema SampleData1Schema = new CsvSchemaBuilder()
         .AddString("First Name")
@@ -100,9 +89,10 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
         .Add(typeof(System.Byte[]).FullName, s => Convert.FromBase64String(s), true)
         .Schema;
 
-    public const string SampleTypedData1 = @"
-System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System.SByte,System.Int16,System.Int32,System.Int64,System.Byte,System.UInt16,System.UInt32,System.UInt64,System.Char,System.String,System.Guid,System.DBNull,System.Byte[]
-""true"",""2001-11-15"",""1"",""1.1"",""1.10"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""1"",""a"",""abc"",""{11111111-1111-1111-1111-111111111111}"","""",""AQIDBAUGBwgJ""";
+    public const string SampleTypedData1 = """
+        System.Boolean,System.DateTime,System.Single,System.Double,System.Decimal,System.SByte,System.Int16,System.Int32,System.Int64,System.Byte,System.UInt16,System.UInt32,System.UInt64,System.Char,System.String,System.Guid,System.DBNull,System.Byte[]
+        "true","2001-11-15","1","1.1","1.10","1","1","1","1","1","1","1","1","a","abc","{11111111-1111-1111-1111-111111111111}","","AQIDBAUGBwgJ"
+        """;
 
     #endregion
 

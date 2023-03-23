@@ -15,7 +15,7 @@ public record CsvBehaviour(
             /// <summary>
             /// Should empty lines be skipped?
             /// </summary>
-            bool SkipEmptyLines = true,
+            EmptyLineAction EmptyLineAction = EmptyLineAction.Skip,
             /// <summary>
             /// What should happen when a quote is found inside a quoted field? (e.g. "123","x y "z" u","345")
             /// </summary>

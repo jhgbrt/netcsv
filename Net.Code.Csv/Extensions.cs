@@ -13,12 +13,14 @@ public static class Extensions
     {
         var properties = type.GetProperties();
 
+        // if we find a record constructor with parameters matching the properties of the type, use that
         var constructor = type.GetConstructors()
             .FirstOrDefault(c => c.GetParameters().Select(p => (p.Name, p.ParameterType))
                 .SequenceEqual(properties.Select(p => (p.Name, p.PropertyType))));
 
         if (constructor is null)
         {
+            // no such constructor; use the default constructor and set all properties with setter
             constructor = type.GetConstructor(Array.Empty<Type>());
             return record =>
             {

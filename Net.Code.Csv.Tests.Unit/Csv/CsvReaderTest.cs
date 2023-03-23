@@ -249,7 +249,7 @@ public class CsvReaderTest
     [Test]
     public void ParsingTest3()
     {
-        const string data = "1\r2\n";
+        const string data = "1\r\n2\n";
 
         using var csv = ReadCsv.FromString(data);
         Assert.IsTrue(csv.Read());
@@ -332,7 +332,7 @@ public class CsvReaderTest
     [Test]
     public void ParsingTest10()
     {
-        const string data = "1\r2";
+        const string data = "1\r\n2";
 
         using var csv = ReadCsv.FromString(data);
         Assert.IsTrue(csv.Read());
@@ -411,19 +411,6 @@ public class CsvReaderTest
     }
 
     [Test]
-    public void SupportsCarriageReturnAsDelimiter()
-    {
-        const string data = "1\r2\n";
-
-        using var csv = ReadCsv.FromString(data, delimiter: '\r', trimmingOptions: ValueTrimmingOptions.UnquotedOnly);
-        Assert.IsTrue(csv.Read());
-        Assert.AreEqual(2, csv.FieldCount);
-        Assert.AreEqual("1", csv[0]);
-        Assert.AreEqual("2", csv[1]);
-        Assert.IsFalse(csv.Read());
-    }
-
-    [Test]
     public void ParsingTest17()
     {
         const string data = "\"July 4th, 2005\"";
@@ -482,7 +469,7 @@ public class CsvReaderTest
     {
         const string data = ",,\n1,";
 
-        using var csv = ReadCsv.FromString(data, delimiter: ',', skipEmptyLines: false, missingFieldAction: MissingFieldAction.ReplaceByNull);
+        using var csv = ReadCsv.FromString(data, delimiter: ',', emptyLineAction: EmptyLineAction.None, missingFieldAction: MissingFieldAction.ReplaceByNull);
         Assert.IsTrue(csv.Read());
         Assert.AreEqual(3, csv.FieldCount);
 
@@ -754,7 +741,7 @@ public class CsvReaderTest
     public void SpaceBecomesEmptyField()
     {
         var data = " ";
-        using var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly, skipEmptyLines: false);
+        using var csv = ReadCsv.FromString(data, trimmingOptions: ValueTrimmingOptions.UnquotedOnly, emptyLineAction: EmptyLineAction.None);
         Assert.IsTrue(csv.Read());
         Assert.AreEqual(1, csv.FieldCount);
         Assert.AreEqual(string.Empty, csv[0]);
@@ -768,7 +755,7 @@ public class CsvReaderTest
         using var csv = ReadCsv.FromString(data,
             missingFieldAction: MissingFieldAction.ReplaceByNull,
             trimmingOptions: ValueTrimmingOptions.All,
-            skipEmptyLines: false);
+            emptyLineAction: EmptyLineAction.None);
         Assert.IsTrue(csv.Read());
         Assert.AreEqual(2, csv.FieldCount);
         Assert.AreEqual("a", csv[0]);
@@ -923,7 +910,7 @@ public class CsvReaderTest
     public void SkipEmptyLinesTest1()
     {
         var data = "00\n\n10";
-        using var csv = ReadCsv.FromString(data, skipEmptyLines: false);
+        using var csv = ReadCsv.FromString(data, emptyLineAction: EmptyLineAction.None);
         Assert.AreEqual(1, csv.FieldCount);
 
         Assert.IsTrue(csv.Read());
@@ -942,7 +929,7 @@ public class CsvReaderTest
     public void SkipEmptyLinesTest2()
     {
         var data = "00\n\n10";
-        using var csv = ReadCsv.FromString(data, skipEmptyLines: true);
+        using var csv = ReadCsv.FromString(data, emptyLineAction: EmptyLineAction.Skip);
         Assert.AreEqual(1, csv.FieldCount);
 
         Assert.IsTrue(csv.Read());

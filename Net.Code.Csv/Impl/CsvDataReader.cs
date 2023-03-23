@@ -5,23 +5,36 @@ namespace Net.Code.Csv.Impl;
 
 internal class CsvDataReader : IDataReader
 {
-    private readonly CsvHeader _header;
+    private readonly TextReader _reader;
+    private readonly Converter _converter;
+    private readonly CsvLayout _layout;
+    private readonly CsvBehaviour _behaviour;
+    private CsvHeader _header => _parser.Header;
     private CsvLine _line;
     private CsvParser _parser;
-    private readonly Converter _converter;
     private bool _isDisposed;
-    private readonly IEnumerator<CsvLine> _enumerator;
-    private readonly CsvSchema _schema;
+    private IEnumerator<CsvLine> _enumerator;
+    private IEnumerator<CsvSchema> _schemas;
+    private CsvSchema _schema;
     private bool _eof;
 
     public CsvDataReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, CultureInfo cultureInfo)
     {
-        _parser = new CsvParser(reader, csvLayout, csvBehaviour);
-        _header = _parser.Header;
-        _line = null;
+        _reader = reader;
+        _layout = csvLayout;
+        _behaviour = csvBehaviour;
         _converter = new Converter(cultureInfo ?? CultureInfo.InvariantCulture);
+        _schemas = _layout.Schemas.GetEnumerator();
+        InitializeResultSet();
+    }
+
+    private void InitializeResultSet()
+    {
+        _parser = new CsvParser(_reader, _layout, _behaviour);
+        _line = null;
         _enumerator = _parser.GetEnumerator();
-        _schema = csvLayout.Schema;
+        if (_schemas?.MoveNext() ?? false)
+            _schema = _schemas.Current;
     }
 
     private int GetIndex(int i) => _schema switch
@@ -247,7 +260,12 @@ internal class CsvDataReader : IDataReader
         return schema;
     }
 
-    public bool NextResult() => false;
+    public bool NextResult()
+    {
+        while (_line is not null && !_line.IsEmpty && Read())
+        {}
+        return !_eof;
+    }
 
     public bool Read()
     {
@@ -256,9 +274,19 @@ internal class CsvDataReader : IDataReader
             _eof = true;
             return false;
         }
+
         _line = _enumerator.Current;
+
+        if (_line.IsEmpty && _behaviour.EmptyLineAction == EmptyLineAction.NextResult)
+        {
+            InitializeResultSet();
+            return false;
+        }
+
         return true;
     }
+
+    public bool HasRows => !_eof;
 
     public int Depth => 0;
     public bool IsClosed => _isDisposed;

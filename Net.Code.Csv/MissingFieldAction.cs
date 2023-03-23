@@ -18,3 +18,19 @@ public enum MissingFieldAction
     /// </summary>
     ReplaceByNull = 2,
 }
+
+public enum EmptyLineAction
+{
+    /// <summary>
+    /// Do nothing. Behaviour will depend on the MissingFieldAction.
+    /// </summary>
+    None = 0,
+    /// <summary>
+    /// Skip empty lines
+    /// </summary>
+    Skip = 1,
+    /// <summary>
+    /// an empty line represents another result set
+    /// </summary>
+    NextResult = 2
+}

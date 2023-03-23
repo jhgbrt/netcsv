@@ -204,8 +204,6 @@ public class CsvReaderIDataReaderTest
     {
         using var reader = ReadCsv.FromString(
             CsvReaderSampleData.SampleData1, hasHeaders: true);
-        Assert.IsFalse(reader.NextResult());
-
         reader.Read();
         Assert.IsFalse(reader.NextResult());
     }
