@@ -31,7 +31,7 @@ internal class CsvDataReader : IDataReader
     private void InitializeResultSet()
     {
         _parser = new CsvParser(_reader, _layout, _behaviour);
-        _line = null;
+        _line = CsvLine.Empty;
         _enumerator = _parser.GetEnumerator();
         if (_schemas?.MoveNext() ?? false)
             _schema = _schemas.Current;
@@ -262,7 +262,7 @@ internal class CsvDataReader : IDataReader
 
     public bool NextResult()
     {
-        while (_line is not null && !_line.IsEmpty && Read())
+        while (!_line.IsEmpty && Read())
         {}
         return !_eof;
     }

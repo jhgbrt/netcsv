@@ -1,6 +1,6 @@
 ﻿namespace Net.Code.Csv;
 
-public class WriteCsv
+public static class WriteCsv
 {
     /// <summary>
     /// Write a list of items to a file in CSV format

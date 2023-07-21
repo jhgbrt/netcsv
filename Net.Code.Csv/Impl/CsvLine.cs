@@ -3,7 +3,7 @@ namespace Net.Code.Csv.Impl;
 /// <summary>
 /// A CSV line
 /// </summary>
-record CsvLine(string[] Fields, bool IsEmpty)
+record struct CsvLine(string[] Fields, bool IsEmpty)
 {
 
     /// <summary>

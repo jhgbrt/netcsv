@@ -3,20 +3,30 @@ namespace Net.Code.Csv.Impl;
 /// <summary>
 /// A CSV header line
 /// </summary>
-record CsvHeader : CsvLine
+record struct CsvHeader(string[] Fields)
 {
-    private readonly IReadOnlyDictionary<string, int> _fieldHeaderIndexes;
+    public static CsvHeader None = new(Array.Empty<string>());
+    public static CsvHeader Default(int length) => new(Enumerable.Range(0, length).Select(i => $"Column{i}").ToArray());
+    public static CsvHeader Create(string[] names) => new(names.Select((f, i) => string.IsNullOrWhiteSpace(f) ? $"Column{i}" : f).ToArray());
 
-    public CsvHeader(string[] fields)
-        : base(DefaultWhereEmpty(fields).ToArray(), false)
-        => _fieldHeaderIndexes = Fields.WithIndex().ToDictionary(x => x.item, x => x.index);
+    public override string ToString() => string.Join(";", Fields);
+    public readonly int Length => Fields.Length;
+    public readonly string this[int field] => Fields[field];
 
-    private static IEnumerable<string> DefaultWhereEmpty(IEnumerable<string> fields)
-        => fields.Select((f, i) => string.IsNullOrWhiteSpace(f) ? $"Column{i}" : f);
-
-    public int this[string headerName] => _fieldHeaderIndexes[headerName];
-
-    public bool TryGetIndex(string name, out int index) => _fieldHeaderIndexes.TryGetValue(name, out index);
+    public bool TryGetIndex(string name, out int index)
+    {
+        if (name is null) throw new ArgumentNullException(nameof(name));
+        index = -1;
+        foreach (var (f, i) in Fields.WithIndex())
+        {
+            if (f == name)
+            {
+                index = i;
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 static class EnumerableEx

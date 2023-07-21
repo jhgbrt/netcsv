@@ -6,13 +6,9 @@ namespace Net.Code.Csv.Impl;
 /// String to primitive conversion class. By default, uses the Convert.ToXXX methods or,
 /// if not available, the [Primitive].Parse method.
 /// </summary>
-class Converter
+class Converter(CultureInfo cultureInfo)
 {
-    private readonly CultureInfo _cultureInfo;
-    public Converter(CultureInfo cultureInfo)
-    {
-        _cultureInfo = cultureInfo ?? CultureInfo.InvariantCulture;
-    }
+    private readonly CultureInfo _cultureInfo = cultureInfo ?? CultureInfo.InvariantCulture;
 
     public bool ToBoolean(string value) => Convert.ToBoolean(value, _cultureInfo);
     public bool ToBoolean(string value, string format)

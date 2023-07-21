@@ -18,16 +18,17 @@ public record struct CsvColumn(
 
 public class CsvSchemaBuilder
 {
+    private readonly List<CsvColumn> _columns = new();
+    private readonly Converter _converter;
+
     public CsvSchemaBuilder() : this(CultureInfo.InvariantCulture)
     {
     }
+
     public CsvSchemaBuilder(CultureInfo cultureInfo)
     {
-        _converter = new Converter(cultureInfo ?? CultureInfo.InvariantCulture);
+        _converter = new(cultureInfo ?? CultureInfo.InvariantCulture);
     }
-
-    private readonly List<CsvColumn> _columns = new();
-    private readonly Converter _converter;
 
     public CsvSchemaBuilder Add(CsvColumn column)
     {
@@ -40,18 +41,23 @@ public class CsvSchemaBuilder
         _columns.Add(new CsvColumn(name, name, typeof(T), s => convert(s), allowNull));
         return this;
     }
+
     private CsvSchemaBuilder Add<T>(string name, string format, Func<string, string, T> convert, bool allowNull)
     {
         _columns.Add(new CsvColumn(name, name, typeof(T), s => convert(s, format), allowNull));
         return this;
     }
+
     private CsvSchemaBuilder Add(string name, Type type, bool allowNull)
     {
         _columns.Add(new CsvColumn(name, name, type, s => _converter.FromString(type, s), allowNull));
         return this;
     }
+
     public CsvSchemaBuilder AddString(string name, bool allowNull = false) => Add(name, s => s, allowNull);
+
     public CsvSchemaBuilder AddBoolean(string name, bool allowNull = false) => Add(name, _converter.ToBoolean, allowNull);
+
     public CsvSchemaBuilder AddBoolean(string name, string @true, string @false, bool allowNull = false)
         => Add(name, $"{@true}|{@false}", _converter.ToBoolean, allowNull);
     public CsvSchemaBuilder AddBoolean(string name, string format, bool allowNull = false)
@@ -71,6 +77,7 @@ public class CsvSchemaBuilder
     public CsvSchemaBuilder AddGuid(string name, bool allowNull = false) => Add(name, _converter.ToGuid, allowNull);
     public CsvSchemaBuilder AddDateTime(string name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTime, allowNull);
     public CsvSchemaBuilder AddDateTimeOffset(string name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTimeOffset, allowNull);
+
     public CsvSchemaBuilder From<T>()
     {
         var properties = typeof(T).GetPropertiesWithCsvFormat();
@@ -151,10 +158,12 @@ public class CsvSchemaBuilder
     public CsvSchema Schema => new(_columns.ToArray());
 }
 
+
 /// <summary>
 /// Use this attribute to specify the format for boolean values (form: "True|False", e.g. "yes|no")
 /// or DateTime or DateTimeOffset values (form: .Net format string)
 /// </summary>
+[AttributeUsage(AttributeTargets.All, AllowMultiple = false)]
 public class CsvFormatAttribute : Attribute
 {
     public string Format { get; set; }

@@ -14,13 +14,13 @@ internal static class TypeExtensions
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
-    public static ConstructorInfo GetRecordConstructor(this Type type)
+    public static ConstructorInfo GetPrimaryConstructor(this Type type)
         => type.GetConstructor(type.GetProperties().Select(p => p.PropertyType).ToArray());
 
     public static IEnumerable<(PropertyInfo property, string format)> GetPropertiesWithCsvFormat(this Type type)
     {
         var properties = type.GetProperties();
-        var parameters = type.GetRecordConstructor()?.GetParameters() ?? Enumerable.Repeat(default(ParameterInfo), properties.Length);
+        var parameters = type.GetPrimaryConstructor()?.GetParameters() ?? Enumerable.Repeat(default(ParameterInfo), properties.Length);
         return properties.Zip(parameters, (property, parameter) => (property, parameter?.GetCsvFormat() ?? property.GetCsvFormat())).ToArray();
     }
 

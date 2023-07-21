@@ -14,25 +14,25 @@ class CsvParser : IEnumerable<CsvLine>, IDisposable
         _enumerator = _csvStateMachine.Lines().GetEnumerator();
         _textReader = textReader;
 
-        var firstLine = Lines().FirstOrDefault();
+        CsvLine? firstLine = Lines().OfType<CsvLine?>().FirstOrDefault();
 
         Header = (layOut, firstLine) switch
         {
             ({ HasHeaders: true }, firstLine: not null)
-                => new CsvHeader(firstLine.Fields),
+                => CsvHeader.Create(firstLine.Value.Fields),
 
             ({ HasHeaders: false }, firstLine: not null)
-                => new CsvHeader(Enumerable.Repeat(string.Empty, firstLine.Fields.Length).ToArray()),
+                => CsvHeader.Default(firstLine.Value.Length),
 
             (_, firstLine: null)
-                => new CsvHeader(Array.Empty<string>())
+                => CsvHeader.None
         };
 
         if (!layOut.HasHeaders)
             _cachedLine = firstLine;
     }
 
-    private CsvLine _cachedLine;
+    private CsvLine? _cachedLine;
 
     private readonly IEnumerator<CsvLine> _enumerator;
 
@@ -44,7 +44,7 @@ class CsvParser : IEnumerable<CsvLine>, IDisposable
     {
         if (_cachedLine != null)
         {
-            yield return _cachedLine;
+            yield return _cachedLine.Value;
             _cachedLine = null;
         }
 

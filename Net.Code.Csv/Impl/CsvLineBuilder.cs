@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 
 namespace Net.Code.Csv.Impl;
-internal class CsvLineBuilder
+internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
 {
     private CsvChar _currentChar;
     private bool _quoted;
@@ -12,8 +12,6 @@ internal class CsvLineBuilder
     private readonly StringBuilder _rawData = new();
     private readonly List<string> _fields = new();
 
-    private readonly CsvLayout _layout;
-    private readonly CsvBehaviour _behaviour;
     public string RawData => _rawData.ToString();
 
     public CsvChar CurrentChar => _currentChar;
@@ -23,12 +21,6 @@ internal class CsvLineBuilder
     public Location Location => _location;
 
     public int? FieldCount { get; set; }
-
-    public CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
-    {
-        _layout = layout;
-        _behaviour = behaviour;
-    }
 
     internal CsvLineBuilder PrepareNextLine()
     {
@@ -67,7 +59,7 @@ internal class CsvLineBuilder
 
     internal CsvLineBuilder NextField()
     {
-        var result = _behaviour.TrimmingOptions switch
+        var result = behaviour.TrimmingOptions switch
         {
             ValueTrimmingOptions.All => _field.Trim(),
             ValueTrimmingOptions.QuotedOnly when _quoted => _field.Trim(),
@@ -95,24 +87,24 @@ internal class CsvLineBuilder
     {
         var isEmpty = _fields.Count == 0 || (_fields.Count == 1 && string.IsNullOrEmpty(_fields[0]));
 
-        if (!FieldCount.HasValue && (!isEmpty || _behaviour.EmptyLineAction != EmptyLineAction.Skip))
+        if (!FieldCount.HasValue && (!isEmpty || behaviour.EmptyLineAction != EmptyLineAction.Skip))
         {
             FieldCount = _fields.Count;
         }
 
 
         var count = _fields.Count;
-        if (!isEmpty && count < FieldCount && _behaviour.MissingFieldAction == MissingFieldAction.ParseError)
+        if (!isEmpty && count < FieldCount && behaviour.MissingFieldAction == MissingFieldAction.ParseError)
         {
             throw new MissingFieldCsvException(RawData, Location, _fields.Count);
         }
 
-        if (FieldCount.HasValue && isEmpty && _behaviour.EmptyLineAction == EmptyLineAction.NextResult)
+        if (FieldCount.HasValue && isEmpty && behaviour.EmptyLineAction == EmptyLineAction.NextResult)
         {
         }
         else if (count < FieldCount)
         {
-            var s = _behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : "";
+            var s = behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : "";
             _fields.AddRange(Enumerable.Repeat(s, FieldCount.Value - count));
         }
 
@@ -131,7 +123,7 @@ internal class CsvLineBuilder
         var peek = textReader.Peek();
         var next = peek < 0 ? null : (char?)peek;
         _location = _location.NextColumn();
-        _currentChar = new CsvChar(currentChar, _layout, next);
+        _currentChar = new CsvChar(currentChar, layout, next);
         _rawData.Append(currentChar);
         if (_rawData.Length > 32) _rawData.Remove(0, 1);
         return true;

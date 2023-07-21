@@ -1,7 +1,7 @@
 ﻿namespace Net.Code.Csv.Impl;
 
 /// <summary>
-/// 
+/// represents a character in the CSV stream
 /// </summary>
 /// <param name="c">The last read character</param>
 /// <param name="layout">the CSV layout parameters</param>

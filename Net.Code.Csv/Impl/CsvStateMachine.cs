@@ -192,9 +192,4 @@ internal class CsvStateMachine
             => new(ParseError, state.Ignore())
     };
 }
-
-record ProcessingResult(Option<CsvLine> Line, ProcessStateFunc Next, CsvLineBuilder State)
-{
-    public ProcessingResult(ProcessStateFunc Next, CsvLineBuilder state, CsvLine line = null)
-        : this(new Option<CsvLine>(line), Next, state) { }
-}
+record struct ProcessingResult(ProcessStateFunc Next, CsvLineBuilder State, CsvLine? Line = null);
