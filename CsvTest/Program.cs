@@ -4,44 +4,57 @@ using System.Globalization;
 using System.Text;
 using CsvTest;
 using System;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Attributes;
+
+BenchmarkRunner.Run<CsvBenchmark>();
+
+[MemoryDiagnoser]
+public class CsvBenchmark
+{
+    private void Experimental()
+    {
+        var be = CultureInfo.CreateSpecificCulture("be");
+
+        var amount = Amount.Parse("$ 123.58", CultureInfo.InvariantCulture);
+        Console.WriteLine(amount.ToString(CultureInfo.InvariantCulture));
+        var converter = TypeDescriptor.GetConverter(typeof(Amount));
+        Console.WriteLine(converter.ConvertToString(null, be, amount));
+        Console.WriteLine(converter.ConvertFrom(null, be, "$ 123,58"));
+
+        Convert.ToString(new DateTime(), new MyFormatProvider());
+    }
+
+    [Benchmark]
+
+    public void Test()
+    {
+        var schema = new CsvSchemaBuilder().From<MyItem>().Schema;
+
+        using var reader = ReadCsv.FromFile(
+            "test.csv",
+            encoding: Encoding.UTF8,
+            delimiter: ';',
+            hasHeaders: true,
+            schema: schema
+        );
+
+        var total = 0.0m;
+        foreach (var item in reader.AsEnumerable<MyItem>())
+        {
+            total += item.Price;
+        }
+    }
+
+}
 
 //record Person(string FirstName, string LastName, [CsvFormat("yyyy-MM-dd")] DateTime BirthDate);
 
 //var people = new[] { new Person("John", "Peterson", new DateTime(1980, 5, 14)) };
 
-//WriteCsv.ToFile("out.csv", people);
-
-var be = CultureInfo.CreateSpecificCulture("be");
-
-var amount = Amount.Parse("$ 123.58", CultureInfo.InvariantCulture);
-Console.WriteLine(amount.ToString(CultureInfo.InvariantCulture));
-var converter = TypeDescriptor.GetConverter(typeof(Amount));
-Console.WriteLine(converter.ConvertToString(null, be, amount));
-Console.WriteLine(converter.ConvertFrom(null, be, "$ 123,58"));
-
-var schema = new CsvSchemaBuilder()
-    .AddString(nameof(MyItem.First))
-    .Add(nameof(MyItem.Last), s => new Custom(s), true)
-    .AddDateTime(nameof(MyItem.BirthDate), "yyyyMMdd")
-    .AddInt32(nameof(MyItem.Quantity))
-    .AddDecimal(nameof(MyItem.Price))
-    .Schema;
-
-Convert.ToString(new DateTime(), new MyFormatProvider());
+//WriteCsv.ToFile("out.csv",*/ people);
 
 
-var schema2 = new CsvSchemaBuilder().From<MyItem>().Schema;
-
-using var reader = ReadCsv.FromFile(
-    "test.csv",
-    encoding: Encoding.UTF8,
-    delimiter: ';',
-    hasHeaders: true,
-    schema: schema2
-);
-
-foreach (var item in reader.AsEnumerable<MyItem>())
-    Console.WriteLine(item);
 
 
 namespace CsvTest
