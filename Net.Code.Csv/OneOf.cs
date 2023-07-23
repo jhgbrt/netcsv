@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+#nullable enable
 namespace Net.Code.Csv
 {
     // credits: https://github.com/mcintyre321/OneOf
