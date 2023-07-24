@@ -16,6 +16,22 @@ public record struct CsvColumn(
 {
 }
 
+public static class Schema
+{
+    public static CsvSchema From<T>() => new CsvSchemaBuilder().From<T>().Schema;
+    public static CsvSchema[] From<T1, T2>() => new[]
+    {
+        new CsvSchemaBuilder().From<T1>().Schema,
+        new CsvSchemaBuilder().From<T2>().Schema,
+    };
+    public static CsvSchema[] From<T1, T2, T3>() => new[]
+    {
+        new CsvSchemaBuilder().From<T1>().Schema,
+        new CsvSchemaBuilder().From<T2>().Schema,
+        new CsvSchemaBuilder().From<T3>().Schema,
+    };
+}
+
 public class CsvSchemaBuilder
 {
     private readonly List<CsvColumn> _columns = new();

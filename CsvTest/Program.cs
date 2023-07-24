@@ -29,7 +29,7 @@ public class CsvBenchmark
 
     public void Test()
     {
-        var schema = new CsvSchemaBuilder().From<MyItem>().Schema;
+        var schema = Schema.From<MyItem>();
 
         using var reader = ReadCsv.FromFile(
             "test.csv",

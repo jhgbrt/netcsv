@@ -228,6 +228,74 @@ public class MultiResultSetTests
     public class CsvMultiResultSetTest
     {
         [Test]
+        public void MultiResultOrdersExample()
+        {
+            var input = """"
+            Id;FirstName;LastName;OrderDate;OrderTotal
+            1;John;Doe;2023-01-01;100
+            2;Jane;Doe;2023-01-02;110
+            
+            OrderId;ItemName;Quantity;Price
+            1;Item 1;2;50
+            2;Item 1;1;50
+            2;Item 2;1;10
+            2;Item 2;1;50
+            """";
+
+            var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, delimiter: ';');
+            while (reader.Read())
+            {
+                var orderId = reader.GetInt32(reader.GetOrdinal("Id"));
+                var customerFirstName = reader.GetString(reader.GetOrdinal("FirstName"));
+                var customerLastName = reader.GetString(reader.GetOrdinal("LastName"));
+                var orderDate = reader.GetDateTime(reader.GetOrdinal("OrderDate"));
+                var orderTotal = reader.GetDecimal(reader.GetOrdinal("OrderTotal"));
+            }
+
+            reader.NextResult();
+            while (reader.Read())
+            {
+                var orderId = reader.GetInt32(reader.GetOrdinal("OrderId"));
+                var itemName = reader.GetString(reader.GetOrdinal("ItemName"));
+                var quantity = reader.GetInt32(reader.GetOrdinal("Quantity"));
+                var price = reader.GetDecimal(reader.GetOrdinal("Price"));
+            }
+
+
+
+        }
+        [Test]
+        public void MultiResultOrdersExampleWithSchemas()
+        {
+            var input = """"
+            Id;FirstName;LastName;OrderDate;OrderTotal
+            1;John;Doe;2023-01-01;100
+            2;Jane;Doe;2023-01-02;110
+            
+            OrderId;ItemName;Quantity;Price
+            1;Item 1;2;50
+            2;Item 1;1;50
+            2;Item 2;1;10
+            2;Item 2;1;50
+            """";
+
+
+            var schemas = Schema.From<Order, OrderItem>();
+
+            var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, delimiter: ';', schema: schemas);
+
+            var orders = reader.AsEnumerable<Order>().ToList();
+            reader.NextResult();
+            var items = reader.AsEnumerable<OrderItem>().ToList();
+
+            Assert.AreEqual(2, orders.Count);
+            Assert.AreEqual(4, items.Count);
+        }
+
+        record Order(int Id, string FirstName, string LastName, DateTime OrderDate, decimal OrderTotal);
+        record OrderItem(int OrderId, string ItemName, int Quantity, decimal Price);
+
+        [Test]
         public void CanReadMultiResult()
         {
             var input = """"
