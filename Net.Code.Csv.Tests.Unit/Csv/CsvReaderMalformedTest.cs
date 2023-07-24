@@ -222,13 +222,15 @@ public class CsvReaderMalformedTest
     }
 }
 
-[TestFixture]
-public class CsvMultiResultSetTest
+public class MultiResultSetTests
 {
-    [Test]
-    public void CanReadMultiResult()
+    [TestFixture]
+    public class CsvMultiResultSetTest
     {
-        var input = """"
+        [Test]
+        public void CanReadMultiResult()
+        {
+            var input = """"
             a,b,c
             1,2,3
 
@@ -237,27 +239,27 @@ public class CsvMultiResultSetTest
             """";
 
 
-        var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true);
+            var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true);
 
-        while (reader.Read())
-        {
-            Assert.AreEqual("1", reader["a"]);
-            Assert.AreEqual("2", reader["b"]);
-            Assert.AreEqual("3", reader["c"]);
+            while (reader.Read())
+            {
+                Assert.AreEqual("1", reader["a"]);
+                Assert.AreEqual("2", reader["b"]);
+                Assert.AreEqual("3", reader["c"]);
+            }
+
+            Assert.IsTrue(reader.NextResult());
+
+            while (reader.Read())
+            {
+                Assert.AreEqual("x", reader["d"]);
+                Assert.AreEqual("y", reader["e"]);
+            }
         }
-
-        Assert.IsTrue(reader.NextResult());
-
-        while (reader.Read())
+        [Test]
+        public void CanReadMultiResultWithSchemas()
         {
-            Assert.AreEqual("x", reader["d"]);
-            Assert.AreEqual("y", reader["e"]);
-        }
-    }
-    [Test]
-    public void CanReadMultiResultWithSchemas()
-    {
-        var input = """"
+            var input = """"
             a,b,c
             1,2,3
 
@@ -266,23 +268,24 @@ public class CsvMultiResultSetTest
             """";
 
 
-        var schemas = new[]
-        {
-            new CsvSchemaBuilder().From<Part1>().Schema,
-            new CsvSchemaBuilder().From<Part2>().Schema
-        };
+            var schemas = new[]
+            {
+                new CsvSchemaBuilder().From<Part1>().Schema,
+                new CsvSchemaBuilder().From<Part2>().Schema
+            };
 
-        var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, schema: schemas);
+            var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, schema: schemas);
 
-        var first = reader.AsEnumerable<Part1>().Single();
-        Assert.AreEqual(new Part1(1,2,3), first);
-        Assert.IsTrue(reader.NextResult());
+            var first = reader.AsEnumerable<Part1>().Single();
+            Assert.AreEqual(new Part1(1, 2, 3), first);
+            Assert.IsTrue(reader.NextResult());
 
-        var second = reader.AsEnumerable<Part2>().Single();
-        Assert.AreEqual(new Part2("x", "y"), second);
-        Assert.IsFalse(reader.NextResult());
+            var second = reader.AsEnumerable<Part2>().Single();
+            Assert.AreEqual(new Part2("x", "y"), second);
+            Assert.IsFalse(reader.NextResult());
+        }
+
+        record Part1(int a, int b, int c);
+        record Part2(string d, string e);
     }
-
-    record Part1(int a, int b, int c);
-    record Part2(string d, string e);
 }
