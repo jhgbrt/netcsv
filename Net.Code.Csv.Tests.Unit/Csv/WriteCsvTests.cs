@@ -1,4 +1,7 @@
 ﻿
+using System.IO;
+using System.Threading.Tasks;
+
 using static System.Environment;
 
 namespace Net.Code.Csv.Tests.Unit.Csv;
@@ -25,6 +28,14 @@ public class WriteCsvTests
                 }
             };
 
+    private async IAsyncEnumerable<MyRecord> GetRecordsAsync()
+    {
+        foreach (var item in recordItems)
+        {
+            await Task.Yield();
+            yield return item;
+        }
+    }
     private readonly MyRecord[] recordItems = new[]
     {
                 new MyRecord(
@@ -62,6 +73,17 @@ public class WriteCsvTests
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
+        Assert.AreEqual(expected, result);
+    }
+    [Test]
+    public async Task WriteCsv_ToStream_Record_WithCultureInfo_ToString()
+    {
+        var cultureInfo = CultureInfo.CreateSpecificCulture("be");
+        var stream = new MemoryStream();
+        await WriteCsv.ToStream(GetRecordsAsync(), stream, delimiter: ';', quote: '"', escape: '\\', hasHeaders: true, cultureInfo: cultureInfo);
+        stream.Position = 0;
+        var sr = new StreamReader(stream);
+        var result = sr.ReadToEnd();
         Assert.AreEqual(expected, result);
     }
 
