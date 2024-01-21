@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Net.Code.Csv;
@@ -15,7 +16,7 @@ public static class WriteCsv
     /// <param name="delimiter">The delimiter (default ',')</param>
     /// <param name="quote">The quote character to use. Fields are always quoted.</param>
     /// <param name="escape">The escape character to use. Required to escape quotes in string fields.</param>
-    /// <param name="hasHeaders">Should a header be written? Ignored when append is true and file is not empty.</param>
+    /// <param name="hasHeaders">Should a header be written? If true, the property names of the [T] are written to the file as headers. Ignored when append is true and file is not empty.</param>
     /// <param name="append">Append to the file. If true, no headers are written if the file is not empty (regardless of hasHeaders).</param>
     /// <param name="cultureInfo">Culture info to be used when serializing values.</param>
     public static void ToFile<T>(
@@ -45,7 +46,7 @@ public static class WriteCsv
     /// <param name="delimiter">The delimiter (default ',')</param>
     /// <param name="quote">The quote character to use. Fields are always quoted.</param>
     /// <param name="escape">The escape character to use. Required to escape quotes in string fields.</param>
-    /// <param name="hasHeaders">Should a header be written?</param>
+    /// <param name="hasHeaders">Should a header be written? If true, the property names of the [T] are written to the file as headers.</param>
     /// <param name="cultureInfo">Culture info to be used when serializing values.</param>
     public static void ToStream<T>(
         IEnumerable<T> items,
@@ -72,7 +73,7 @@ public static class WriteCsv
     /// <param name="delimiter">The delimiter (default ',')</param>
     /// <param name="quote">The quote character to use. Fields are always quoted.</param>
     /// <param name="escape">The escape character to use. Required to escape quotes in string fields.</param>
-    /// <param name="hasHeaders">Should a header be written?</param>
+    /// <param name="hasHeaders">Should a header be written? If true, the property names of the [T] are written to the file as headers.</param>
     /// <param name="cultureInfo">Culture info to be used when serializing values.</param>
     public static async Task ToStream<T>(
         IAsyncEnumerable<T> items,
@@ -96,7 +97,7 @@ public static class WriteCsv
     /// <param name="delimiter">The delimiter (default ',')</param>
     /// <param name="quote">The quote character to use. Fields are always quoted.</param>
     /// <param name="escape">The escape character to use. Required to escape quotes in string fields.</param>
-    /// <param name="hasHeaders">Should a header be written?</param>
+    /// <param name="hasHeaders">Should a header be written? If true, the property names of the [T] are written to the file as headers.</param>
     /// <param name="cultureInfo">Culture info to be used when serializing values.</param>
     public static string ToString<T>(
         IEnumerable<T> items,
@@ -123,21 +124,18 @@ public static class WriteCsv
         CultureInfo cultureInfo = null
         )
     {
-        cultureInfo ??= CultureInfo.InvariantCulture;
-        var converter = new Converter(cultureInfo);
         var properties = typeof(T).GetPropertiesWithCsvFormat();
-        var sb = new StringBuilder();
         if (hasHeaders)
         {
             writer.WriteLine(string.Join(delimiter.ToString(), properties.Select(p => p.property.Name)));
         }
 
+        cultureInfo ??= CultureInfo.InvariantCulture;
+        var converter = new Converter(cultureInfo);
+        var sb = new StringBuilder();
         foreach (var item in items)
         {
-            var values = from pf in properties
-                         let value = pf.property.GetValue(item)
-                         let s = converter.ToString(value, pf.format)
-                         select sb.Clear().Append(s).QuoteIfNecessary(quote, delimiter, escape);
+            var values = GetPropertyValuesAsString(item, properties, delimiter, quote, escape, converter, sb);
 
             bool writeDelimiter = false;
             foreach (var v in values)
@@ -161,31 +159,40 @@ public static class WriteCsv
         CultureInfo cultureInfo = null
         )
     {
-        cultureInfo ??= CultureInfo.InvariantCulture;
-        var converter = new Converter(cultureInfo);
         var properties = typeof(T).GetPropertiesWithCsvFormat();
-        var sb = new StringBuilder();
         if (hasHeaders)
         {
             writer.WriteLine(string.Join(delimiter.ToString(), properties.Select(p => p.property.Name)));
         }
 
+        cultureInfo ??= CultureInfo.InvariantCulture;
+        var converter = new Converter(cultureInfo);
+        var sb = new StringBuilder();
         await foreach (var item in items)
         {
-            var values = from pf in properties
-                         let value = pf.property.GetValue(item)
-                         let s = converter.ToString(value, pf.format)
-                         select sb.Clear().Append(s).QuoteIfNecessary(quote, delimiter, escape);
+            var values = GetPropertyValuesAsString(item, properties, delimiter, quote, escape, converter, sb);
 
             bool writeDelimiter = false;
             foreach (var v in values)
             {
-                if (writeDelimiter) writer.Write(delimiter);
+                if (writeDelimiter) await writer.WriteAsync(delimiter);
                 else writeDelimiter = true;
-                writer.Write(sb.ToString());
+                await writer.WriteAsync(v);
             }
 
-            writer.WriteLine();
+            await writer.WriteLineAsync();
         }
     }
+
+    /// <summary>
+    /// This method returns an unmaterialized LINQ query for all properties of an item of type T
+    /// the StringBuilder parameter should be allocated once and is passed in to avoid the 
+    /// allocation of a new StringBuilder for each item in the list.
+    /// In the query, the StringBuilder is cleared for each resulting value, in order to avoid unnecessary allocations.
+    /// </summary>
+    private static IEnumerable<string> GetPropertyValuesAsString(object item, IEnumerable<(PropertyInfo property, string format)> properties, char delimiter, char quote, char escape, Converter converter, StringBuilder sb)
+    => from pf in properties
+       let value = pf.property.GetValue(item)
+       let s = converter.ToString(value, pf.format)
+       select sb.Clear().Append(s).QuoteIfNecessary(quote, delimiter, escape).ToString();
 }

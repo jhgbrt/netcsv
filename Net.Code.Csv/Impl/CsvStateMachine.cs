@@ -3,7 +3,37 @@ namespace Net.Code.Csv.Impl;
 using System.Diagnostics;
 
 using ProcessStateFunc = Func<CsvLineBuilder, CsvBehaviour, ProcessingResult>;
-
+/// <summary>
+/// CsvStateMachine is a core component of this CSV parsing library, responsible for parsing CSV data
+/// into structured CsvLine records. It implements a state machine pattern to manage the complexity
+/// of parsing CSV files, which can vary in format and content.
+///
+/// Key Responsibilities:
+/// - Iteratively processes CSV data character-by-character, handling different scenarios like quoted fields,
+///   escaped characters, comments, and varying line endings.
+/// - Transitions between different states based on the current character and CSV parsing rules. The states include
+///   handling the beginning of lines, inside/outside of fields, quoted fields, comments, and handling parse errors.
+/// - Works in conjunction with CsvLineBuilder to construct CsvLine records, which represent individual lines
+///   in the CSV file with their respective fields.
+/// - Utilizes CsvLayout to understand the CSV format (such as delimiters, quote characters) and CsvBehaviour
+///   to determine how to handle specific parsing scenarios (like missing fields or quotes inside quoted fields).
+///
+/// Usage:
+/// The state machine is used internally by the CSV parser to process CSV data. It is not intended for direct
+/// use outside of this library. Instead, users should interact with higher-level CSV parsing functions that
+/// instantiate and manage this class.
+///
+/// Implementation Details:
+/// - The state machine uses a series of delegate functions (ProcessStateFunc) to represent different parsing states.
+/// - Each state function handles specific parsing logic and determines the next state based on the current character
+///   and CSV rules, making the parser adaptable to various CSV formats.
+/// - Error handling is integral to the state machine, with custom exceptions (MalformedCsvException, MissingFieldCsvException)
+///   providing detailed error information.
+///
+/// Note:
+/// This class is internally used and should be maintained with care. Changes to the state machine logic can
+/// significantly impact the CSV parsing capabilities and correctness.
+/// </summary>
 internal class CsvStateMachine
 {
     private readonly TextReader _textReader;
