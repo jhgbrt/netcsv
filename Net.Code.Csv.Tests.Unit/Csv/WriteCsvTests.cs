@@ -6,7 +6,7 @@ using static System.Environment;
 
 namespace Net.Code.Csv.Tests.Unit.Csv;
 
-[TestFixture]
+
 public class WriteCsvTests
 {
     private readonly string expected =
@@ -52,30 +52,30 @@ public class WriteCsvTests
             };
 
 
-    [Test]
+    [Fact]
     public void WriteCsv_Class_ToString()
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(classItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.AreEqual(expected, result);
+        Assert.Equal(expected, result);
     }
 
-    [Test]
+    [Fact]
     public void WriteCsv_Record_ToString()
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.AreEqual(expected, result);
+        Assert.Equal(expected, result);
     }
 
-    [Test]
+    [Fact]
     public void WriteCsv_Record_WithCultureInfo_ToString()
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.AreEqual(expected, result);
+        Assert.Equal(expected, result);
     }
-    [Test]
+    [Fact]
     public async Task WriteCsv_ToStream_Record_WithCultureInfo_ToString()
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
@@ -84,38 +84,38 @@ public class WriteCsvTests
         stream.Position = 0;
         var sr = new StreamReader(stream);
         var result = sr.ReadToEnd();
-        Assert.AreEqual(expected, result);
+        Assert.Equal(expected, result);
     }
 
     class Item { public decimal Value { get; set; } }
-    [Test]
+    [Fact]
     public void WriteCsv_ReadBack_ReturnsExpectedResult()
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var schema = new CsvSchemaBuilder(cultureInfo).From<Item>().Schema;
         var result = WriteCsv.ToString(new[] { new Item { Value = 123.5m } }, cultureInfo: cultureInfo);
-        Assert.AreEqual($"\"123,5\"{NewLine}", result);
+        Assert.Equal($"\"123,5\"{NewLine}", result);
         var readback = ReadCsv.FromString(result, schema: schema).AsEnumerable<Item>().Single().Value;
-        Assert.AreEqual(123.5m, readback);
+        Assert.Equal(123.5m, readback);
     }
 
-    [Test]
+    [Fact]
     public void BooleanValue_SerializedAsYesOrNo_WhenYes_IsTrue()
     {
         var data = "yes";
         var reader = ReadCsv.FromString(data, schema: new CsvSchemaBuilder().AddBoolean("BooleanColumn", "yes", "no", false).Schema);
         reader.Read();
-        Assert.AreEqual(true, reader[0]);
+        Assert.Equal(true, reader[0]);
     }
-    [Test]
+    [Fact]
     public void BooleanValue_SerializedAsYesOrNo_WhenNo_IsFalse()
     {
         var data = "no";
         var reader = ReadCsv.FromString(data, schema: new CsvSchemaBuilder().AddBoolean("BooleanColumn", "yes", "no", false).Schema);
         reader.Read();
-        Assert.AreEqual(false, reader[0]);
+        Assert.Equal(false, reader[0]);
     }
-    [Test]
+    [Fact]
     public void BooleanValue_SerializedAsYesOrNo_WhenInvalid_Throws()
     {
         var data = "foo";
@@ -129,41 +129,41 @@ public class WriteCsvTests
         [CsvFormat("yes|no")]
         public bool BooleanProperty { get; set; }
     }
-    [Test]
+    [Fact]
     public void BooleanValue_True_CanBeSerializedAsYesNo()
     {
         var expected = $"yes{NewLine}";
         var result = WriteCsv.ToString(new[] { new ItemWithBoolean { BooleanProperty = true } });
-        Assert.AreEqual(expected, result);
+        Assert.Equal(expected, result);
     }
 
 }
-[TestFixture]
+
 public class WriteCsvByDefaultConformsToRFC4180
 {
-    [Test]
+    [Fact]
     public void Fields_Containing_Quote_Should_Be_Quoted_And_Quotes_In_Field_Should_Be_Escaped()
     {
         var result = WriteCsv.ToString(new[] { new { Value = "abc\"def" } });
-        Assert.AreEqual($"\"abc\"\"def\"{NewLine}", result);
+        Assert.Equal($"\"abc\"\"def\"{NewLine}", result);
     }
 
-    [Test]
+    [Fact]
     public void Fields_Containing_Delimiter_Should_Be_Quoted()
     {
         var result = WriteCsv.ToString(new[] { new { Value = "abc,def" } });
-        Assert.AreEqual($"\"abc,def\"{NewLine}", result);
+        Assert.Equal($"\"abc,def\"{NewLine}", result);
     }
-    [Test]
+    [Fact]
     public void WriteCsv_StringWithQuotesAndDelimiters_GetsQuotedAndEscapesQuotes()
     {
         var result = WriteCsv.ToString(new[] { new { Value = "ab\"c,def" } });
-        Assert.AreEqual($"\"ab\"\"c,def\"{NewLine}", result);
+        Assert.Equal($"\"ab\"\"c,def\"{NewLine}", result);
     }
-    [Test]
+    [Fact]
     public void Fields_Containing_LineBreak_Should_Be_Quoted()
     {
         var result = WriteCsv.ToString(new[] { new { Value = "abc\r\ndef" } });
-        Assert.AreEqual($"\"abc\r\ndef\"{NewLine}", result);
+        Assert.Equal($"\"abc\r\ndef\"{NewLine}", result);
     }
 }

@@ -5,7 +5,7 @@ using Net.Code.Csv.Tests.Unit.IO.Csv;
 
 namespace Net.Code.Csv.Tests.Unit.Csv;
 
-[TestFixture]
+
 public class CsvStateMachineTests
 {
     private static IEnumerable<string> Split(string line)
@@ -24,181 +24,181 @@ public class CsvStateMachineTests
         return result.First().Fields;
     }
 
-    [Test]
+    [Fact]
     public void SplitsSimpleDelimitedLine()
     {
         var splitLineParams = new CsvLayout(Quote: '"', Delimiter: ';');
         var result = Split("1;2;3", splitLineParams);
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
+        Assert.Equal(new[] { "1", "2", "3" }, result);
     }
 
-    [Test]
+    [Fact]
     public void TrimsTrailingWhitespaceOfUnquotedField()
     {
         var splitLineParams = new CsvLayout('"', ';');
         var result = Split("1;2;3 \t", splitLineParams);
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
+        Assert.Equal(new[] { "1", "2", "3" }, result);
     }
 
-    [Test]
+    [Fact]
     public void DoesNotTrimTrailingWhitespaceOfQuotedField()
     {
         var splitLineParams = new CsvLayout('"', ';');
         var result = Split("1;2;\"3 \t\"", splitLineParams);
-        CollectionAssert.AreEqual(new[] { "1", "2", "3 \t" }, result);
+        Assert.Equal(new[] { "1", "2", "3 \t" }, result);
     }
 
-    [Test]
+    [Fact]
     public void ValueTrimmingOptions_All_TrimsWhiteSpace()
     {
         var input = "\" x \"";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.All);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual("x", result.Single());
+        Assert.Equal("x", result.Single());
     }
 
-    [Test]
+    [Fact]
     public void ValueTrimmingOptions_QuotedOnly_TrimsWhiteSpaceWhenQuoted()
     {
         var input = "\" x \"";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.QuotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual("x", result.Single());
+        Assert.Equal("x", result.Single());
     }
-    [Test]
+    [Fact]
     public void ValueTrimmingOptions_QuotedOnly_DoesNotTrimWhiteSpaceWhenNotQuoted()
     {
         var input = " x ";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.QuotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual(" x ", result.Single());
+        Assert.Equal(" x ", result.Single());
     }
 
-    [Test]
+    [Fact]
     public void ValueTrimmingOptions_UnQuotedOnly_TrimsWhiteSpaceWhenNotQuoted()
     {
         var input = " x ";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.UnquotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual("x", result.Single());
+        Assert.Equal("x", result.Single());
     }
-    [Test]
+    [Fact]
     public void ValueTrimmingOptions_UnQuotedOnly_DoesNotTrimWhiteSpaceWhenQuoted()
     {
         var input = "\" x \"";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.UnquotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual(" x ", result.Single());
+        Assert.Equal(" x ", result.Single());
     }
 
-    [Test]
+    [Fact]
     public void StripsQuotes()
     {
         const string line = @"""FieldContent""";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "FieldContent" }, result);
+        Assert.Equal(new[] { "FieldContent" }, result);
     }
 
-    [Test]
+    [Fact]
     public void TrimsLeadingWhitespaceFromUnquotedField()
     {
         const string line = @"x, y,z";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
+        Assert.Equal(new[] { "x", "y", "z" }, result);
     }
 
-    [Test]
+    [Fact]
     public void TrimsTrailingWhitespaceFromUnquotedField()
     {
         const string line = @"x,y   ,z";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
+        Assert.Equal(new[] { "x", "y", "z" }, result);
     }
 
-    [Test]
+    [Fact]
     public void SupportsFieldsWithEscapedQuotes()
     {
         const string line = "x \"y\",z";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x \"y\"", "z" }, result);
+        Assert.Equal(new[] { "x \"y\"", "z" }, result);
     }
 
-    [Test]
+    [Fact]
     public void EmptyFields()
     {
         const string line = @",x,,y";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "", "x", "", "y" }, result);
+        Assert.Equal(new[] { "", "x", "", "y" }, result);
     }
 
-    [Test]
+    [Fact]
     public void EmptyString()
     {
         const string line = "";
         var splitter = new CsvStateMachine(new StringReader(line), new CsvLayout(), new CsvBehaviour());
         var result = splitter.Lines();
-        CollectionAssert.IsEmpty(result);
+        Assert.Empty(result);
     }
-    [Test]
+    [Fact]
     public void EmptyFields_Comma()
     {
         const string line = ",,";
         var result = Split(line, new CsvLayout());
-        CollectionAssert.AreEqual(new[] { "", "", "" }, result);
+        Assert.Equal(new[] { "", "", "" }, result);
     }
-    [Test]
+    [Fact]
     public void EmptyFields_Tab()
     {
         const string line = "\t\t";
         var result = Split(line, new CsvLayout(Delimiter: '\t'));
-        CollectionAssert.AreEqual(new[] { "", "", "" }, result);
+        Assert.Equal(new[] { "", "", "" }, result);
     }
-    [Test]
+    [Fact]
     public void QuotedStringWithDelimiter()
     {
         // "x ""y"", z"
         const string line = "\"x \"y\" z, u\",v";
         var splitLineParams = new CsvLayout();
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x \"y\" z, u", "v" }, result);
+        Assert.Equal(new[] { "x \"y\" z, u", "v" }, result);
 
     }
 
-    [Test]
+    [Fact]
     public void WhenValueTrimmingIsNone_LastFieldHasLeadingAndTrailingWhitespace_WhitespaceIsNotTrimmed()
     {
         const string line = "x,y, z ";
         var splitLineParams = new CsvLayout('"', ',', '"');
         var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        CollectionAssert.AreEqual(new[] { @"x", "y", " z " }, result);
+        Assert.Equal(new[] { @"x", "y", " z " }, result);
 
     }
 
 
-    [Test]
+    [Fact]
     public void EscapeCharacterInsideQuotedStringIsEscaped()
     {
         const string line = @"""\\""";
         var splitLineParams = new CsvLayout('"', ',', '\\');
         var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        Assert.AreEqual(@"\", result.Single());
+        Assert.Equal(@"\", result.Single());
     }
 
-    [Test]
+    [Fact]
     public void LineWithOnlySeparatorIsSplitIntoTwoEmptyStrings()
     {
         const string line = ",";
         var splitLineParams = new CsvLayout('"', ',', '\\');
         var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        CollectionAssert.AreEqual(new[] { "", "" }, result);
+        Assert.Equal(new[] { "", "" }, result);
     }
 
-    [Test]
+    [Fact]
     public void CanWorkWithMultilineField()
     {
         const string data = """
@@ -207,13 +207,13 @@ public class CsvStateMachineTests
             """;
         var splitLineParams = new CsvLayout('"', ',', '\\');
         var result = Split(data, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        CollectionAssert.AreEqual(new[] { "a", "b", """
+        Assert.Equal(new[] { "a", "b", """
             line1
             line2
             """ }, result);
     }
 
-    [Test]
+    [Fact]
     public void MultipleLinesAreSplitCorrectly()
     {
         var data1 = """
@@ -227,12 +227,12 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result[0].Fields);
-        CollectionAssert.AreEqual(new[] { "4", "5", "6" }, result[1].Fields);
+        Assert.Equal(new[] { "1", "2", "3" }, result[0].Fields);
+        Assert.Equal(new[] { "4", "5", "6" }, result[1].Fields);
 
     }
 
-    [Test]
+    [Fact]
     public void WorksWithQuotedStringInsideQuotedFieldButOnlyWhitespaceAfterSecondQuote()
     {
         var data1 = @"""1"";"" 2  ""inside""   "";3";
@@ -243,11 +243,11 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""   ", "3" }, result[0].Fields);
+        Assert.Equal(new[] { "1", @" 2  ""inside""   ", "3" }, result[0].Fields);
 
     }
 
-    [Test]
+    [Fact]
     public void WorksWithQuotedStringInsideQuotedField()
     {
         var data1 = @"""1"";"" 2  ""inside""  x "";3";
@@ -258,11 +258,11 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""  x ", "3" }, result[0].Fields);
+        Assert.Equal(new[] { "1", @" 2  ""inside""  x ", "3" }, result[0].Fields);
 
     }
 
-    [Test]
+    [Fact]
     public void WorksWithQuotedMultilineString()
     {
         var data1 = """
@@ -276,14 +276,14 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", """
+        Assert.Equal(new[] { "1", """
              2  "in
             side"  x 
             """, "3" }, result[0].Fields);
 
     }
 
-    [Test]
+    [Fact]
     public void WhenSkipEmptyLinesIsFalse_ReturnsEmptyLines()
     {
         var input = "1\n\n2";
@@ -292,10 +292,10 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        Assert.IsTrue(result[1].IsEmpty);
+        Assert.True(result[1].IsEmpty);
     }
 
-    [Test]
+    [Fact]
     public void WhenSkipEmptyLinesIsTrue_SkipsEmptyLines()
     {
         var input = "\r\n1\n\n2";
@@ -304,11 +304,11 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        Assert.AreEqual("1", result[0].Fields[0]);
-        Assert.AreEqual("2", result[1].Fields[0]);
+        Assert.Equal("1", result[0].Fields[0]);
+        Assert.Equal("2", result[1].Fields[0]);
     }
 
-    [Test]
+    [Fact]
     public void WhenSkipEmptyLinesIsFalse_AndEmptyLineIsAtTheEnd_ReturnsEmptyLine()
     {
         var input = "a,b\n   ";
@@ -316,34 +316,34 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        Assert.AreEqual(2, result.Length);
-        CollectionAssert.AreEqual(new[] { "a", "b" }, result[0].Fields);
-        Assert.IsTrue(result[1].IsEmpty);
-        CollectionAssert.AreEqual(new[] { string.Empty, string.Empty }, result[1].Fields);
+        Assert.Equal(2, result.Length);
+        Assert.Equal(new[] { "a", "b" }, result[0].Fields);
+        Assert.True(result[1].IsEmpty);
+        Assert.Equal(new[] { string.Empty, string.Empty }, result[1].Fields);
     }
 
-    [Test]
+    [Fact]
     public void WhenInputContainsMultipleLinesWithTrailingEmptyField_ReturnsLinesWithEmptyField()
     {
         var input = "00,01,   \n10,11,   ";
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour());
         var result = splitter.Lines().ToArray();
-        Assert.AreEqual(2, result.Length);
-        CollectionAssert.AreEqual(new[] { "00", "01", "" }, result[0].Fields);
-        CollectionAssert.AreEqual(new[] { "10", "11", "" }, result[1].Fields);
+        Assert.Equal(2, result.Length);
+        Assert.Equal(new[] { "00", "01", "" }, result[0].Fields);
+        Assert.Equal(new[] { "10", "11", "" }, result[1].Fields);
     }
 
-    [Test]
+    [Fact]
     public void Testing()
     {
         var input = "00,   ,02\n,,";
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(TrimmingOptions: ValueTrimmingOptions.None));
         var result = splitter.Lines().ToArray();
-        Assert.AreEqual(2, result.Length);
-        CollectionAssert.AreEqual(new[] { "00", "   ", "02" }, result[0].Fields);
+        Assert.Equal(2, result.Length);
+        Assert.Equal(new[] { "00", "   ", "02" }, result[0].Fields);
     }
 
-    [Test]
+    [Fact]
     public void WhenTrailingLineContainsMissingFields_MissingFieldActionIsReplaceByNull_LastLineIsAppendedWithNulls()
     {
         var input = "a,b,c,d,e"
@@ -352,14 +352,14 @@ public class CsvStateMachineTests
 
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(MissingFieldAction: MissingFieldAction.ReplaceByNull));
         var result = splitter.Lines().ToArray();
-        Assert.AreEqual(3, result.Length);
+        Assert.Equal(3, result.Length);
 
-        CollectionAssert.AreEqual(new[] { "a", "b", "c", "d", "e" }, result[0].Fields);
-        CollectionAssert.AreEqual(new[] { "a", "b", "c", "d", "" }, result[1].Fields);
-        CollectionAssert.AreEqual(new[] { "a", "b", "", null, null }, result[2].Fields);
+        Assert.Equal(new[] { "a", "b", "c", "d", "e" }, result[0].Fields);
+        Assert.Equal(new[] { "a", "b", "c", "d", "" }, result[1].Fields);
+        Assert.Equal(new[] { "a", "b", "", null, null }, result[2].Fields);
     }
 
-    [Test]
+    [Fact]
     public void SampleDataSplitTest()
     {
         var data = CsvReaderSampleData.SampleData1;
@@ -372,20 +372,20 @@ public class CsvStateMachineTests
 
     }
 
-    [Test]
+    [Fact]
     public void QuotedFieldCanContainNewLineCharacters()
     {
         const string data = "\"\n\r\n\n\r\r\",,\t,\n";
         var result = Split(data);
-        CollectionAssert.AreEqual(new[] { "\n\r\n\n\r\r", "", "", "" }, result);
+        Assert.Equal(new[] { "\n\r\n\n\r\r", "", "", "" }, result);
     }
 
-    [Test]
+    [Fact]
     public void CanSplitByTabs()
     {
         const string data = "1\t2\t3";
         var result = Split(data, new CsvLayout(Delimiter: '\t'));
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
+        Assert.Equal(new[] { "1", "2", "3" }, result);
     }
 
 }

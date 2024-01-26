@@ -1,6 +1,7 @@
-﻿namespace Net.Code.Csv.Tests.Unit.Csv;
+﻿using Xunit;
 
-[TestFixture]
+namespace Net.Code.Csv.Tests.Unit.Csv;
+
 public class ReadCsvTests
 {
     private static string[] Read(string data,
@@ -30,135 +31,135 @@ public class ReadCsvTests
         return results;
     }
 
-    [Test]
+    [Fact]
     public void NullData_Throws()
     {
         Assert.Throws<ArgumentNullException>(() => Read(null));
     }
 
-    [Test]
+    [Fact]
     public void EmptyString_WhenSkipEmptyLinesIsFalse_ReadsEmptyStringIntoEmptyField()
     {
         var data = "";
         var result = Read(data, skipEmptyLines: false);
-        CollectionAssert.AreEqual(new string[] { string.Empty }, result);
+        Assert.Equal(new string[] { string.Empty }, result);
     }
 
-    [Test]
+    [Fact]
     public void EmptyString_WhenSkipEmptyLinesIsTrue_EmptyStringIsNotRead()
     {
         var data = "";
         var result = ReadCsv.FromString(data, emptyLineAction: EmptyLineAction.Skip);
-        Assert.IsFalse(result.Read());
+        Assert.False(result.Read());
     }
 
-    [Test]
+    [Fact]
     public void SingleDelimiter_IsReadAsTwoEmptyFields()
     {
         var data = ",";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { string.Empty, string.Empty }, result);
+        Assert.Equal(new string[] { string.Empty, string.Empty }, result);
     }
 
-    [Test]
-    [TestCase(',')]
-    [TestCase(';')]
-    [TestCase('\t')]
-    [TestCase('|')]
-    [TestCase('x')]
+    [Theory]
+    [InlineData(',')]
+    [InlineData(';')]
+    [InlineData('\t')]
+    [InlineData('|')]
+    [InlineData('x')]
     public void AllowedDelimiterCharacters(char delimiter)
     {
         var data = $"{delimiter}";
         var result = Read(data, delimiter: delimiter);
-        CollectionAssert.AreEqual(new string[] { string.Empty, string.Empty }, result);
+        Assert.Equal(new string[] { string.Empty, string.Empty }, result);
     }
 
-    [Test]
+    [Fact]
     public void SimpleStringField_IsReadAsString()
     {
         var data = "x";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "x" }, result);
+        Assert.Equal(new string[] { "x" }, result);
     }
-    [Test]
+    [Fact]
     public void QuotedStringField_IsReadAsString()
     {
         var data = "\"x\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "x" }, result);
+        Assert.Equal(new string[] { "x" }, result);
     }
 
-    [Test]
+    [Fact]
     public void QuotedStringCanContainNewline()
     {
         var data = "\"x\r\n\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "x\r\n" }, result);
+        Assert.Equal(new string[] { "x\r\n" }, result);
     }
 
-    [Test]
+    [Fact]
     public void QuotedStringCanContainEscapedQuote()
     {
         var data = "\"a\"\"b\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a\"b" }, result);
+        Assert.Equal(new string[] { "a\"b" }, result);
     }
 
-    [Test]
+    [Fact]
     public void QuotedString_WhenUnescapedQuoteEncounterd_AndShouldIgnore_ThenFieldContainsQuote()
     {
         var data = "\"a\"b\"";
         var result = Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore);
-        CollectionAssert.AreEqual(new string[] { "a\"b" }, result);
+        Assert.Equal(new string[] { "a\"b" }, result);
     }
-    [Test]
+    [Fact]
     public void QuotedString_WhenUnescapedQuoteEncounterd_AndShouldThrow_ThenThrows()
     {
         var data = "\"a\"b\"";
         Assert.Throws<MalformedCsvException>(() => Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException));
     }
-    [Test]
+    [Fact]
     public void QuotedString_WhenUnescapedQuoteEncounterd_AndAdvanceToNextLine_ThenIgnoresRestOfField()
     {
         var data = "\"a\"b\"";
         var result = Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine);
-        CollectionAssert.AreEqual(new string[] { "a" }, result);
+        Assert.Equal(new string[] { "a" }, result);
     }
 
-    [Test]
+    [Fact]
     public void CommentIsIgnored()
     {
         var data = "#whatever";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "" }, result);
+        Assert.Equal(new string[] { "" }, result);
     }
 
-    [Test]
+    [Fact]
     public void TwoFields()
     {
         var data = "a,b";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a", "b" }, result);
+        Assert.Equal(new string[] { "a", "b" }, result);
     }
-    [Test]
+    [Fact]
     public void TwoFields_FirstFieldWithNewLine()
     {
         var data = "\"a\r\n\",b";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a\r\n", "b" }, result);
+        Assert.Equal(new string[] { "a\r\n", "b" }, result);
     }
-    [Test]
+    [Fact]
     public void TwoFields_SecondFieldWithQuotes()
     {
         var data = "\"a\r\n\",\"b\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a\r\n", "b" }, result);
+        Assert.Equal(new string[] { "a\r\n", "b" }, result);
     }
-    [Test]
+    [Fact]
     public void TwoLines()
     {
         var data = "\r\n";
         var result = Read(data);
-        CollectionAssert.AreEqual(Array.Empty<string>(), result);
+        Assert.Equal(Array.Empty<string>(), result);
     }
 }

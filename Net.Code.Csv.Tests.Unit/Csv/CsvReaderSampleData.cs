@@ -101,16 +101,16 @@ public class CsvReaderSampleData
 
     public static void CheckSampleData1(IDataReader csv, bool hasHeaders, bool nullIsEmpty)
     {
-        Assert.AreEqual(CsvReaderSampleData.SampleData1FieldCount, csv.FieldCount);
+        Assert.Equal(CsvReaderSampleData.SampleData1FieldCount, csv.FieldCount);
 
         if (hasHeaders)
         {
-            Assert.AreEqual(0, csv.GetOrdinal(SampleData1Header0));
-            Assert.AreEqual(1, csv.GetOrdinal(SampleData1Header1));
-            Assert.AreEqual(2, csv.GetOrdinal(SampleData1Header2));
-            Assert.AreEqual(3, csv.GetOrdinal(SampleData1Header3));
-            Assert.AreEqual(4, csv.GetOrdinal(SampleData1Header4));
-            Assert.AreEqual(5, csv.GetOrdinal(SampleData1Header5));
+            Assert.Equal(0, csv.GetOrdinal(SampleData1Header0));
+            Assert.Equal(1, csv.GetOrdinal(SampleData1Header1));
+            Assert.Equal(2, csv.GetOrdinal(SampleData1Header2));
+            Assert.Equal(3, csv.GetOrdinal(SampleData1Header3));
+            Assert.Equal(4, csv.GetOrdinal(SampleData1Header4));
+            Assert.Equal(5, csv.GetOrdinal(SampleData1Header5));
         }
 
         long recordCount = 0;
@@ -121,9 +121,9 @@ public class CsvReaderSampleData
         }
 
         if (hasHeaders)
-            Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, recordCount);
+            Assert.Equal(CsvReaderSampleData.SampleData1RecordCount, recordCount);
         else
-            Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount + 1, recordCount);
+            Assert.Equal(CsvReaderSampleData.SampleData1RecordCount + 1, recordCount);
     }
 
     public static void CheckSampleData1(long recordIndex, IDataReader csv, bool nullIsEmpty, bool hasHeaders)
@@ -140,7 +140,7 @@ public class CsvReaderSampleData
 
     public static void CheckSampleData1(bool hasHeaders, long recordIndex, string[] fields, int startIndex, bool nullIsEmpty = false)
     {
-        Assert.IsTrue(fields.Length - startIndex >= 6);
+        Assert.True(fields.Length - startIndex >= 6);
 
         long index = recordIndex;
 
@@ -150,68 +150,68 @@ public class CsvReaderSampleData
         switch (index)
         {
             case 0:
-                Assert.AreEqual(SampleData1Header0, fields[startIndex]);
-                Assert.AreEqual(SampleData1Header1, fields[startIndex + 1]);
-                Assert.AreEqual(SampleData1Header2, fields[startIndex + 2]);
-                Assert.AreEqual(SampleData1Header3, fields[startIndex + 3]);
-                Assert.AreEqual(SampleData1Header4, fields[startIndex + 4]);
-                Assert.AreEqual(SampleData1Header5, fields[startIndex + 5]);
+                Assert.Equal(SampleData1Header0, fields[startIndex]);
+                Assert.Equal(SampleData1Header1, fields[startIndex + 1]);
+                Assert.Equal(SampleData1Header2, fields[startIndex + 2]);
+                Assert.Equal(SampleData1Header3, fields[startIndex + 3]);
+                Assert.Equal(SampleData1Header4, fields[startIndex + 4]);
+                Assert.Equal(SampleData1Header5, fields[startIndex + 5]);
                 break;
 
             case 1:
-                Assert.AreEqual("John", fields[startIndex]);
-                Assert.AreEqual("Doe", fields[startIndex + 1]);
-                Assert.AreEqual("120 jefferson st.", fields[startIndex + 2]);
-                Assert.AreEqual("Riverside", fields[startIndex + 3]);
-                Assert.AreEqual("NJ", fields[startIndex + 4]);
-                Assert.AreEqual("08075", fields[startIndex + 5]);
+                Assert.Equal("John", fields[startIndex]);
+                Assert.Equal("Doe", fields[startIndex + 1]);
+                Assert.Equal("120 jefferson st.", fields[startIndex + 2]);
+                Assert.Equal("Riverside", fields[startIndex + 3]);
+                Assert.Equal("NJ", fields[startIndex + 4]);
+                Assert.Equal("08075", fields[startIndex + 5]);
                 break;
 
             case 2:
-                Assert.AreEqual("Jack", fields[startIndex]);
-                Assert.AreEqual("McGinnis", fields[startIndex + 1]);
-                Assert.AreEqual("220 hobo Av.", fields[startIndex + 2]);
-                Assert.AreEqual("Phila", fields[startIndex + 3]);
-                Assert.AreEqual("PA", fields[startIndex + 4]);
-                Assert.AreEqual("09119", fields[startIndex + 5]);
+                Assert.Equal("Jack", fields[startIndex]);
+                Assert.Equal("McGinnis", fields[startIndex + 1]);
+                Assert.Equal("220 hobo Av.", fields[startIndex + 2]);
+                Assert.Equal("Phila", fields[startIndex + 3]);
+                Assert.Equal("PA", fields[startIndex + 4]);
+                Assert.Equal("09119", fields[startIndex + 5]);
                 break;
 
             case 3:
-                Assert.AreEqual(@"John ""Da Man""", fields[startIndex]);
-                Assert.AreEqual("Repici", fields[startIndex + 1]);
-                Assert.AreEqual("120 Jefferson St.", fields[startIndex + 2]);
-                Assert.AreEqual("Riverside", fields[startIndex + 3]);
-                Assert.AreEqual("NJ", fields[startIndex + 4]);
-                Assert.AreEqual("08075", fields[startIndex + 5]);
+                Assert.Equal(@"John ""Da Man""", fields[startIndex]);
+                Assert.Equal("Repici", fields[startIndex + 1]);
+                Assert.Equal("120 Jefferson St.", fields[startIndex + 2]);
+                Assert.Equal("Riverside", fields[startIndex + 3]);
+                Assert.Equal("NJ", fields[startIndex + 4]);
+                Assert.Equal("08075", fields[startIndex + 5]);
                 break;
 
             case 4:
-                Assert.AreEqual("Stephen", fields[startIndex]);
-                Assert.AreEqual("Tyler", fields[startIndex + 1]);
-                Assert.AreEqual(@"7452 Terrace ""At the Plaza"" road", fields[startIndex + 2]);
-                Assert.AreEqual("SomeTown", fields[startIndex + 3]);
-                Assert.AreEqual("SD", fields[startIndex + 4]);
-                Assert.AreEqual("91234", fields[startIndex + 5]);
+                Assert.Equal("Stephen", fields[startIndex]);
+                Assert.Equal("Tyler", fields[startIndex + 1]);
+                Assert.Equal(@"7452 Terrace ""At the Plaza"" road", fields[startIndex + 2]);
+                Assert.Equal("SomeTown", fields[startIndex + 3]);
+                Assert.Equal("SD", fields[startIndex + 4]);
+                Assert.Equal("91234", fields[startIndex + 5]);
                 break;
 
             case 5:
-                if (nullIsEmpty) Assert.AreEqual(string.Empty, fields[startIndex]);
-                else Assert.IsNull(fields[startIndex]);
-                Assert.AreEqual("Blankman", fields[startIndex + 1]);
-                if (nullIsEmpty) Assert.AreEqual(string.Empty, fields[startIndex + 2]);
-                else Assert.IsNull(fields[startIndex + 2]);
-                Assert.AreEqual("SomeTown", fields[startIndex + 3]);
-                Assert.AreEqual("SD", fields[startIndex + 4]);
-                Assert.AreEqual("00298", fields[startIndex + 5]);
+                if (nullIsEmpty) Assert.Equal(string.Empty, fields[startIndex]);
+                else Assert.Null(fields[startIndex]);
+                Assert.Equal("Blankman", fields[startIndex + 1]);
+                if (nullIsEmpty) Assert.Equal(string.Empty, fields[startIndex + 2]);
+                else Assert.Null(fields[startIndex + 2]);
+                Assert.Equal("SomeTown", fields[startIndex + 3]);
+                Assert.Equal("SD", fields[startIndex + 4]);
+                Assert.Equal("00298", fields[startIndex + 5]);
                 break;
 
             case 6:
-                Assert.AreEqual(@"Joan ""the bone"", Anne", fields[startIndex]);
-                Assert.AreEqual("Jet", fields[startIndex + 1]);
-                Assert.AreEqual("9th, at Terrace plc", fields[startIndex + 2]);
-                Assert.AreEqual("Desert City", fields[startIndex + 3]);
-                Assert.AreEqual("CO", fields[startIndex + 4]);
-                Assert.AreEqual("00123", fields[startIndex + 5]);
+                Assert.Equal(@"Joan ""the bone"", Anne", fields[startIndex]);
+                Assert.Equal("Jet", fields[startIndex + 1]);
+                Assert.Equal("9th, at Terrace plc", fields[startIndex + 2]);
+                Assert.Equal("Desert City", fields[startIndex + 3]);
+                Assert.Equal("CO", fields[startIndex + 4]);
+                Assert.Equal("00123", fields[startIndex + 5]);
                 break;
 
             default:

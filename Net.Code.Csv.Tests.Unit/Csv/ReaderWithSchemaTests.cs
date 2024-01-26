@@ -2,7 +2,7 @@
 
 namespace Net.Code.Csv.Tests.Unit.Csv;
 
-[TestFixture]
+
 public class ReadCsvWithSchemaTests
 {
     readonly string input =
@@ -13,31 +13,31 @@ public class ReadCsvWithSchemaTests
 
     static void Verify(IMyItem item)
     {
-        Assert.AreEqual("John", item.First);
-        Assert.AreEqual("Peters", item.Last.Value);
-        Assert.AreEqual(new DateTime(1970, 11, 15), item.BirthDate);
-        Assert.AreEqual(123, item.Quantity);
-        Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
-        Assert.AreEqual(null, item.Count);
-        Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
-        Assert.IsTrue(item.IsActive);
+        Assert.Equal("John", item.First);
+        Assert.Equal("Peters", item.Last.Value);
+        Assert.Equal(new DateTime(1970, 11, 15), item.BirthDate);
+        Assert.Equal(123, item.Quantity);
+        Assert.Equal(new Amount("US$", 5.98m), item.Price);
+        Assert.Null(item.Count);
+        Assert.Equal(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
+        Assert.True(item.IsActive);
         Assert.Null(item.NullableCustom);
     }
     static void Verify(dynamic item)
     {
-        Assert.AreEqual("John", item.First);
-        Assert.AreEqual("Peters", item.Last.Value);
-        Assert.AreEqual(new DateTime(1970, 11, 15), item.BirthDate);
-        Assert.AreEqual(123, item.Quantity);
-        Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
-        Assert.AreEqual(null, item.Count);
-        Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
-        Assert.IsTrue(item.IsActive);
+        Assert.Equal("John", item.First);
+        Assert.Equal("Peters", item.Last.Value);
+        Assert.Equal(new DateTime(1970, 11, 15), item.BirthDate);
+        Assert.Equal(123, item.Quantity);
+        Assert.Equal(new Amount("US$", 5.98m), item.Price);
+        Assert.Null(item.Count);
+        Assert.Equal(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
+        Assert.True(item.IsActive);
         Assert.Null(item.NullableCustom);
     }
 
 
-    [Test]
+    [Fact]
     public void WhenSchemaIsManuallyCreated_ExpectedValuesAreReturned()
     {
         CsvSchema schema = new CsvSchemaBuilder()
@@ -62,7 +62,7 @@ public class ReadCsvWithSchemaTests
         Verify(item);
     }
 
-    [Test]
+    [Fact]
     public void WithSchema_CanReturnAsDynamicAndAllPropertiesAreTyped()
     {
         CsvSchema schema = new CsvSchemaBuilder()
@@ -86,7 +86,7 @@ public class ReadCsvWithSchemaTests
         Verify(item);
     }
 
-    [Test]
+    [Fact]
     public void WithoutSchema_AllPropertiesAreStrings()
     {
         var item = ReadCsv
@@ -94,17 +94,17 @@ public class ReadCsvWithSchemaTests
             .AsEnumerable()
             .Single();
 
-        Assert.AreEqual("John", item.First);
-        Assert.AreEqual("Peters", item.Last);
-        Assert.AreEqual("19701115", item.BirthDate);
-        Assert.AreEqual("123", item.Quantity);
-        Assert.AreEqual("US$ 5.98", item.Price);
-        Assert.AreEqual(string.Empty, item.Count);
-        Assert.AreEqual("2020-11-13T10:20:30.0000000+02:00", item.SomeDateTimeOffset);
-        Assert.AreEqual("yes", item.IsActive);
-        Assert.AreEqual(string.Empty, item.NullableCustom);
+        Assert.Equal("John", item.First);
+        Assert.Equal("Peters", item.Last);
+        Assert.Equal("19701115", item.BirthDate);
+        Assert.Equal("123", item.Quantity);
+        Assert.Equal("US$ 5.98", item.Price);
+        Assert.Equal(string.Empty, item.Count);
+        Assert.Equal("2020-11-13T10:20:30.0000000+02:00", item.SomeDateTimeOffset);
+        Assert.Equal("yes", item.IsActive);
+        Assert.Equal(string.Empty, item.NullableCustom);
     }
-    [Test]
+    [Fact]
     public void WithSchemaFromRecord_CanReturnAsDynamicWithType()
     {
         CsvSchema schema = new CsvSchemaBuilder()
@@ -119,7 +119,7 @@ public class ReadCsvWithSchemaTests
         Verify(item);
     }
 
-    [Test]
+    [Fact]
     public void WithSchemaFromClass_CanReturnAsDynamicWithType()
     {
         CsvSchema schema = new CsvSchemaBuilder()
@@ -134,7 +134,7 @@ public class ReadCsvWithSchemaTests
         Verify(item);
     }
 
-    [Test]
+    [Fact]
     public void WithSchemaFromClassWithIncompleteColumns_CanReturnAsDynamicWithType()
     {
         CsvSchema schema = new CsvSchemaBuilder()
@@ -156,7 +156,7 @@ public class ReadCsvWithSchemaTests
         Verify(item);
     }
 
-    [Test]
+    [Fact]
     public void WithSchemaFromClassWithColumnsInOtherOrder_CanReturnAsDynamicWithType()
     {
         CsvSchema schema = new CsvSchemaBuilder()
@@ -175,7 +175,7 @@ public class ReadCsvWithSchemaTests
         Verify(item);
     }
 
-    [Test]
+    [Fact]
     public void WhenSchemaCreatedFromRecord_ExpectedValuesAreReturned()
     {
         CsvSchema schema = new CsvSchemaBuilder().From<MyRecord>().Schema;
@@ -187,7 +187,7 @@ public class ReadCsvWithSchemaTests
 
         Verify(item);
     }
-    [Test]
+    [Fact]
     public void WhenSchemaImplicitlyCreatedFromRecord_ExpectedValuesAreReturned()
     {
         var item = ReadCsv
@@ -196,7 +196,7 @@ public class ReadCsvWithSchemaTests
 
         Verify(item);
     }
-    [Test]
+    [Fact]
     public void WhenSchemaCreatedFromClass_ExpectedValuesAreReturned()
     {
         CsvSchema schema = new CsvSchemaBuilder().From<MyClass>().Schema;
@@ -208,7 +208,7 @@ public class ReadCsvWithSchemaTests
 
         Verify(item);
     }
-    [Test]
+    [Fact]
     public void WhenSchemaImplicitlyCreatedFromClass_ExpectedValuesAreReturned()
     {
         var item = ReadCsv

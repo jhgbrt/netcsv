@@ -26,11 +26,11 @@ using System.Diagnostics;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv;
 
-[TestFixture()]
+
 public class CsvReaderMalformedTest
 {
 
-    [Test]
+    [Fact]
     public void MissingFieldQuotedTest1()
     {
         const string Data = "a,b,c,d\n" +
@@ -49,11 +49,11 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.Equal(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
         }
     }
 
-    [Test()]
+    [Fact]
     public void MissingFieldQuotedTest2()
     {
         const string Data = "a,b,c,d\n" +
@@ -72,11 +72,11 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.Equal(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
         }
     }
 
-    [Test()]
+    [Fact]
     public void MissingFieldQuotedTest3()
     {
         const string Data = "a,b,c,d\n" +
@@ -95,11 +95,11 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.Equal(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
         }
     }
 
-    [Test()]
+    [Fact]
     public void MissingFieldQuotedTest4()
     {
         const string Data = "a,b,c,d\n" +
@@ -118,11 +118,11 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.Equal(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
         }
     }
 
-    [Test]
+    [Fact]
     public void MissingDelimiterAfterQuotedFieldTest1()
     {
         const string Data = "\"111\",\"222\"\"333\"";
@@ -136,11 +136,11 @@ public class CsvReaderMalformedTest
         }
         catch (MalformedCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 1L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.Equal(new { LineNumber = 1L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
         }
     }
 
-    [Test]
+    [Fact]
     public void MissingDelimiterAfterQuotedFieldTest2()
     {
         const string Data = "\"111\",\"222\",\"333\"\n" +
@@ -157,11 +157,11 @@ public class CsvReaderMalformedTest
         }
         catch (MalformedCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 2L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.Equal(new { LineNumber = 2L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
         }
     }
 
-    [Test()]
+    [Fact]
     public void TrailingFields_Are_Ignored()
     {
         const string Data = "ORIGIN,DESTINATION\nPHL,FLL,kjhkj kjhkjh,eg,fhgf\nNYC,LAX";
@@ -169,7 +169,7 @@ public class CsvReaderMalformedTest
         using var csv = ReadCsv.FromString(Data, hasHeaders: true);
         while (csv.Read())
         {
-            Assert.AreEqual(2, csv.FieldCount);
+            Assert.Equal(2, csv.FieldCount);
             for (int i = 0; i < csv.FieldCount; i++)
             {
                 _ = csv.GetString(i);
@@ -177,7 +177,7 @@ public class CsvReaderMalformedTest
         }
     }
 
-    [Test]
+    [Fact]
     public void ParseErrorBeforeInitializeTest()
     {
         const string Data = "\"0022 - SKABELON\";\"\"Tandremstrammer\";\"\";\"0,00\";\"\"\n" +
@@ -185,18 +185,18 @@ public class CsvReaderMalformedTest
                             "\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
 
         using var csv = ReadCsv.FromString(Data, delimiter: ';', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine);
-        Assert.IsTrue(csv.Read());
+        Assert.True(csv.Read());
 
-        Assert.AreEqual("19324", csv[0]);
-        Assert.AreEqual("FJEDER TIL 2-05-405", csv[1]);
-        Assert.AreEqual("", csv[2]);
-        Assert.AreEqual("14,50", csv[3]);
-        Assert.AreEqual("4027816193241", csv[4]);
+        Assert.Equal("19324", csv[0]);
+        Assert.Equal("FJEDER TIL 2-05-405", csv[1]);
+        Assert.Equal("", csv[2]);
+        Assert.Equal("14,50", csv[3]);
+        Assert.Equal("4027816193241", csv[4]);
 
-        Assert.IsFalse(csv.Read());
+        Assert.False(csv.Read());
     }
 
-    [Test]
+    [Fact]
     public void LastFieldEmptyFollowedByMissingFieldsOnNextRecord()
     {
         const string Data = "a,b,c,d,e"
@@ -206,28 +206,28 @@ public class CsvReaderMalformedTest
         using var csv = ReadCsv.FromString(Data, missingFieldAction: MissingFieldAction.ReplaceByNull);
         var record = new string[5];
 
-        Assert.IsTrue(csv.Read());
+        Assert.True(csv.Read());
         csv.GetValues(record);
-        CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "e" }, record);
+        Assert.Equal(new string[] { "a", "b", "c", "d", "e" }, record);
 
-        Assert.IsTrue(csv.Read());
+        Assert.True(csv.Read());
         csv.GetValues(record);
-        CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "" }, record);
+        Assert.Equal(new string[] { "a", "b", "c", "d", "" }, record);
 
-        Assert.IsTrue(csv.Read());
+        Assert.True(csv.Read());
         csv.GetValues(record);
-        CollectionAssert.AreEqual(new string[] { "a", "b", "", null, null }, record);
+        Assert.Equal(new string[] { "a", "b", "", null, null }, record);
 
-        Assert.IsFalse(csv.Read());
+        Assert.False(csv.Read());
     }
 }
 
 public class MultiResultSetTests
 {
-    [TestFixture]
+    
     public class CsvMultiResultSetTest
     {
-        [Test]
+        [Fact]
         public void MultiResultOrdersExample()
         {
             var input = """"
@@ -264,7 +264,7 @@ public class MultiResultSetTests
 
 
         }
-        [Test]
+        [Fact]
         public void MultiResultOrdersExampleWithSchemas()
         {
             var input = """"
@@ -288,14 +288,14 @@ public class MultiResultSetTests
             reader.NextResult();
             var items = reader.AsEnumerable<OrderItem>().ToList();
 
-            Assert.AreEqual(2, orders.Count);
-            Assert.AreEqual(4, items.Count);
+            Assert.Equal(2, orders.Count);
+            Assert.Equal(4, items.Count);
         }
 
         record Order(int Id, string FirstName, string LastName, DateTime OrderDate, decimal OrderTotal);
         record OrderItem(int OrderId, string ItemName, int Quantity, decimal Price);
 
-        [Test]
+        [Fact]
         public void CanReadMultiResult()
         {
             var input = """"
@@ -311,20 +311,20 @@ public class MultiResultSetTests
 
             while (reader.Read())
             {
-                Assert.AreEqual("1", reader["a"]);
-                Assert.AreEqual("2", reader["b"]);
-                Assert.AreEqual("3", reader["c"]);
+                Assert.Equal("1", reader["a"]);
+                Assert.Equal("2", reader["b"]);
+                Assert.Equal("3", reader["c"]);
             }
 
-            Assert.IsTrue(reader.NextResult());
+            Assert.True(reader.NextResult());
 
             while (reader.Read())
             {
-                Assert.AreEqual("x", reader["d"]);
-                Assert.AreEqual("y", reader["e"]);
+                Assert.Equal("x", reader["d"]);
+                Assert.Equal("y", reader["e"]);
             }
         }
-        [Test]
+        [Fact]
         public void CanReadMultiResultWithSchemas()
         {
             var input = """"
@@ -345,12 +345,12 @@ public class MultiResultSetTests
             var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, schema: schemas);
 
             var first = reader.AsEnumerable<Part1>().Single();
-            Assert.AreEqual(new Part1(1, 2, 3), first);
-            Assert.IsTrue(reader.NextResult());
+            Assert.Equal(new Part1(1, 2, 3), first);
+            Assert.True(reader.NextResult());
 
             var second = reader.AsEnumerable<Part2>().Single();
-            Assert.AreEqual(new Part2("x", "y"), second);
-            Assert.IsFalse(reader.NextResult());
+            Assert.Equal(new Part2("x", "y"), second);
+            Assert.False(reader.NextResult());
         }
 
         record Part1(int a, int b, int c);

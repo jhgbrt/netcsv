@@ -2,32 +2,31 @@
 
 namespace Net.Code.Csv.Tests.Unit.SampleFiles;
 
-[TestFixture]
+
 public class EncodingTests
 {
-    [OneTimeSetUp]
-    public void Setup()
+    static EncodingTests()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
 
-    [Test]
+    [Fact]
     public void Cp1253()
     {
         Test("1253", Encoding.GetEncoding(1253), "Βέλγιο");
     }
-    [Test]
+    [Fact]
     public void Utf8()
     {
         Test("utf8", Encoding.UTF8, "België");
     }
-    [Test]
+    [Fact]
     public void Ansi()
     {
         Test("ansi", Encoding.GetEncoding(1252), "België");
     }
-    [Test]
+    [Fact]
     public void Utf7()
     {
 #pragma warning disable SYSLIB0001 // Type or member is obsolete
@@ -43,6 +42,6 @@ public class EncodingTests
         using var stream = assembly.GetManifestResourceStream(resourceName);
         using var reader = ReadCsv.FromStream(stream, encoding: encoding, delimiter: ';', hasHeaders: true);
         reader.Read();
-        Assert.AreEqual(expected, reader[1]);
+        Assert.Equal(expected, reader[1]);
     }
 }
