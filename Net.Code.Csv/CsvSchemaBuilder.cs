@@ -1,4 +1,6 @@
-﻿namespace Net.Code.Csv;
+﻿using System.Reflection;
+
+namespace Net.Code.Csv;
 
 public record CsvSchema(IList<CsvColumn> Columns)
 {
@@ -69,15 +71,28 @@ public class CsvSchemaBuilder
         _columns.Add(new CsvColumn(name, name, type, s => _converter.FromString(type, s), allowNull));
         return this;
     }
+    private CsvSchemaBuilder Add<T>((string column, string property) name, Func<string, T> convert, bool allowNull)
+    {
+        _columns.Add(new CsvColumn(name.column, name.property, typeof(T), s => convert(s), allowNull));
+        return this;
+    }
+
+    private CsvSchemaBuilder Add<T>((string column, string property) name, string format, Func<string, string, T> convert, bool allowNull)
+    {
+        _columns.Add(new CsvColumn(name.column, name.property, typeof(T), s => convert(s, format), allowNull));
+        return this;
+    }
+
+    private CsvSchemaBuilder Add((string column, string property) name, Type type, bool allowNull)
+    {
+        _columns.Add(new CsvColumn(name.column, name.property, type, s => _converter.FromString(type, s), allowNull));
+        return this;
+    }
 
     public CsvSchemaBuilder AddString(string name, bool allowNull = false) => Add(name, s => s, allowNull);
-
     public CsvSchemaBuilder AddBoolean(string name, bool allowNull = false) => Add(name, _converter.ToBoolean, allowNull);
-
-    public CsvSchemaBuilder AddBoolean(string name, string @true, string @false, bool allowNull = false)
-        => Add(name, $"{@true}|{@false}", _converter.ToBoolean, allowNull);
-    public CsvSchemaBuilder AddBoolean(string name, string format, bool allowNull = false)
-        => Add(name, format, _converter.ToBoolean, allowNull);
+    public CsvSchemaBuilder AddBoolean(string name, string @true, string @false, bool allowNull = false) => Add(name, $"{@true}|{@false}", _converter.ToBoolean, allowNull);
+    public CsvSchemaBuilder AddBoolean(string name, string format, bool allowNull = false) => Add(name, format, _converter.ToBoolean, allowNull);
     public CsvSchemaBuilder AddInt16(string name, bool allowNull = false) => Add(name, _converter.ToInt16, allowNull);
     public CsvSchemaBuilder AddInt32(string name, bool allowNull = false) => Add(name, _converter.ToInt32, allowNull);
     public CsvSchemaBuilder AddInt64(string name, bool allowNull = false) => Add(name, _converter.ToInt64, allowNull);
@@ -94,6 +109,26 @@ public class CsvSchemaBuilder
     public CsvSchemaBuilder AddDateTime(string name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTime, allowNull);
     public CsvSchemaBuilder AddDateTimeOffset(string name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTimeOffset, allowNull);
 
+    private CsvSchemaBuilder AddString((string column, string property) name,bool allowNull = false) => Add(name, s => s, allowNull);
+    private CsvSchemaBuilder AddBoolean((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToBoolean, allowNull);
+    private CsvSchemaBuilder AddBoolean((string column, string property) name,string @true, string @false, bool allowNull = false) => Add(name, $"{@true}|{@false}", _converter.ToBoolean, allowNull);
+    private CsvSchemaBuilder AddBoolean((string column, string property) name,string format, bool allowNull = false) => Add(name, format, _converter.ToBoolean, allowNull);
+    private CsvSchemaBuilder AddInt16((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToInt16, allowNull);
+    private CsvSchemaBuilder AddInt32((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToInt32, allowNull);
+    private CsvSchemaBuilder AddInt64((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToInt64, allowNull);
+    private CsvSchemaBuilder AddUInt16((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToUInt16, allowNull);
+    private CsvSchemaBuilder AddUInt32((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToUInt32, allowNull);
+    private CsvSchemaBuilder AddUInt64((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToUInt64, allowNull);
+    private CsvSchemaBuilder AddSingle((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToSingle, allowNull);
+    private CsvSchemaBuilder AddDouble((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToDouble, allowNull);
+    private CsvSchemaBuilder AddDecimal((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToDecimal, allowNull);
+    private CsvSchemaBuilder AddChar((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToChar, allowNull);
+    private CsvSchemaBuilder AddByte((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToByte, allowNull);
+    private CsvSchemaBuilder AddSByte((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToSByte, allowNull);
+    private CsvSchemaBuilder AddGuid((string column, string property) name,bool allowNull = false) => Add(name, _converter.ToGuid, allowNull);
+    private CsvSchemaBuilder AddDateTime((string column, string property) name,string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTime, allowNull);
+    private CsvSchemaBuilder AddDateTimeOffset((string column, string property) name,string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTimeOffset, allowNull);
+
     public CsvSchemaBuilder From<T>()
     {
         var properties = typeof(T).GetPropertiesWithCsvFormat();
@@ -103,69 +138,80 @@ public class CsvSchemaBuilder
             bool allowNull = p.PropertyType.IsNullableType() || !p.PropertyType.IsValueType;
             var underlyingType = p.PropertyType.GetUnderlyingType();
 
+            var columnName = p.GetCustomAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>(false)?.Name ?? p.Name;
+            var propertyName = p.Name;
+
             if (underlyingType == typeof(DateTime))
             {
-                AddDateTime(p.Name, format, allowNull);
+                AddDateTime((columnName, propertyName), format, allowNull);
             }
             else if (underlyingType == typeof(DateTimeOffset))
             {
-                AddDateTimeOffset(p.Name, format, allowNull);
+                AddDateTimeOffset((columnName, propertyName), format, allowNull);
             }
             else if (underlyingType == typeof(decimal))
             {
-                AddDecimal(p.Name, allowNull);
+                AddDecimal((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(double))
             {
-                AddDouble(p.Name, allowNull);
+                AddDouble((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(float))
             {
-                AddSingle(p.Name, allowNull);
+                AddSingle((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(long))
             {
-                AddInt64(p.Name, allowNull);
+                AddInt64((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(int))
             {
-                AddInt32(p.Name, allowNull);
+                AddInt32((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(short))
             {
-                AddInt16(p.Name, allowNull);
+                AddInt16((columnName, propertyName), allowNull);
+            }
+            else if (underlyingType == typeof(byte))
+            {
+                AddByte((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(sbyte))
             {
-                AddSByte(p.Name, allowNull);
+                AddSByte((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(char))
             {
-                AddChar(p.Name, allowNull);
+                AddChar((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(ushort))
             {
-                AddUInt16(p.Name, allowNull);
+                AddUInt16((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(uint))
             {
-                AddUInt32(p.Name, allowNull);
+                AddUInt32((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(ulong))
             {
-                AddUInt64(p.Name, allowNull);
+                AddUInt64((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(ushort))
             {
-                AddUInt16(p.Name, allowNull);
+                AddUInt16((columnName, propertyName), allowNull);
+            }
+            else if (underlyingType == typeof(Guid))
+            {
+                AddGuid((columnName, propertyName), allowNull);
             }
             else if (underlyingType == typeof(bool))
             {
-                AddBoolean(p.Name, format, allowNull);
+                AddBoolean((columnName, propertyName), format, allowNull);
             }
             else
             {
-                Add(p.Name, underlyingType, allowNull);
+                Add((columnName, propertyName), underlyingType, allowNull);
             }
         }
         return this;

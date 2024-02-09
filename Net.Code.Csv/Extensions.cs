@@ -1,4 +1,6 @@
-﻿namespace Net.Code.Csv;
+﻿using System.Reflection;
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Net.Code.Csv;
 
 public static class Extensions
 {
@@ -21,14 +23,13 @@ public static class Extensions
         if (constructor is null)
         {
             // no such constructor; use the default constructor and set all properties with setter
-            constructor = type.GetConstructor(Array.Empty<Type>());
+            constructor = type.GetConstructor([]);
             return record =>
             {
-                var values = properties.Select(p => record.GetValue(record.GetOrdinal(p.Name)));
-                var item = constructor.Invoke(Array.Empty<Type>());
+                var item = constructor.Invoke([]);
                 foreach (var p in properties)
                 {
-                    p.SetValue(item, record.GetValue(record.GetOrdinal(p.Name)));
+                    p.SetValue(item, record.GetValue(record.GetOrdinal(GetName(p))));
                 }
                 return item;
             };
@@ -41,6 +42,11 @@ public static class Extensions
                 return constructor.Invoke(values.ToArray());
             };
         }
+    }
+
+    private static string GetName(PropertyInfo property)
+    {
+        return property.GetCustomAttribute<ColumnAttribute>()?.Name ?? property.Name;
     }
 
     public static IEnumerable<T> AsEnumerable<T>(this IDataReader reader)

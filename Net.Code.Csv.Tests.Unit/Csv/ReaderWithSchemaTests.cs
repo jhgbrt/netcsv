@@ -1,13 +1,19 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Net.Code.Csv.Tests.Unit.Csv;
 
 [TestFixture]
 public class ReadCsvWithSchemaTests
 {
-    readonly string input =
+    readonly string myrecord =
             """
             First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom
+            "John";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
+            """;
+    readonly string myclass =
+            """
+            First;Last;BirthDate;Quantity;Price;Count;Large value;SomeDateTimeOffset;IsActive;NullableCustom
             "John";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
             """;
 
@@ -22,6 +28,7 @@ public class ReadCsvWithSchemaTests
         Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
         Assert.IsTrue(item.IsActive);
         Assert.Null(item.NullableCustom);
+        Assert.AreEqual(2147483647, item.LargeValue);
     }
     static void Verify(dynamic item)
     {
@@ -34,6 +41,7 @@ public class ReadCsvWithSchemaTests
         Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
         Assert.IsTrue(item.IsActive);
         Assert.Null(item.NullableCustom);
+        Assert.AreEqual(2147483647, item.LargeValue);
     }
 
 
@@ -55,7 +63,7 @@ public class ReadCsvWithSchemaTests
 
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable<MyRecord>()
             .Single();
 
@@ -79,7 +87,7 @@ public class ReadCsvWithSchemaTests
             .Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable()
             .Single();
 
@@ -90,7 +98,7 @@ public class ReadCsvWithSchemaTests
     public void WithoutSchema_AllPropertiesAreStrings()
     {
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true)
             .AsEnumerable()
             .Single();
 
@@ -112,7 +120,7 @@ public class ReadCsvWithSchemaTests
             .Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable(typeof(MyRecord))
             .Single();
 
@@ -127,7 +135,7 @@ public class ReadCsvWithSchemaTests
             .Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable(typeof(MyClass))
             .Single();
 
@@ -140,16 +148,9 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder()
             .From<MyClass>()
             .Schema;
-        var input =
-            """
-            First;Ignored;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom
-            "John";SomeIgnoredValue;Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
-
-            """;
-
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable(typeof(MyClass))
             .Single();
 
@@ -162,13 +163,9 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder()
             .From<MyClass>()
             .Schema;
-        var input =
-            "Last;First;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
-            "\"Peters\";John;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
-
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable(typeof(MyClass))
             .Single();
 
@@ -181,7 +178,7 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder().From<MyRecord>().Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable<MyRecord>()
             .Single();
 
@@ -191,7 +188,7 @@ public class ReadCsvWithSchemaTests
     public void WhenSchemaImplicitlyCreatedFromRecord_ExpectedValuesAreReturned()
     {
         var item = ReadCsv
-            .FromString<MyRecord>(input, delimiter: ';', hasHeaders: true)
+            .FromString<MyRecord>(myrecord, delimiter: ';', hasHeaders: true)
             .Single();
 
         Verify(item);
@@ -202,7 +199,7 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder().From<MyClass>().Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable<MyClass>()
             .Single();
 
@@ -212,7 +209,7 @@ public class ReadCsvWithSchemaTests
     public void WhenSchemaImplicitlyCreatedFromClass_ExpectedValuesAreReturned()
     {
         var item = ReadCsv
-            .FromString<MyClass>(input, delimiter: ';', hasHeaders: true)
+            .FromString<MyClass>(myclass, delimiter: ';', hasHeaders: true)
             .Single();
 
         Verify(item);
@@ -265,6 +262,7 @@ public class MyClass : IMyItem
     public int Quantity { get; set; }
     public Amount Price { get; set; }
     public int? Count { get; set; }
+    [Column("Large value")]
     public decimal LargeValue { get; set; }
     public DateTimeOffset SomeDateTimeOffset { get; set; }
     [CsvFormat("yes|no")]
