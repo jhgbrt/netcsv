@@ -57,7 +57,6 @@ internal class CsvStateMachine
         var state = new CsvLineBuilder(_csvLayout, _behaviour);
         while (state.ReadNext(_textReader))
         {
-            Trace.TraceInformation("");
             var result = ProcessState(state, _behaviour);
             var line = result.Line;
             if (line.HasValue)
