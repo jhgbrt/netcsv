@@ -43,6 +43,6 @@ public class EncodingTests
         using var stream = assembly.GetManifestResourceStream(resourceName);
         using var reader = ReadCsv.FromStream(stream, encoding: encoding, delimiter: ';', hasHeaders: true);
         reader.Read();
-        Assert.AreEqual(expected, reader[1]);
+        Assert.That(reader[1], Is.EqualTo(expected));
     }
 }

@@ -37,7 +37,7 @@ public class CsvReaderIDataReaderTest
 
         reader.Read();
         reader.Close();
-        Assert.IsTrue(reader.IsClosed);
+        Assert.That(reader.IsClosed, Is.True);
     }
 
     [Test()]
@@ -48,41 +48,41 @@ public class CsvReaderIDataReaderTest
         
         DataTable schema = reader.GetSchemaTable();
 
-        Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, schema.Rows.Count);
+        Assert.That(schema.Rows.Count, Is.EqualTo(CsvReaderSampleData.SampleData1RecordCount));
 
         foreach (DataColumn column in schema.Columns)
         {
-            Assert.IsTrue(column.ReadOnly);
+            Assert.That(column.ReadOnly, Is.True);
         }
 
         for (int index = 0; index < schema.Rows.Count; index++)
         {
             DataRow column = schema.Rows[index];
 
-            Assert.AreEqual(int.MaxValue, column["ColumnSize"]);
-            Assert.AreEqual(DBNull.Value, column["NumericPrecision"]);
-            Assert.AreEqual(DBNull.Value, column["NumericScale"]);
-            Assert.AreEqual(false, column["IsUnique"]);
-            Assert.AreEqual(false, column["IsKey"]);
-            Assert.AreEqual(DBNull.Value, column["BaseServerName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseCatalogName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseSchemaName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseTableName"]);
-            Assert.AreEqual(typeof(string), column["DataType"]);
-            Assert.AreEqual(true, column["AllowDBNull"]);
-            Assert.AreEqual(0, column["ProviderType"]);
-            Assert.AreEqual(false, column["IsAliased"]);
-            Assert.AreEqual(false, column["IsExpression"]);
-            Assert.AreEqual(false, column["IsAutoIncrement"]);
-            Assert.AreEqual(false, column["IsRowVersion"]);
-            Assert.AreEqual(false, column["IsHidden"]);
-            Assert.AreEqual(false, column["IsLong"]);
-            Assert.AreEqual(true, column["IsReadOnly"]);
+            Assert.That(column["ColumnSize"], Is.EqualTo(int.MaxValue));
+            Assert.That(column["NumericPrecision"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["NumericScale"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["IsUnique"], Is.EqualTo(false));
+            Assert.That(column["IsKey"], Is.EqualTo(false));
+            Assert.That(column["BaseServerName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseCatalogName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseSchemaName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseTableName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["DataType"], Is.EqualTo(typeof(string)));
+            Assert.That(column["AllowDBNull"], Is.EqualTo(true));
+            Assert.That(column["ProviderType"], Is.EqualTo(0));
+            Assert.That(column["IsAliased"], Is.EqualTo(false));
+            Assert.That(column["IsExpression"], Is.EqualTo(false));
+            Assert.That(column["IsAutoIncrement"], Is.EqualTo(false));
+            Assert.That(column["IsRowVersion"], Is.EqualTo(false));
+            Assert.That(column["IsHidden"], Is.EqualTo(false));
+            Assert.That(column["IsLong"], Is.EqualTo(false));
+            Assert.That(column["IsReadOnly"], Is.EqualTo(true));
 
-            Assert.AreEqual(index, column["ColumnOrdinal"]);
+            Assert.That(column["ColumnOrdinal"], Is.EqualTo(index));
 
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Headers[index], column["ColumnName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseColumnName"]);
+            Assert.That(column["ColumnName"], Is.EqualTo(CsvReaderSampleData.SampleData1Headers[index]));
+            Assert.That(column["BaseColumnName"], Is.EqualTo(DBNull.Value));
         }
     }
     [Test]
@@ -91,23 +91,23 @@ public class CsvReaderIDataReaderTest
         using IDataReader csv = ReadCsv.FromString(CsvReaderSampleData.SampleTypedData1,
             hasHeaders: true, schema: CsvReaderSampleData.SampleTypedData1Schema);
         csv.Read();
-        Assert.AreEqual(true, csv["System.Boolean"]);
-        Assert.AreEqual(new DateTime(2001, 11, 15), csv["System.DateTime"]);
-        Assert.AreEqual(1, csv["System.Single"]);
-        Assert.AreEqual(1.1, csv["System.Double"]);
-        Assert.AreEqual(1.10d, csv["System.Decimal"]);
-        Assert.AreEqual(1, csv["System.Int16"]);
-        Assert.AreEqual(1, csv["System.Int32"]);
-        Assert.AreEqual(1, csv["System.Int64"]);
-        Assert.AreEqual(1, csv["System.UInt16"]);
-        Assert.AreEqual(1, csv["System.UInt32"]);
-        Assert.AreEqual(1, csv["System.UInt64"]);
-        Assert.AreEqual(1, csv["System.Byte"]);
-        Assert.AreEqual(1, csv["System.SByte"]);
-        Assert.AreEqual('a', csv["System.Char"]);
-        Assert.AreEqual("abc", csv["System.String"]);
-        Assert.AreEqual(Guid.Parse("{11111111-1111-1111-1111-111111111111}"), csv["System.Guid"]);
-        Assert.AreEqual(null, csv["System.DBNull"]);
+        Assert.That(csv["System.Boolean"], Is.EqualTo(true));
+        Assert.That(csv["System.DateTime"], Is.EqualTo(new DateTime(2001, 11, 15)));
+        Assert.That(csv["System.Single"], Is.EqualTo(1));
+        Assert.That(csv["System.Double"], Is.EqualTo(1.1));
+        Assert.That(csv["System.Decimal"], Is.EqualTo(1.10d));
+        Assert.That(csv["System.Int16"], Is.EqualTo(1));
+        Assert.That(csv["System.Int32"], Is.EqualTo(1));
+        Assert.That(csv["System.Int64"], Is.EqualTo(1));
+        Assert.That(csv["System.UInt16"], Is.EqualTo(1));
+        Assert.That(csv["System.UInt32"], Is.EqualTo(1));
+        Assert.That(csv["System.UInt64"], Is.EqualTo(1));
+        Assert.That(csv["System.Byte"], Is.EqualTo(1));
+        Assert.That(csv["System.SByte"], Is.EqualTo(1));
+        Assert.That(csv["System.Char"], Is.EqualTo('a'));
+        Assert.That(csv["System.String"], Is.EqualTo("abc"));
+        Assert.That(csv["System.Guid"], Is.EqualTo(Guid.Parse("{11111111-1111-1111-1111-111111111111}")));
+        Assert.That(csv["System.DBNull"], Is.EqualTo(null));
 
     }
     [Test]
@@ -119,7 +119,7 @@ public class CsvReaderIDataReaderTest
         DataTable schema = reader.GetSchemaTable();
         foreach (DataColumn column in schema.Columns)
         {
-            Assert.IsTrue(column.ReadOnly);
+            Assert.That(column.ReadOnly, Is.True);
         }
 
         for (int index = 0; index < schema.Rows.Count; index++)
@@ -127,28 +127,28 @@ public class CsvReaderIDataReaderTest
             DataRow column = schema.Rows[index];
             var schemaColumn = CsvReaderSampleData.SampleTypedData1Schema[index];
 
-            Assert.AreEqual(schemaColumn.Name, column["ColumnName"]);
-            Assert.AreEqual(int.MaxValue, column["ColumnSize"]);
-            Assert.AreEqual(DBNull.Value, column["NumericPrecision"]);
-            Assert.AreEqual(DBNull.Value, column["NumericScale"]);
-            Assert.AreEqual(false, column["IsUnique"]);
-            Assert.AreEqual(false, column["IsKey"]);
-            Assert.AreEqual(DBNull.Value, column["BaseServerName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseCatalogName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseSchemaName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseTableName"]);
-            Assert.AreEqual(schemaColumn.Type, column["DataType"]);
-            Assert.AreEqual(schemaColumn.AllowNull, column["AllowDBNull"]);
-            Assert.AreEqual(0, column["ProviderType"]);
-            Assert.AreEqual(false, column["IsAliased"]);
-            Assert.AreEqual(false, column["IsExpression"]);
-            Assert.AreEqual(false, column["IsAutoIncrement"]);
-            Assert.AreEqual(false, column["IsRowVersion"]);
-            Assert.AreEqual(false, column["IsHidden"]);
-            Assert.AreEqual(false, column["IsLong"]);
-            Assert.AreEqual(true, column["IsReadOnly"]);
+            Assert.That(column["ColumnName"], Is.EqualTo(schemaColumn.Name));
+            Assert.That(column["ColumnSize"], Is.EqualTo(int.MaxValue));
+            Assert.That(column["NumericPrecision"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["NumericScale"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["IsUnique"], Is.EqualTo(false));
+            Assert.That(column["IsKey"], Is.EqualTo(false));
+            Assert.That(column["BaseServerName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseCatalogName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseSchemaName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseTableName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["DataType"], Is.EqualTo(schemaColumn.Type));
+            Assert.That(column["AllowDBNull"], Is.EqualTo(schemaColumn.AllowNull));
+            Assert.That(column["ProviderType"], Is.EqualTo(0));
+            Assert.That(column["IsAliased"], Is.EqualTo(false));
+            Assert.That(column["IsExpression"], Is.EqualTo(false));
+            Assert.That(column["IsAutoIncrement"], Is.EqualTo(false));
+            Assert.That(column["IsRowVersion"], Is.EqualTo(false));
+            Assert.That(column["IsHidden"], Is.EqualTo(false));
+            Assert.That(column["IsLong"], Is.EqualTo(false));
+            Assert.That(column["IsReadOnly"], Is.EqualTo(true));
 
-            Assert.AreEqual(index, column["ColumnOrdinal"]);
+            Assert.That(column["ColumnOrdinal"], Is.EqualTo(index));
 
         }
 
@@ -161,41 +161,41 @@ public class CsvReaderIDataReaderTest
             CsvReaderSampleData.SampleData1, hasHeaders: false);
         DataTable schema = reader.GetSchemaTable();
 
-        Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, schema.Rows.Count);
+        Assert.That(schema.Rows.Count, Is.EqualTo(CsvReaderSampleData.SampleData1RecordCount));
 
         foreach (DataColumn column in schema.Columns)
         {
-            Assert.IsTrue(column.ReadOnly);
+            Assert.That(column.ReadOnly, Is.True);
         }
 
         for (int index = 0; index < schema.Rows.Count; index++)
         {
             DataRow column = schema.Rows[index];
 
-            Assert.AreEqual(int.MaxValue, column["ColumnSize"]);
-            Assert.AreEqual(DBNull.Value, column["NumericPrecision"]);
-            Assert.AreEqual(DBNull.Value, column["NumericScale"]);
-            Assert.AreEqual(false, column["IsUnique"]);
-            Assert.AreEqual(false, column["IsKey"]);
-            Assert.AreEqual(DBNull.Value, column["BaseServerName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseCatalogName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseSchemaName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseTableName"]);
-            Assert.AreEqual(typeof(string), column["DataType"]);
-            Assert.AreEqual(true, column["AllowDBNull"]);
-            Assert.AreEqual(0, column["ProviderType"]);
-            Assert.AreEqual(false, column["IsAliased"]);
-            Assert.AreEqual(false, column["IsExpression"]);
-            Assert.AreEqual(false, column["IsAutoIncrement"]);
-            Assert.AreEqual(false, column["IsRowVersion"]);
-            Assert.AreEqual(false, column["IsHidden"]);
-            Assert.AreEqual(false, column["IsLong"]);
-            Assert.AreEqual(true, column["IsReadOnly"]);
+            Assert.That(column["ColumnSize"], Is.EqualTo(int.MaxValue));
+            Assert.That(column["NumericPrecision"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["NumericScale"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["IsUnique"], Is.EqualTo(false));
+            Assert.That(column["IsKey"], Is.EqualTo(false));
+            Assert.That(column["BaseServerName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseCatalogName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseSchemaName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["BaseTableName"], Is.EqualTo(DBNull.Value));
+            Assert.That(column["DataType"], Is.EqualTo(typeof(string)));
+            Assert.That(column["AllowDBNull"], Is.EqualTo(true));
+            Assert.That(column["ProviderType"], Is.EqualTo(0));
+            Assert.That(column["IsAliased"], Is.EqualTo(false));
+            Assert.That(column["IsExpression"], Is.EqualTo(false));
+            Assert.That(column["IsAutoIncrement"], Is.EqualTo(false));
+            Assert.That(column["IsRowVersion"], Is.EqualTo(false));
+            Assert.That(column["IsHidden"], Is.EqualTo(false));
+            Assert.That(column["IsLong"], Is.EqualTo(false));
+            Assert.That(column["IsReadOnly"], Is.EqualTo(true));
 
-            Assert.AreEqual(index, column["ColumnOrdinal"]);
+            Assert.That(column["ColumnOrdinal"], Is.EqualTo(index));
 
-            Assert.AreEqual("Column" + index.ToString(CultureInfo.InvariantCulture), column["ColumnName"]);
-            Assert.AreEqual(DBNull.Value, column["BaseColumnName"]);
+            Assert.That(column["ColumnName"], Is.EqualTo("Column" + index.ToString(CultureInfo.InvariantCulture)));
+            Assert.That(column["BaseColumnName"], Is.EqualTo(DBNull.Value));
         }
     }
 
@@ -205,7 +205,7 @@ public class CsvReaderIDataReaderTest
         using var reader = ReadCsv.FromString(
             CsvReaderSampleData.SampleData1, hasHeaders: true);
         reader.Read();
-        Assert.IsFalse(reader.NextResult());
+        Assert.That(reader.NextResult(), Is.False);
     }
 
     [Test()]
@@ -215,7 +215,7 @@ public class CsvReaderIDataReaderTest
             CsvReaderSampleData.SampleData1, hasHeaders: true);
         reader.Read();
         reader.Close();
-        Assert.IsFalse(reader.NextResult());
+        Assert.That(reader.NextResult(), Is.False);
     }
 
     [Test()]
@@ -224,7 +224,7 @@ public class CsvReaderIDataReaderTest
         using var reader = ReadCsv.FromString(
             CsvReaderSampleData.SampleData1, hasHeaders: true);
         for (int i = 0; i < CsvReaderSampleData.SampleData1RecordCount; i++)
-            Assert.IsTrue(reader.Read());
+            Assert.That(reader.Read(), Is.True);
     }
     [Test()]
     public void Read_NoMoreRecords_ReturnsFalse()
@@ -234,7 +234,7 @@ public class CsvReaderIDataReaderTest
         for (int i = 0; i < CsvReaderSampleData.SampleData1RecordCount; i++)
             reader.Read();
 
-        Assert.IsFalse(reader.Read());
+        Assert.That(reader.Read(), Is.False);
     }
 
     [Test()]
@@ -244,7 +244,7 @@ public class CsvReaderIDataReaderTest
             CsvReaderSampleData.SampleData1, hasHeaders: true);
         reader.Read();
         reader.Close();
-        Assert.IsFalse(reader.Read());
+        Assert.That(reader.Read(), Is.False);
     }
 
     [Test()]
@@ -252,9 +252,9 @@ public class CsvReaderIDataReaderTest
     {
         using var reader = ReadCsv.FromString(
             CsvReaderSampleData.SampleData1, hasHeaders: true);
-        Assert.AreEqual(0, reader.Depth);
+        Assert.That(reader.Depth, Is.EqualTo(0));
         reader.Read();
-        Assert.AreEqual(0, reader.Depth);
+        Assert.That(reader.Depth, Is.EqualTo(0));
     }
 
     [Test()]
@@ -264,7 +264,7 @@ public class CsvReaderIDataReaderTest
             CsvReaderSampleData.SampleData1, hasHeaders: true);
         reader.Read();
         reader.Close();
-        Assert.AreEqual(0, reader.Depth);
+        Assert.That(reader.Depth, Is.EqualTo(0));
     }
 
     [Test()]
@@ -272,13 +272,13 @@ public class CsvReaderIDataReaderTest
     {
         using var reader = ReadCsv.FromString(
             CsvReaderSampleData.SampleData1, hasHeaders: true);
-        Assert.IsFalse(reader.IsClosed);
+        Assert.That(reader.IsClosed, Is.False);
 
         reader.Read();
-        Assert.IsFalse(reader.IsClosed);
+        Assert.That(reader.IsClosed, Is.False);
 
         reader.Close();
-        Assert.IsTrue(reader.IsClosed);
+        Assert.That(reader.IsClosed, Is.True);
     }
 
     [Test()]
@@ -286,13 +286,13 @@ public class CsvReaderIDataReaderTest
     {
         using var reader = ReadCsv.FromString(
             CsvReaderSampleData.SampleData1, hasHeaders: true);
-        Assert.AreEqual(-1, reader.RecordsAffected);
+        Assert.That(reader.RecordsAffected, Is.EqualTo(-1));
 
         reader.Read();
-        Assert.AreEqual(-1, reader.RecordsAffected);
+        Assert.That(reader.RecordsAffected, Is.EqualTo(-1));
 
         reader.Close();
-        Assert.AreEqual(-1, reader.RecordsAffected);
+        Assert.That(reader.RecordsAffected, Is.EqualTo(-1));
     }
 
     #endregion
@@ -307,7 +307,7 @@ public class CsvReaderIDataReaderTest
         Boolean value = true;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetBoolean(reader.GetOrdinal(typeof(Boolean).FullName)));
+            Assert.That(reader.GetBoolean(reader.GetOrdinal(typeof(Boolean).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -319,7 +319,7 @@ public class CsvReaderIDataReaderTest
         Byte value = 1;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetByte(reader.GetOrdinal(typeof(Byte).FullName)));
+            Assert.That(reader.GetByte(reader.GetOrdinal(typeof(Byte).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -335,8 +335,8 @@ public class CsvReaderIDataReaderTest
             Byte[] buffer = new Byte[16];
 
             long count = reader.GetBytes(reader.GetOrdinal(typeof(System.Byte[]).FullName), 0, buffer, 0, buffer.Length);
-            Assert.AreEqual(expected.Length, count);
-            CollectionAssert.AreEqual(expected.Take((int)count), buffer.Take((int)count));
+            Assert.That(count, Is.EqualTo(expected.Length));
+            Assert.That(buffer.Take((int)count), Is.EqualTo(expected.Take((int)count)));
         }
     }
 
@@ -348,7 +348,7 @@ public class CsvReaderIDataReaderTest
         Char value = 'a';
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetChar(reader.GetOrdinal(typeof(Char).FullName)));
+            Assert.That(reader.GetChar(reader.GetOrdinal(typeof(Char).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -364,11 +364,11 @@ public class CsvReaderIDataReaderTest
 
             long count = reader.GetChars(reader.GetOrdinal(typeof(String).FullName), 0, csvValue, 0, value.Length);
 
-            Assert.AreEqual(value.Length, count);
-            Assert.AreEqual(value.Length, csvValue.Length);
+            Assert.That(count, Is.EqualTo(value.Length));
+            Assert.That(csvValue.Length, Is.EqualTo(value.Length));
 
             for (int i = 0; i < value.Length; i++)
-                Assert.AreEqual(value[i], csvValue[i]);
+                Assert.That(csvValue[i], Is.EqualTo(value[i]));
         }
     }
 
@@ -379,10 +379,10 @@ public class CsvReaderIDataReaderTest
             CsvReaderSampleData.SampleTypedData1, hasHeaders: true, schema: CsvReaderSampleData.SampleTypedData1Schema);
         while (reader.Read())
         {
-            Assert.AreSame(reader, reader.GetData(0));
+            Assert.That(reader.GetData(0), Is.SameAs(reader));
 
             for (int i = 1; i < reader.FieldCount; i++)
-                Assert.IsNull(reader.GetData(i));
+                Assert.That(reader.GetData(i), Is.Null);
         }
     }
 
@@ -394,7 +394,7 @@ public class CsvReaderIDataReaderTest
         while (reader.Read())
         {
             for (int i = 0; i < reader.FieldCount; i++)
-                Assert.AreEqual(CsvReaderSampleData.SampleTypedData1Schema[i].Type.FullName, reader.GetDataTypeName(i));
+                Assert.That(reader.GetDataTypeName(i), Is.EqualTo(CsvReaderSampleData.SampleTypedData1Schema[i].Type.FullName));
         }
     }
 
@@ -406,7 +406,7 @@ public class CsvReaderIDataReaderTest
         DateTime value = new(2001, 11, 15);
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetDateTime(reader.GetOrdinal(typeof(DateTime).FullName)));
+            Assert.That(reader.GetDateTime(reader.GetOrdinal(typeof(DateTime).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -418,7 +418,7 @@ public class CsvReaderIDataReaderTest
         Decimal value = 1.10m;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetDecimal(reader.GetOrdinal(typeof(Decimal).FullName)));
+            Assert.That(reader.GetDecimal(reader.GetOrdinal(typeof(Decimal).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -430,7 +430,7 @@ public class CsvReaderIDataReaderTest
         Double value = 1.1d;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetDouble(reader.GetOrdinal(typeof(Double).FullName)));
+            Assert.That(reader.GetDouble(reader.GetOrdinal(typeof(Double).FullName)), Is.EqualTo(value));
         }
     }
     [Test()]
@@ -441,7 +441,7 @@ public class CsvReaderIDataReaderTest
         Single value = 1f;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetFloat(reader.GetOrdinal(typeof(Single).FullName)));
+            Assert.That(reader.GetFloat(reader.GetOrdinal(typeof(Single).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -454,7 +454,7 @@ public class CsvReaderIDataReaderTest
         while (reader.Read())
         {
             for (int i = 0; i < reader.FieldCount; i++)
-                Assert.AreEqual(CsvReaderSampleData.SampleTypedData1Schema[i].Type, reader.GetFieldType(i));
+                Assert.That(reader.GetFieldType(i), Is.EqualTo(CsvReaderSampleData.SampleTypedData1Schema[i].Type));
         }
     }
 
@@ -466,7 +466,7 @@ public class CsvReaderIDataReaderTest
         Single value = 1;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetFloat(reader.GetOrdinal(typeof(Single).FullName)));
+            Assert.That(reader.GetFloat(reader.GetOrdinal(typeof(Single).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -479,7 +479,7 @@ public class CsvReaderIDataReaderTest
         var value = new Guid("{11111111-1111-1111-1111-111111111111}");
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetGuid(reader.GetOrdinal(typeof(Guid).FullName)));
+            Assert.That(reader.GetGuid(reader.GetOrdinal(typeof(Guid).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -492,7 +492,7 @@ public class CsvReaderIDataReaderTest
         Int16 value = 1;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetInt16(reader.GetOrdinal(typeof(Int16).FullName)));
+            Assert.That(reader.GetInt16(reader.GetOrdinal(typeof(Int16).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -505,7 +505,7 @@ public class CsvReaderIDataReaderTest
         Int32 value = 1;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetInt32(reader.GetOrdinal(typeof(Int32).FullName)));
+            Assert.That(reader.GetInt32(reader.GetOrdinal(typeof(Int32).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -518,7 +518,7 @@ public class CsvReaderIDataReaderTest
         Int64 value = 1;
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetInt64(reader.GetOrdinal(typeof(Int64).FullName)));
+            Assert.That(reader.GetInt64(reader.GetOrdinal(typeof(Int64).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -530,12 +530,12 @@ public class CsvReaderIDataReaderTest
 
         while (reader.Read())
         {
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header0, reader.GetName(0));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header1, reader.GetName(1));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header2, reader.GetName(2));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header3, reader.GetName(3));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header4, reader.GetName(4));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header5, reader.GetName(5));
+            Assert.That(reader.GetName(0), Is.EqualTo(CsvReaderSampleData.SampleData1Header0));
+            Assert.That(reader.GetName(1), Is.EqualTo(CsvReaderSampleData.SampleData1Header1));
+            Assert.That(reader.GetName(2), Is.EqualTo(CsvReaderSampleData.SampleData1Header2));
+            Assert.That(reader.GetName(3), Is.EqualTo(CsvReaderSampleData.SampleData1Header3));
+            Assert.That(reader.GetName(4), Is.EqualTo(CsvReaderSampleData.SampleData1Header4));
+            Assert.That(reader.GetName(5), Is.EqualTo(CsvReaderSampleData.SampleData1Header5));
         }
     }
 
@@ -547,12 +547,12 @@ public class CsvReaderIDataReaderTest
 
         while (reader.Read())
         {
-            Assert.AreEqual(0, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header0));
-            Assert.AreEqual(1, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header1));
-            Assert.AreEqual(2, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header2));
-            Assert.AreEqual(3, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header3));
-            Assert.AreEqual(4, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header4));
-            Assert.AreEqual(5, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header5));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header0), Is.EqualTo(0));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header1), Is.EqualTo(1));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header2), Is.EqualTo(2));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header3), Is.EqualTo(3));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header4), Is.EqualTo(4));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header5), Is.EqualTo(5));
         }
     }
 
@@ -565,12 +565,12 @@ public class CsvReaderIDataReaderTest
 
         while (reader.Read())
         {
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header0, reader.GetName(0));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header1, reader.GetName(1));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header2, reader.GetName(2));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header3, reader.GetName(3));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header4, reader.GetName(4));
-            Assert.AreEqual(CsvReaderSampleData.SampleData1Header5, reader.GetName(5));
+            Assert.That(reader.GetName(0), Is.EqualTo(CsvReaderSampleData.SampleData1Header0));
+            Assert.That(reader.GetName(1), Is.EqualTo(CsvReaderSampleData.SampleData1Header1));
+            Assert.That(reader.GetName(2), Is.EqualTo(CsvReaderSampleData.SampleData1Header2));
+            Assert.That(reader.GetName(3), Is.EqualTo(CsvReaderSampleData.SampleData1Header3));
+            Assert.That(reader.GetName(4), Is.EqualTo(CsvReaderSampleData.SampleData1Header4));
+            Assert.That(reader.GetName(5), Is.EqualTo(CsvReaderSampleData.SampleData1Header5));
         }
     }
 
@@ -582,12 +582,12 @@ public class CsvReaderIDataReaderTest
 
         while (reader.Read())
         {
-            Assert.AreEqual(0, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header0));
-            Assert.AreEqual(1, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header1));
-            Assert.AreEqual(2, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header2));
-            Assert.AreEqual(3, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header3));
-            Assert.AreEqual(4, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header4));
-            Assert.AreEqual(5, reader.GetOrdinal(CsvReaderSampleData.SampleData1Header5));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header0), Is.EqualTo(0));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header1), Is.EqualTo(1));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header2), Is.EqualTo(2));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header3), Is.EqualTo(3));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header4), Is.EqualTo(4));
+            Assert.That(reader.GetOrdinal(CsvReaderSampleData.SampleData1Header5), Is.EqualTo(5));
         }
     }
 
@@ -600,7 +600,7 @@ public class CsvReaderIDataReaderTest
         String value = "abc";
         while (reader.Read())
         {
-            Assert.AreEqual(value, reader.GetString(reader.GetOrdinal(typeof(String).FullName)));
+            Assert.That(reader.GetString(reader.GetOrdinal(typeof(String).FullName)), Is.EqualTo(value));
         }
     }
 
@@ -637,7 +637,7 @@ public class CsvReaderIDataReaderTest
         int currentRecordIndex = 0;
         while (reader.Read())
         {
-            Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, reader.GetValues(objValues));
+            Assert.That(reader.GetValues(objValues), Is.EqualTo(CsvReaderSampleData.SampleData1RecordCount));
 
             for (int i = 0; i < reader.FieldCount; i++)
             {
@@ -656,8 +656,8 @@ public class CsvReaderIDataReaderTest
             CsvReaderSampleData.SampleTypedData1, hasHeaders: true, schema: CsvReaderSampleData.SampleTypedData1Schema);
         while (reader.Read())
         {
-            Assert.IsTrue(reader.IsDBNull(reader.GetOrdinal(typeof(DBNull).FullName)));
-            Assert.IsNull(reader[reader.GetOrdinal(typeof(DBNull).FullName)]);
+            Assert.That(reader.IsDBNull(reader.GetOrdinal(typeof(DBNull).FullName)), Is.True);
+            Assert.That(reader[reader.GetOrdinal(typeof(DBNull).FullName)], Is.Null);
         }
     }
 
@@ -666,7 +666,7 @@ public class CsvReaderIDataReaderTest
     {
         using var reader = ReadCsv.FromString(
             CsvReaderSampleData.SampleData1, hasHeaders: true, schema: CsvReaderSampleData.SampleData1Schema);
-        Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, reader.FieldCount);
+        Assert.That(reader.FieldCount, Is.EqualTo(CsvReaderSampleData.SampleData1RecordCount));
     }
 
     [Test()]

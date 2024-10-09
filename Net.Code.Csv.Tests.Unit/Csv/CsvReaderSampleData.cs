@@ -101,16 +101,16 @@ public class CsvReaderSampleData
 
     public static void CheckSampleData1(IDataReader csv, bool hasHeaders, bool nullIsEmpty)
     {
-        Assert.AreEqual(CsvReaderSampleData.SampleData1FieldCount, csv.FieldCount);
+        Assert.That(csv.FieldCount, Is.EqualTo(CsvReaderSampleData.SampleData1FieldCount));
 
         if (hasHeaders)
         {
-            Assert.AreEqual(0, csv.GetOrdinal(SampleData1Header0));
-            Assert.AreEqual(1, csv.GetOrdinal(SampleData1Header1));
-            Assert.AreEqual(2, csv.GetOrdinal(SampleData1Header2));
-            Assert.AreEqual(3, csv.GetOrdinal(SampleData1Header3));
-            Assert.AreEqual(4, csv.GetOrdinal(SampleData1Header4));
-            Assert.AreEqual(5, csv.GetOrdinal(SampleData1Header5));
+            Assert.That(csv.GetOrdinal(SampleData1Header0), Is.EqualTo(0));
+            Assert.That(csv.GetOrdinal(SampleData1Header1), Is.EqualTo(1));
+            Assert.That(csv.GetOrdinal(SampleData1Header2), Is.EqualTo(2));
+            Assert.That(csv.GetOrdinal(SampleData1Header3), Is.EqualTo(3));
+            Assert.That(csv.GetOrdinal(SampleData1Header4), Is.EqualTo(4));
+            Assert.That(csv.GetOrdinal(SampleData1Header5), Is.EqualTo(5));
         }
 
         long recordCount = 0;
@@ -121,9 +121,9 @@ public class CsvReaderSampleData
         }
 
         if (hasHeaders)
-            Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount, recordCount);
+            Assert.That(recordCount, Is.EqualTo(CsvReaderSampleData.SampleData1RecordCount));
         else
-            Assert.AreEqual(CsvReaderSampleData.SampleData1RecordCount + 1, recordCount);
+            Assert.That(recordCount, Is.EqualTo(CsvReaderSampleData.SampleData1RecordCount + 1));
     }
 
     public static void CheckSampleData1(long recordIndex, IDataReader csv, bool nullIsEmpty, bool hasHeaders)
@@ -140,7 +140,7 @@ public class CsvReaderSampleData
 
     public static void CheckSampleData1(bool hasHeaders, long recordIndex, string[] fields, int startIndex, bool nullIsEmpty = false)
     {
-        Assert.IsTrue(fields.Length - startIndex >= 6);
+        Assert.That(fields.Length - startIndex >= 6, Is.True);
 
         long index = recordIndex;
 
@@ -150,68 +150,68 @@ public class CsvReaderSampleData
         switch (index)
         {
             case 0:
-                Assert.AreEqual(SampleData1Header0, fields[startIndex]);
-                Assert.AreEqual(SampleData1Header1, fields[startIndex + 1]);
-                Assert.AreEqual(SampleData1Header2, fields[startIndex + 2]);
-                Assert.AreEqual(SampleData1Header3, fields[startIndex + 3]);
-                Assert.AreEqual(SampleData1Header4, fields[startIndex + 4]);
-                Assert.AreEqual(SampleData1Header5, fields[startIndex + 5]);
+                Assert.That(fields[startIndex], Is.EqualTo(SampleData1Header0));
+                Assert.That(fields[startIndex + 1], Is.EqualTo(SampleData1Header1));
+                Assert.That(fields[startIndex + 2], Is.EqualTo(SampleData1Header2));
+                Assert.That(fields[startIndex + 3], Is.EqualTo(SampleData1Header3));
+                Assert.That(fields[startIndex + 4], Is.EqualTo(SampleData1Header4));
+                Assert.That(fields[startIndex + 5], Is.EqualTo(SampleData1Header5));
                 break;
 
             case 1:
-                Assert.AreEqual("John", fields[startIndex]);
-                Assert.AreEqual("Doe", fields[startIndex + 1]);
-                Assert.AreEqual("120 jefferson st.", fields[startIndex + 2]);
-                Assert.AreEqual("Riverside", fields[startIndex + 3]);
-                Assert.AreEqual("NJ", fields[startIndex + 4]);
-                Assert.AreEqual("08075", fields[startIndex + 5]);
+                Assert.That(fields[startIndex], Is.EqualTo("John"));
+                Assert.That(fields[startIndex + 1], Is.EqualTo("Doe"));
+                Assert.That(fields[startIndex + 2], Is.EqualTo("120 jefferson st."));
+                Assert.That(fields[startIndex + 3], Is.EqualTo("Riverside"));
+                Assert.That(fields[startIndex + 4], Is.EqualTo("NJ"));
+                Assert.That(fields[startIndex + 5], Is.EqualTo("08075"));
                 break;
 
             case 2:
-                Assert.AreEqual("Jack", fields[startIndex]);
-                Assert.AreEqual("McGinnis", fields[startIndex + 1]);
-                Assert.AreEqual("220 hobo Av.", fields[startIndex + 2]);
-                Assert.AreEqual("Phila", fields[startIndex + 3]);
-                Assert.AreEqual("PA", fields[startIndex + 4]);
-                Assert.AreEqual("09119", fields[startIndex + 5]);
+                Assert.That(fields[startIndex], Is.EqualTo("Jack"));
+                Assert.That(fields[startIndex + 1], Is.EqualTo("McGinnis"));
+                Assert.That(fields[startIndex + 2], Is.EqualTo("220 hobo Av."));
+                Assert.That(fields[startIndex + 3], Is.EqualTo("Phila"));
+                Assert.That(fields[startIndex + 4], Is.EqualTo("PA"));
+                Assert.That(fields[startIndex + 5], Is.EqualTo("09119"));
                 break;
 
             case 3:
-                Assert.AreEqual(@"John ""Da Man""", fields[startIndex]);
-                Assert.AreEqual("Repici", fields[startIndex + 1]);
-                Assert.AreEqual("120 Jefferson St.", fields[startIndex + 2]);
-                Assert.AreEqual("Riverside", fields[startIndex + 3]);
-                Assert.AreEqual("NJ", fields[startIndex + 4]);
-                Assert.AreEqual("08075", fields[startIndex + 5]);
+                Assert.That(fields[startIndex], Is.EqualTo(@"John ""Da Man"""));
+                Assert.That(fields[startIndex + 1], Is.EqualTo("Repici"));
+                Assert.That(fields[startIndex + 2], Is.EqualTo("120 Jefferson St."));
+                Assert.That(fields[startIndex + 3], Is.EqualTo("Riverside"));
+                Assert.That(fields[startIndex + 4], Is.EqualTo("NJ"));
+                Assert.That(fields[startIndex + 5], Is.EqualTo("08075"));
                 break;
 
             case 4:
-                Assert.AreEqual("Stephen", fields[startIndex]);
-                Assert.AreEqual("Tyler", fields[startIndex + 1]);
-                Assert.AreEqual(@"7452 Terrace ""At the Plaza"" road", fields[startIndex + 2]);
-                Assert.AreEqual("SomeTown", fields[startIndex + 3]);
-                Assert.AreEqual("SD", fields[startIndex + 4]);
-                Assert.AreEqual("91234", fields[startIndex + 5]);
+                Assert.That(fields[startIndex], Is.EqualTo("Stephen"));
+                Assert.That(fields[startIndex + 1], Is.EqualTo("Tyler"));
+                Assert.That(fields[startIndex + 2], Is.EqualTo(@"7452 Terrace ""At the Plaza"" road"));
+                Assert.That(fields[startIndex + 3], Is.EqualTo("SomeTown"));
+                Assert.That(fields[startIndex + 4], Is.EqualTo("SD"));
+                Assert.That(fields[startIndex + 5], Is.EqualTo("91234"));
                 break;
 
             case 5:
-                if (nullIsEmpty) Assert.AreEqual(string.Empty, fields[startIndex]);
-                else Assert.IsNull(fields[startIndex]);
-                Assert.AreEqual("Blankman", fields[startIndex + 1]);
-                if (nullIsEmpty) Assert.AreEqual(string.Empty, fields[startIndex + 2]);
-                else Assert.IsNull(fields[startIndex + 2]);
-                Assert.AreEqual("SomeTown", fields[startIndex + 3]);
-                Assert.AreEqual("SD", fields[startIndex + 4]);
-                Assert.AreEqual("00298", fields[startIndex + 5]);
+                if (nullIsEmpty) Assert.That(fields[startIndex], Is.EqualTo(string.Empty));
+                else Assert.That(fields[startIndex], Is.Null);
+                Assert.That(fields[startIndex + 1], Is.EqualTo("Blankman"));
+                if (nullIsEmpty) Assert.That(fields[startIndex + 2], Is.EqualTo(string.Empty));
+                else Assert.That(fields[startIndex + 2], Is.Null);
+                Assert.That(fields[startIndex + 3], Is.EqualTo("SomeTown"));
+                Assert.That(fields[startIndex + 4], Is.EqualTo("SD"));
+                Assert.That(fields[startIndex + 5], Is.EqualTo("00298"));
                 break;
 
             case 6:
-                Assert.AreEqual(@"Joan ""the bone"", Anne", fields[startIndex]);
-                Assert.AreEqual("Jet", fields[startIndex + 1]);
-                Assert.AreEqual("9th, at Terrace plc", fields[startIndex + 2]);
-                Assert.AreEqual("Desert City", fields[startIndex + 3]);
-                Assert.AreEqual("CO", fields[startIndex + 4]);
-                Assert.AreEqual("00123", fields[startIndex + 5]);
+                Assert.That(fields[startIndex], Is.EqualTo(@"Joan ""the bone"", Anne"));
+                Assert.That(fields[startIndex + 1], Is.EqualTo("Jet"));
+                Assert.That(fields[startIndex + 2], Is.EqualTo("9th, at Terrace plc"));
+                Assert.That(fields[startIndex + 3], Is.EqualTo("Desert City"));
+                Assert.That(fields[startIndex + 4], Is.EqualTo("CO"));
+                Assert.That(fields[startIndex + 5], Is.EqualTo("00123"));
                 break;
 
             default:

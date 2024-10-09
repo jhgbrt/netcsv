@@ -19,29 +19,30 @@ public class ReadCsvWithSchemaTests
 
     static void Verify(IMyItem item)
     {
-        Assert.AreEqual("John", item.First);
-        Assert.AreEqual("Peters", item.Last.Value);
-        Assert.AreEqual(new DateTime(1970, 11, 15), item.BirthDate);
-        Assert.AreEqual(123, item.Quantity);
-        Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
-        Assert.AreEqual(null, item.Count);
-        Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
-        Assert.IsTrue(item.IsActive);
-        Assert.Null(item.NullableCustom);
-        Assert.AreEqual(2147483647, item.LargeValue);
+        Assert.That(item.First, Is.EqualTo("John"));
+        Assert.That(item.Last.Value, Is.EqualTo("Peters"));
+        Assert.That(item.BirthDate, Is.EqualTo(new DateTime(1970, 11, 15)));
+        Assert.That(item.Quantity, Is.EqualTo(123));
+        Assert.That(item.Price, Is.EqualTo(new Amount("US$", 5.98m)));
+        Assert.That(item.Count, Is.EqualTo(null));
+        Assert.That(item.SomeDateTimeOffset, Is.EqualTo(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2))));
+        Assert.That(item.IsActive, Is.True);
+        Assert.That(item.NullableCustom, Is.Null);
+        Assert.That(item.LargeValue, Is.EqualTo(2147483647));
     }
+
     static void Verify(dynamic item)
     {
-        Assert.AreEqual("John", item.First);
-        Assert.AreEqual("Peters", item.Last.Value);
-        Assert.AreEqual(new DateTime(1970, 11, 15), item.BirthDate);
-        Assert.AreEqual(123, item.Quantity);
-        Assert.AreEqual(new Amount("US$", 5.98m), item.Price);
-        Assert.AreEqual(null, item.Count);
-        Assert.AreEqual(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)), item.SomeDateTimeOffset);
-        Assert.IsTrue(item.IsActive);
-        Assert.Null(item.NullableCustom);
-        Assert.AreEqual(2147483647, item.LargeValue);
+        Assert.That(item.First, Is.EqualTo("John"));
+        Assert.That(item.Last.Value, Is.EqualTo("Peters"));
+        Assert.That(item.BirthDate, Is.EqualTo(new DateTime(1970, 11, 15)));
+        Assert.That(item.Quantity, Is.EqualTo(123));
+        Assert.That(item.Price, Is.EqualTo(new Amount("US$", 5.98m)));
+        Assert.That(item.Count, Is.EqualTo(null));
+        Assert.That(item.SomeDateTimeOffset, Is.EqualTo(new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2))));
+        Assert.That(item.IsActive, Is.True);
+        Assert.That(item.NullableCustom, Is.Null);
+        Assert.That(item.LargeValue, Is.EqualTo(2147483647));
     }
 
 
@@ -102,15 +103,15 @@ public class ReadCsvWithSchemaTests
             .AsEnumerable()
             .Single();
 
-        Assert.AreEqual("John", item.First);
-        Assert.AreEqual("Peters", item.Last);
-        Assert.AreEqual("19701115", item.BirthDate);
-        Assert.AreEqual("123", item.Quantity);
-        Assert.AreEqual("US$ 5.98", item.Price);
-        Assert.AreEqual(string.Empty, item.Count);
-        Assert.AreEqual("2020-11-13T10:20:30.0000000+02:00", item.SomeDateTimeOffset);
-        Assert.AreEqual("yes", item.IsActive);
-        Assert.AreEqual(string.Empty, item.NullableCustom);
+        Assert.That(item.First, Is.EqualTo("John"));
+        Assert.That(item.Last, Is.EqualTo("Peters"));
+        Assert.That(item.BirthDate, Is.EqualTo("19701115"));
+        Assert.That(item.Quantity, Is.EqualTo("123"));
+        Assert.That(item.Price, Is.EqualTo("US$ 5.98"));
+        Assert.That(item.Count, Is.EqualTo(string.Empty));
+        Assert.That(item.SomeDateTimeOffset, Is.EqualTo("2020-11-13T10:20:30.0000000+02:00"));
+        Assert.That(item.IsActive, Is.EqualTo("yes"));
+        Assert.That(item.NullableCustom, Is.EqualTo(string.Empty));
     }
     [Test]
     public void WithSchemaFromRecord_CanReturnAsDynamicWithType()
@@ -121,7 +122,7 @@ public class ReadCsvWithSchemaTests
 
         var item = ReadCsv
             .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyRecord))
+            .AsEnumerable<MyRecord>()
             .Single();
 
         Verify(item);
@@ -136,7 +137,7 @@ public class ReadCsvWithSchemaTests
 
         var item = ReadCsv
             .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyClass))
+            .AsEnumerable<MyClass>()
             .Single();
 
         Verify(item);
@@ -151,7 +152,7 @@ public class ReadCsvWithSchemaTests
 
         var item = ReadCsv
             .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyClass))
+            .AsEnumerable<MyClass>()
             .Single();
 
         Verify(item);
@@ -166,7 +167,7 @@ public class ReadCsvWithSchemaTests
 
         var item = ReadCsv
             .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyClass))
+            .AsEnumerable<MyClass>()
             .Single();
 
         Verify(item);
@@ -221,10 +222,9 @@ public class CustomTypeConverter : TypeConverter
 }
 
 [TypeConverter(typeof(CustomTypeConverter))]
-public class Custom
+public class Custom(string value)
 {
-    public Custom(string value) { Value = value; }
-    public string Value { get; set; }
+    public string Value { get; set; } = value;
     public override string ToString() => Value;
 }
 public interface IMyItem
@@ -271,15 +271,10 @@ public class MyClass : IMyItem
 }
 
 [TypeConverter(typeof(AmountConverter))]
-public struct Amount
+public struct Amount(string currency, decimal value)
 {
-    public Amount(string currency, decimal value)
-    {
-        Currency = currency;
-        Value = value;
-    }
-    public string Currency { get; set; }
-    public decimal Value { get; set; }
+    public string Currency { get; set; } = currency;
+    public decimal Value { get; set; } = value;
     public static Amount Parse(string s, IFormatProvider provider)
     {
         var parts = s.Split(' ');
@@ -287,12 +282,12 @@ public struct Amount
         var decimalValue = decimal.Parse(parts[1], provider);
         return new Amount { Currency = currency, Value = decimalValue };
     }
-    public string ToString(IFormatProvider provider)
+    public readonly string ToString(IFormatProvider provider)
     {
         return $"{Currency} {Value.ToString(provider)}";
     }
 
-    public override string ToString() => ToString(CultureInfo.CurrentCulture);
+    public override readonly string ToString() => ToString(CultureInfo.CurrentCulture);
 }
 
 public class AmountConverter : TypeConverter

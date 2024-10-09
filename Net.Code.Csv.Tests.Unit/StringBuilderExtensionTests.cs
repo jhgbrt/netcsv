@@ -20,7 +20,7 @@ public class StringBuilderExtensionTests
     {
         var sb = new StringBuilder(input);
         var result = sb.QuoteIfNecessary('\'', ';', '\\').ToString();
-        Assert.AreEqual(expectedResult, result);
+        Assert.That(result, Is.EqualTo(expectedResult));
     }
 
     [TestCase(null, "")]
@@ -33,7 +33,7 @@ public class StringBuilderExtensionTests
     {
         var sb = new StringBuilder(input);
         var result = sb.Trim();
-        Assert.AreEqual(expected, result);
+        Assert.That(result, Is.EqualTo(expected));
     }
 }
 

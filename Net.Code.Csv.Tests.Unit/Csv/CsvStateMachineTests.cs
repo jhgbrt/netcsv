@@ -8,16 +8,9 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 [TestFixture]
 public class CsvStateMachineTests
 {
-    private static IEnumerable<string> Split(string line)
-    {
-        return Split(line, new CsvLayout(), new CsvBehaviour());
-    }
-    private static IEnumerable<string> Split(string line, CsvLayout splitLineParams)
-    {
-        return Split(line, splitLineParams, new CsvBehaviour());
-    }
-
-    private static IEnumerable<string> Split(string line, CsvLayout splitLineParams, CsvBehaviour behaviour)
+    private static string[] Split(string line) => Split(line, new CsvLayout(), new CsvBehaviour());
+    private static string[] Split(string line, CsvLayout splitLineParams) => Split(line, splitLineParams, new CsvBehaviour());
+    private static string[] Split(string line, CsvLayout splitLineParams, CsvBehaviour behaviour)
     {
         var splitter = new CsvStateMachine(new StringReader(line), splitLineParams, behaviour);
         var result = splitter.Lines();
@@ -29,7 +22,7 @@ public class CsvStateMachineTests
     {
         var splitLineParams = new CsvLayout(Quote: '"', Delimiter: ';');
         var result = Split("1;2;3", splitLineParams);
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "1", "2", "3" }));
     }
 
     [Test]
@@ -37,7 +30,7 @@ public class CsvStateMachineTests
     {
         var splitLineParams = new CsvLayout('"', ';');
         var result = Split("1;2;3 \t", splitLineParams);
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "1", "2", "3" }));
     }
 
     [Test]
@@ -45,7 +38,7 @@ public class CsvStateMachineTests
     {
         var splitLineParams = new CsvLayout('"', ';');
         var result = Split("1;2;\"3 \t\"", splitLineParams);
-        CollectionAssert.AreEqual(new[] { "1", "2", "3 \t" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "1", "2", "3 \t" }));
     }
 
     [Test]
@@ -54,7 +47,7 @@ public class CsvStateMachineTests
         var input = "\" x \"";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.All);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual("x", result.Single());
+        Assert.That(result.Single(), Is.EqualTo("x"));
     }
 
     [Test]
@@ -63,15 +56,16 @@ public class CsvStateMachineTests
         var input = "\" x \"";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.QuotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual("x", result.Single());
+        Assert.That(result.Single(), Is.EqualTo("x"));
     }
+
     [Test]
     public void ValueTrimmingOptions_QuotedOnly_DoesNotTrimWhiteSpaceWhenNotQuoted()
     {
         var input = " x ";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.QuotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual(" x ", result.Single());
+        Assert.That(result.Single(), Is.EqualTo(" x "));
     }
 
     [Test]
@@ -80,15 +74,16 @@ public class CsvStateMachineTests
         var input = " x ";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.UnquotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual("x", result.Single());
+        Assert.That(result.Single(), Is.EqualTo("x"));
     }
+
     [Test]
     public void ValueTrimmingOptions_UnQuotedOnly_DoesNotTrimWhiteSpaceWhenQuoted()
     {
         var input = "\" x \"";
         var behaviour = new CsvBehaviour(ValueTrimmingOptions.UnquotedOnly);
         var result = Split(input, new CsvLayout(), behaviour);
-        Assert.AreEqual(" x ", result.Single());
+        Assert.That(result.Single(), Is.EqualTo(" x "));
     }
 
     [Test]
@@ -97,7 +92,7 @@ public class CsvStateMachineTests
         const string line = @"""FieldContent""";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "FieldContent" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "FieldContent" }));
     }
 
     [Test]
@@ -106,7 +101,7 @@ public class CsvStateMachineTests
         const string line = @"x, y,z";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "x", "y", "z" }));
     }
 
     [Test]
@@ -115,7 +110,7 @@ public class CsvStateMachineTests
         const string line = @"x,y   ,z";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x", "y", "z" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "x", "y", "z" }));
     }
 
     [Test]
@@ -124,7 +119,7 @@ public class CsvStateMachineTests
         const string line = "x \"y\",z";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x \"y\"", "z" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "x \"y\"", "z" }));
     }
 
     [Test]
@@ -133,7 +128,7 @@ public class CsvStateMachineTests
         const string line = @",x,,y";
         var splitLineParams = new CsvLayout('"', ',');
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "", "x", "", "y" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "", "x", "", "y" }));
     }
 
     [Test]
@@ -142,21 +137,21 @@ public class CsvStateMachineTests
         const string line = "";
         var splitter = new CsvStateMachine(new StringReader(line), new CsvLayout(), new CsvBehaviour());
         var result = splitter.Lines();
-        CollectionAssert.IsEmpty(result);
+        Assert.That(result, Is.Empty);
     }
     [Test]
     public void EmptyFields_Comma()
     {
         const string line = ",,";
         var result = Split(line, new CsvLayout());
-        CollectionAssert.AreEqual(new[] { "", "", "" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "", "", "" }));
     }
     [Test]
     public void EmptyFields_Tab()
     {
         const string line = "\t\t";
         var result = Split(line, new CsvLayout(Delimiter: '\t'));
-        CollectionAssert.AreEqual(new[] { "", "", "" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "", "", "" }));
     }
     [Test]
     public void QuotedStringWithDelimiter()
@@ -165,7 +160,7 @@ public class CsvStateMachineTests
         const string line = "\"x \"y\" z, u\",v";
         var splitLineParams = new CsvLayout();
         var result = Split(line, splitLineParams);
-        CollectionAssert.AreEqual(new[] { "x \"y\" z, u", "v" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "x \"y\" z, u", "v" }));
 
     }
 
@@ -175,7 +170,7 @@ public class CsvStateMachineTests
         const string line = "x,y, z ";
         var splitLineParams = new CsvLayout('"', ',', '"');
         var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        CollectionAssert.AreEqual(new[] { @"x", "y", " z " }, result);
+        Assert.That(result, Is.EqualTo(new[] { @"x", "y", " z " }));
 
     }
 
@@ -186,7 +181,7 @@ public class CsvStateMachineTests
         const string line = @"""\\""";
         var splitLineParams = new CsvLayout('"', ',', '\\');
         var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        Assert.AreEqual(@"\", result.Single());
+        Assert.That(result.Single(), Is.EqualTo(@"\"));
     }
 
     [Test]
@@ -195,7 +190,7 @@ public class CsvStateMachineTests
         const string line = ",";
         var splitLineParams = new CsvLayout('"', ',', '\\');
         var result = Split(line, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        CollectionAssert.AreEqual(new[] { "", "" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "", "" }));
     }
 
     [Test]
@@ -207,10 +202,10 @@ public class CsvStateMachineTests
             """;
         var splitLineParams = new CsvLayout('"', ',', '\\');
         var result = Split(data, splitLineParams, new CsvBehaviour(ValueTrimmingOptions.None));
-        CollectionAssert.AreEqual(new[] { "a", "b", """
+        Assert.That(result, Is.EqualTo(new[] { "a", "b", """
             line1
             line2
-            """ }, result);
+            """ }));
     }
 
     [Test]
@@ -227,8 +222,8 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result[0].Fields);
-        CollectionAssert.AreEqual(new[] { "4", "5", "6" }, result[1].Fields);
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "1", "2", "3" }));
+        Assert.That(result[1].Fields, Is.EqualTo(new[] { "4", "5", "6" }));
 
     }
 
@@ -243,7 +238,7 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""   ", "3" }, result[0].Fields);
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "1", @" 2  ""inside""   ", "3" }));
 
     }
 
@@ -258,7 +253,7 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", @" 2  ""inside""  x ", "3" }, result[0].Fields);
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "1", @" 2  ""inside""  x ", "3" }));
 
     }
 
@@ -276,10 +271,10 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        CollectionAssert.AreEqual(new[] { "1", """
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "1", """
              2  "in
             side"  x 
-            """, "3" }, result[0].Fields);
+            """, "3" }));
 
     }
 
@@ -292,7 +287,7 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        Assert.IsTrue(result[1].IsEmpty);
+        Assert.That(result[1].IsEmpty, Is.True);
     }
 
     [Test]
@@ -304,8 +299,8 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        Assert.AreEqual("1", result[0].Fields[0]);
-        Assert.AreEqual("2", result[1].Fields[0]);
+        Assert.That(result[0].Fields[0], Is.EqualTo("1"));
+        Assert.That(result[1].Fields[0], Is.EqualTo("2"));
     }
 
     [Test]
@@ -316,10 +311,10 @@ public class CsvStateMachineTests
 
         var result = splitter.Lines().ToArray();
 
-        Assert.AreEqual(2, result.Length);
-        CollectionAssert.AreEqual(new[] { "a", "b" }, result[0].Fields);
-        Assert.IsTrue(result[1].IsEmpty);
-        CollectionAssert.AreEqual(new[] { string.Empty, string.Empty }, result[1].Fields);
+        Assert.That(result.Length, Is.EqualTo(2));
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "a", "b" }));
+        Assert.That(result[1].IsEmpty, Is.True);
+        Assert.That(result[1].Fields, Is.EqualTo(new[] { string.Empty, string.Empty }));
     }
 
     [Test]
@@ -328,9 +323,9 @@ public class CsvStateMachineTests
         var input = "00,01,   \n10,11,   ";
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour());
         var result = splitter.Lines().ToArray();
-        Assert.AreEqual(2, result.Length);
-        CollectionAssert.AreEqual(new[] { "00", "01", "" }, result[0].Fields);
-        CollectionAssert.AreEqual(new[] { "10", "11", "" }, result[1].Fields);
+        Assert.That(result.Length, Is.EqualTo(2));
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "00", "01", "" }));
+        Assert.That(result[1].Fields, Is.EqualTo(new[] { "10", "11", "" }));
     }
 
     [Test]
@@ -339,8 +334,8 @@ public class CsvStateMachineTests
         var input = "00,   ,02\n,,";
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(TrimmingOptions: ValueTrimmingOptions.None));
         var result = splitter.Lines().ToArray();
-        Assert.AreEqual(2, result.Length);
-        CollectionAssert.AreEqual(new[] { "00", "   ", "02" }, result[0].Fields);
+        Assert.That(result.Length, Is.EqualTo(2));
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "00", "   ", "02" }));
     }
 
     [Test]
@@ -352,11 +347,11 @@ public class CsvStateMachineTests
 
         var splitter = new CsvStateMachine(new StringReader(input), new CsvLayout(), new CsvBehaviour(MissingFieldAction: MissingFieldAction.ReplaceByNull));
         var result = splitter.Lines().ToArray();
-        Assert.AreEqual(3, result.Length);
+        Assert.That(result.Length, Is.EqualTo(3));
 
-        CollectionAssert.AreEqual(new[] { "a", "b", "c", "d", "e" }, result[0].Fields);
-        CollectionAssert.AreEqual(new[] { "a", "b", "c", "d", "" }, result[1].Fields);
-        CollectionAssert.AreEqual(new[] { "a", "b", "", null, null }, result[2].Fields);
+        Assert.That(result[0].Fields, Is.EqualTo(new[] { "a", "b", "c", "d", "e" }));
+        Assert.That(result[1].Fields, Is.EqualTo(new[] { "a", "b", "c", "d", "" }));
+        Assert.That(result[2].Fields, Is.EqualTo(new[] { "a", "b", "", null, null }));
     }
 
     [Test]
@@ -377,7 +372,7 @@ public class CsvStateMachineTests
     {
         const string data = "\"\n\r\n\n\r\r\",,\t,\n";
         var result = Split(data);
-        CollectionAssert.AreEqual(new[] { "\n\r\n\n\r\r", "", "", "" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "\n\r\n\n\r\r", "", "", "" }));
     }
 
     [Test]
@@ -385,7 +380,7 @@ public class CsvStateMachineTests
     {
         const string data = "1\t2\t3";
         var result = Split(data, new CsvLayout(Delimiter: '\t'));
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "1", "2", "3" }));
     }
 
 }

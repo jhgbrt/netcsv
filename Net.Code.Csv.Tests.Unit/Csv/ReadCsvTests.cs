@@ -41,7 +41,7 @@ public class ReadCsvTests
     {
         var data = "";
         var result = Read(data, skipEmptyLines: false);
-        CollectionAssert.AreEqual(new string[] { string.Empty }, result);
+        Assert.That(result, Is.EqualTo(new string[] { string.Empty }));
     }
 
     [Test]
@@ -49,7 +49,7 @@ public class ReadCsvTests
     {
         var data = "";
         var result = ReadCsv.FromString(data, emptyLineAction: EmptyLineAction.Skip);
-        Assert.IsFalse(result.Read());
+        Assert.That(result.Read(), Is.False);
     }
 
     [Test]
@@ -57,7 +57,7 @@ public class ReadCsvTests
     {
         var data = ",";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { string.Empty, string.Empty }, result);
+        Assert.That(result, Is.EqualTo(new string[] { string.Empty, string.Empty }) );
     }
 
     [Test]
@@ -70,7 +70,7 @@ public class ReadCsvTests
     {
         var data = $"{delimiter}";
         var result = Read(data, delimiter: delimiter);
-        CollectionAssert.AreEqual(new string[] { string.Empty, string.Empty }, result);
+        Assert.That(result, Is.EqualTo(new string[] { string.Empty, string.Empty }));
     }
 
     [Test]
@@ -78,14 +78,14 @@ public class ReadCsvTests
     {
         var data = "x";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "x" }, result);
+        Assert.That(result, Is.EqualTo(new [] { "x" }));
     }
     [Test]
     public void QuotedStringField_IsReadAsString()
     {
         var data = "\"x\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "x" }, result);
+        Assert.That(result, Is.EqualTo(new [] { "x" }));
     }
 
     [Test]
@@ -93,7 +93,7 @@ public class ReadCsvTests
     {
         var data = "\"x\r\n\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "x\r\n" }, result);
+        Assert.That(result, Is.EqualTo(new [] { "x\r\n" }));
     }
 
     [Test]
@@ -101,28 +101,28 @@ public class ReadCsvTests
     {
         var data = "\"a\"\"b\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a\"b" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "a\"b" }));
     }
 
     [Test]
-    public void QuotedString_WhenUnescapedQuoteEncounterd_AndShouldIgnore_ThenFieldContainsQuote()
+    public void QuotedString_WhenUnescapedQuoteEncountered_AndShouldIgnore_ThenFieldContainsQuote()
     {
         var data = "\"a\"b\"";
         var result = Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore);
-        CollectionAssert.AreEqual(new string[] { "a\"b" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "a\"b" }));
     }
     [Test]
-    public void QuotedString_WhenUnescapedQuoteEncounterd_AndShouldThrow_ThenThrows()
+    public void QuotedString_WhenUnescapedQuoteEncountered_AndShouldThrow_ThenThrows()
     {
         var data = "\"a\"b\"";
         Assert.Throws<MalformedCsvException>(() => Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException));
     }
     [Test]
-    public void QuotedString_WhenUnescapedQuoteEncounterd_AndAdvanceToNextLine_ThenIgnoresRestOfField()
+    public void QuotedString_WhenUnescapedQuoteEncountered_AndAdvanceToNextLine_ThenIgnoresRestOfField()
     {
         var data = "\"a\"b\"";
         var result = Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine);
-        CollectionAssert.AreEqual(new string[] { "a" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "a" }));
     }
 
     [Test]
@@ -130,7 +130,7 @@ public class ReadCsvTests
     {
         var data = "#whatever";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "" }, result);
+        Assert.That(result, Is.EqualTo(new[] { "" }));
     }
 
     [Test]
@@ -138,27 +138,27 @@ public class ReadCsvTests
     {
         var data = "a,b";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a", "b" }, result);
+        Assert.That(result, Is.EqualTo(new string[] { "a", "b" }));
     }
     [Test]
     public void TwoFields_FirstFieldWithNewLine()
     {
         var data = "\"a\r\n\",b";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a\r\n", "b" }, result);
+        Assert.That(result, Is.EqualTo(new [] { "a\r\n", "b" }));
     }
     [Test]
     public void TwoFields_SecondFieldWithQuotes()
     {
         var data = "\"a\r\n\",\"b\"";
         var result = Read(data);
-        CollectionAssert.AreEqual(new string[] { "a\r\n", "b" }, result);
+        Assert.That(result, Is.EqualTo(new [] { "a\r\n", "b" }));
     }
     [Test]
     public void TwoLines()
     {
         var data = "\r\n";
         var result = Read(data);
-        CollectionAssert.AreEqual(Array.Empty<string>(), result);
+        Assert.That(result, Is.Empty);
     }
 }

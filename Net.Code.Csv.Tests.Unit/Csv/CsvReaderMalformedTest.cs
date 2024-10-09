@@ -22,6 +22,8 @@
 
 // A special thanks goes to "shriop" at CodeProject for providing many of the standard and Unicode parsing tests.
 
+using NUnit.Framework.Legacy;
+
 using System.Diagnostics;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv;
@@ -49,7 +51,10 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.That(
+                new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber },
+                Is.EqualTo(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 })
+                );
         }
     }
 
@@ -72,7 +77,7 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.That(new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, Is.EqualTo(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }));
         }
     }
 
@@ -95,7 +100,10 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.That(
+                    new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber },
+                    Is.EqualTo(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }) 
+                    );
         }
     }
 
@@ -118,7 +126,11 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.That(
+                new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, 
+                Is.EqualTo(
+                new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }
+                ));
         }
     }
 
@@ -136,7 +148,7 @@ public class CsvReaderMalformedTest
         }
         catch (MalformedCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 1L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.That(new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, Is.EqualTo(new { LineNumber = 1L, FieldNumber = 1, ColumnNumber = 13 }));
         }
     }
 
@@ -157,7 +169,7 @@ public class CsvReaderMalformedTest
         }
         catch (MalformedCsvException ex)
         {
-            Assert.AreEqual(new { LineNumber = 2L, FieldNumber = 1, ColumnNumber = 13 }, new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber });
+            Assert.That(new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, Is.EqualTo(new { LineNumber = 2L, FieldNumber = 1, ColumnNumber = 13 }));
         }
     }
 
@@ -169,7 +181,7 @@ public class CsvReaderMalformedTest
         using var csv = ReadCsv.FromString(Data, hasHeaders: true);
         while (csv.Read())
         {
-            Assert.AreEqual(2, csv.FieldCount);
+            Assert.That(csv.FieldCount, Is.EqualTo(2));
             for (int i = 0; i < csv.FieldCount; i++)
             {
                 _ = csv.GetString(i);
@@ -185,15 +197,15 @@ public class CsvReaderMalformedTest
                             "\"19324\";\"FJEDER TIL 2-05-405\";\"\";\"14,50\";\"4027816193241\"";
 
         using var csv = ReadCsv.FromString(Data, delimiter: ';', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine);
-        Assert.IsTrue(csv.Read());
+        Assert.That(csv.Read(), Is.True);
 
-        Assert.AreEqual("19324", csv[0]);
-        Assert.AreEqual("FJEDER TIL 2-05-405", csv[1]);
-        Assert.AreEqual("", csv[2]);
-        Assert.AreEqual("14,50", csv[3]);
-        Assert.AreEqual("4027816193241", csv[4]);
+        Assert.That(csv[0], Is.EqualTo("19324"));
+        Assert.That(csv[1], Is.EqualTo("FJEDER TIL 2-05-405"));
+        Assert.That(csv[2], Is.EqualTo(""));
+        Assert.That(csv[3], Is.EqualTo("14,50"));
+        Assert.That(csv[4], Is.EqualTo("4027816193241"));
 
-        Assert.IsFalse(csv.Read());
+        Assert.That(csv.Read(), Is.False);
     }
 
     [Test]
@@ -206,19 +218,19 @@ public class CsvReaderMalformedTest
         using var csv = ReadCsv.FromString(Data, missingFieldAction: MissingFieldAction.ReplaceByNull);
         var record = new string[5];
 
-        Assert.IsTrue(csv.Read());
+        Assert.That(csv.Read(), Is.True);
         csv.GetValues(record);
-        CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "e" }, record);
+        Assert.That(record, Is.EqualTo(new string[] { "a", "b", "c", "d", "e" }));
 
-        Assert.IsTrue(csv.Read());
+        Assert.That(csv.Read(), Is.True);
         csv.GetValues(record);
-        CollectionAssert.AreEqual(new string[] { "a", "b", "c", "d", "" }, record);
+        Assert.That(record, Is.EqualTo(new string[] { "a", "b", "c", "d", "" }));
 
-        Assert.IsTrue(csv.Read());
+        Assert.That(csv.Read(), Is.True);
         csv.GetValues(record);
-        CollectionAssert.AreEqual(new string[] { "a", "b", "", null, null }, record);
+        Assert.That(record, Is.EqualTo(new string[] { "a", "b", "", null, null }));
 
-        Assert.IsFalse(csv.Read());
+        Assert.That(csv.Read(), Is.False);
     }
 }
 
@@ -288,8 +300,8 @@ public class MultiResultSetTests
             reader.NextResult();
             var items = reader.AsEnumerable<OrderItem>().ToList();
 
-            Assert.AreEqual(2, orders.Count);
-            Assert.AreEqual(4, items.Count);
+            Assert.That(orders.Count, Is.EqualTo(2));
+            Assert.That(items.Count, Is.EqualTo(4));
         }
 
         record Order(int Id, string FirstName, string LastName, DateTime OrderDate, decimal OrderTotal);
@@ -311,17 +323,17 @@ public class MultiResultSetTests
 
             while (reader.Read())
             {
-                Assert.AreEqual("1", reader["a"]);
-                Assert.AreEqual("2", reader["b"]);
-                Assert.AreEqual("3", reader["c"]);
+                Assert.That(reader["a"], Is.EqualTo("1"));
+                Assert.That(reader["b"], Is.EqualTo("2"));
+                Assert.That(reader["c"], Is.EqualTo("3"));
             }
 
-            Assert.IsTrue(reader.NextResult());
+            Assert.That(reader.NextResult(), Is.True);
 
             while (reader.Read())
             {
-                Assert.AreEqual("x", reader["d"]);
-                Assert.AreEqual("y", reader["e"]);
+                Assert.That(reader["d"], Is.EqualTo("x"));
+                Assert.That(reader["e"], Is.EqualTo("y"));
             }
         }
         [Test]
@@ -345,12 +357,12 @@ public class MultiResultSetTests
             var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, schema: schemas);
 
             var first = reader.AsEnumerable<Part1>().Single();
-            Assert.AreEqual(new Part1(1, 2, 3), first);
-            Assert.IsTrue(reader.NextResult());
+            Assert.That(first, Is.EqualTo(new Part1(1, 2, 3)));
+            Assert.That(reader.NextResult(), Is.True);
 
             var second = reader.AsEnumerable<Part2>().Single();
-            Assert.AreEqual(new Part2("x", "y"), second);
-            Assert.IsFalse(reader.NextResult());
+            Assert.That(second, Is.EqualTo(new Part2("x", "y")));
+            Assert.That(reader.NextResult(), Is.False);
         }
 
         record Part1(int a, int b, int c);
