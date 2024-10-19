@@ -6,13 +6,13 @@
 /// <param name="c">The last read character</param>
 /// <param name="layout">the CSV layout parameters</param>
 /// <param name="next">Look ahead character (if any). Required to determine if the current character is an escape character.</param>
-record struct CsvChar(char Value, CsvLayout Layout, char? Next)
+readonly ref struct CsvChar(char value, CsvLayout layout, char? Next)
 {
-    public bool IsCarriageReturn => Value == '\r';
-    public bool IsNewLine => Value == '\n';
-    public bool IsComment => Value == Layout.Comment;
-    public bool IsQuote => Value == Layout.Quote;
-    public bool IsDelimiter => Value == Layout.Delimiter;
-    public bool IsWhiteSpace => char.IsWhiteSpace(Value);
-    public bool IsEscape => Layout.IsEscape(Value, Next);
+    public readonly bool IsCarriageReturn => value == '\r';
+    public readonly bool IsNewLine => value == '\n';
+    public readonly bool IsComment => value == layout.Comment;
+    public readonly bool IsQuote => value == layout.Quote;
+    public readonly bool IsDelimiter => value == layout.Delimiter;
+    public readonly bool IsWhiteSpace => char.IsWhiteSpace(value);
+    public readonly bool IsEscape => layout.IsEscape(value, Next);
 }

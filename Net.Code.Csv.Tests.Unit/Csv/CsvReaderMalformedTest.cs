@@ -52,8 +52,8 @@ public class CsvReaderMalformedTest
         catch (MissingFieldCsvException ex)
         {
             Assert.That(
-                new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber },
-                Is.EqualTo(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 })
+                (ex.LineNumber, ex.FieldNumber, ex.ColumnNumber),
+                Is.EqualTo((3L, 2, 6 ))
                 );
         }
     }
@@ -77,7 +77,7 @@ public class CsvReaderMalformedTest
         }
         catch (MissingFieldCsvException ex)
         {
-            Assert.That(new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, Is.EqualTo(new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }));
+            Assert.That((ex.LineNumber, ex.FieldNumber, ex.ColumnNumber), Is.EqualTo((3L, 3, 7)));
         }
     }
 
@@ -101,8 +101,8 @@ public class CsvReaderMalformedTest
         catch (MissingFieldCsvException ex)
         {
             Assert.That(
-                    new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber },
-                    Is.EqualTo(new { LineNumber = 3L, FieldNumber = 2, ColumnNumber = 6 }) 
+                    (ex.LineNumber, ex.FieldNumber, ex.ColumnNumber),
+                    Is.EqualTo((3L, 2, 6 )) 
                     );
         }
     }
@@ -127,9 +127,9 @@ public class CsvReaderMalformedTest
         catch (MissingFieldCsvException ex)
         {
             Assert.That(
-                new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, 
+                (ex.LineNumber, ex.FieldNumber, ex.ColumnNumber), 
                 Is.EqualTo(
-                new { LineNumber = 3L, FieldNumber = 3, ColumnNumber = 7 }
+                (3L, 3, 7)
                 ));
         }
     }
@@ -148,7 +148,7 @@ public class CsvReaderMalformedTest
         }
         catch (MalformedCsvException ex)
         {
-            Assert.That(new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, Is.EqualTo(new { LineNumber = 1L, FieldNumber = 1, ColumnNumber = 13 }));
+            Assert.That((ex.LineNumber, ex.FieldNumber, ex.ColumnNumber), Is.EqualTo((1L, 1, 13)));
         }
     }
 
@@ -169,7 +169,7 @@ public class CsvReaderMalformedTest
         }
         catch (MalformedCsvException ex)
         {
-            Assert.That(new { ex.LineNumber, ex.FieldNumber, ex.ColumnNumber }, Is.EqualTo(new { LineNumber = 2L, FieldNumber = 1, ColumnNumber = 13 }));
+            Assert.That((ex.LineNumber, ex.FieldNumber, ex.ColumnNumber), Is.EqualTo((2L, 1, 13)));
         }
     }
 
@@ -232,6 +232,31 @@ public class CsvReaderMalformedTest
 
         Assert.That(csv.Read(), Is.False);
     }
+
+    [Test]
+    public void LastFieldEmptyFollowedByMissingFieldsEmptyOnNextRecord()
+    {
+        const string Data = "a,b,c,d,e"
+            + "\na,b,c,d,"
+            + "\na,b,";
+
+        using var csv = ReadCsv.FromString(Data, missingFieldAction: MissingFieldAction.ReplaceByEmpty);
+        var record = new string[5];
+
+        Assert.That(csv.Read(), Is.True);
+        csv.GetValues(record);
+        Assert.That(record, Is.EqualTo(new string[] { "a", "b", "c", "d", "e" }));
+
+        Assert.That(csv.Read(), Is.True);
+        csv.GetValues(record);
+        Assert.That(record, Is.EqualTo(new string[] { "a", "b", "c", "d", "" }));
+
+        Assert.That(csv.Read(), Is.True);
+        csv.GetValues(record);
+        Assert.That(record, Is.EqualTo(new string[] { "a", "b", "", "", ""}));
+
+        Assert.That(csv.Read(), Is.False);
+    }
 }
 
 public class MultiResultSetTests
@@ -254,6 +279,13 @@ public class MultiResultSetTests
             2;Item 2;1;50
             """";
 
+            (int Id, string FirstName, string LastName, DateTime OrderDate, decimal OrderTotal)[] expected1 =
+                [
+                    (1, "John", "Doe", new DateTime(2023,1,1), 100m),
+                    (2, "Jane", "Doe", new DateTime(2023,1,2), 110m),
+                ];
+
+            int i = 0;
             var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, delimiter: ';');
             while (reader.Read())
             {
@@ -262,8 +294,19 @@ public class MultiResultSetTests
                 var customerLastName = reader.GetString(reader.GetOrdinal("LastName"));
                 var orderDate = reader.GetDateTime(reader.GetOrdinal("OrderDate"));
                 var orderTotal = reader.GetDecimal(reader.GetOrdinal("OrderTotal"));
+                Assert.That((orderId, customerFirstName, customerLastName, orderDate, orderTotal), Is.EqualTo(expected1[i]));
+                i++;
             }
 
+            (int Id, string ItemName, int Quantity, decimal Price)[] expected2 =
+                [
+                    (1, "Item 1", 2, 50m),
+                    (2, "Item 1", 1, 50m),
+                    (2, "Item 2", 1, 10m),
+                    (2, "Item 2", 1, 50m),
+                ];
+
+            i = 0;
             reader.NextResult();
             while (reader.Read())
             {
@@ -271,6 +314,8 @@ public class MultiResultSetTests
                 var itemName = reader.GetString(reader.GetOrdinal("ItemName"));
                 var quantity = reader.GetInt32(reader.GetOrdinal("Quantity"));
                 var price = reader.GetDecimal(reader.GetOrdinal("Price"));
+                Assert.That((orderId, itemName, quantity, price), Is.EqualTo(expected2[i]));
+                i++;
             }
 
 
@@ -296,12 +341,23 @@ public class MultiResultSetTests
 
             var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, delimiter: ';', schema: schemas);
 
+            Order[] expectedOrders = [
+                new (1, "John", "Doe", new DateTime(2023,1,1), 100m),
+                new (2, "Jane", "Doe", new DateTime(2023,1,2), 110m)
+            ];
             var orders = reader.AsEnumerable<Order>().ToList();
-            reader.NextResult();
-            var items = reader.AsEnumerable<OrderItem>().ToList();
+            Assert.That(orders, Is.EqualTo(expectedOrders));
 
-            Assert.That(orders.Count, Is.EqualTo(2));
-            Assert.That(items.Count, Is.EqualTo(4));
+            reader.NextResult();
+
+            OrderItem[] expectedItems = [
+                new (1, "Item 1", 2, 50m),
+                new (2, "Item 1", 1, 50m),
+                new (2, "Item 2", 1, 10m),
+                new (2, "Item 2", 1, 50m)
+                ];
+            var items = reader.AsEnumerable<OrderItem>().ToList();
+            Assert.That(items, Is.EqualTo(expectedItems));
         }
 
         record Order(int Id, string FirstName, string LastName, DateTime OrderDate, decimal OrderTotal);

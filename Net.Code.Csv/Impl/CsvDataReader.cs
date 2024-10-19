@@ -217,8 +217,8 @@ internal class CsvDataReader : IDataReader
                 _schema is null ? _header.Fields : _schema.Columns.Select(c => c.Name).ToArray();
 
             // null marks columns that will change for each row
-            var schemaRow = new object[]
-                                 {
+            object[] schemaRow =
+                                 [
                                          true, // 00- AllowDBNull
                                          null, // 01- BaseColumnName
                                          null, // 02- BaseSchemaName
@@ -241,7 +241,7 @@ internal class CsvDataReader : IDataReader
                                          false, // 19- IsHidden
                                          true, // 20- IsReadOnly
                                          false // 21- IsRowVersion
-                                 };
+                                 ];
 
             for (var i = 0; i < columnNames.Length; i++)
             {
