@@ -17,7 +17,7 @@ internal class CsvDataReader : IDataReader
     private IEnumerator<CsvSchema> _schemas;
     private CsvSchema _schema;
     private bool _eof;
-
+    internal CsvSchema Schema => _schema;
     public CsvDataReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, CultureInfo cultureInfo)
     {
         _reader = reader;

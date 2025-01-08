@@ -4,16 +4,20 @@ namespace Net.Code.Csv;
 
 public static class Extensions
 {
-    static Func<IDataRecord, T> GetActivator<T>()
+    static Func<IDataRecord, T> GetActivator<T>(CsvSchema schema)
     {
         var type = typeof(T);
-        var activator = GetActivator(type);
+        var activator = GetActivator(type, schema);
         return record => (T)activator(record);
     }
 
-    private static Func<IDataRecord, object> GetActivator(Type type)
+    private static Func<IDataRecord, object> GetActivator(Type type, CsvSchema schema)
     {
-        var properties = type.GetProperties();
+        schema ??= Schema.From(type);
+        var properties =
+             from p in type.GetProperties()
+             join c in schema.Columns on p.Name equals c.PropertyName
+             select p;
 
         // if we find a record constructor with parameters matching the properties of the type, use that
         var constructor = type.GetConstructors()
@@ -51,7 +55,9 @@ public static class Extensions
 
     public static IEnumerable<T> AsEnumerable<T>(this IDataReader reader)
     {
-        var activator = GetActivator<T>();
+
+        CsvSchema schema = reader is CsvDataReader r ? r.Schema : Schema.From<T>();
+        var activator = GetActivator<T>(schema);
         while (reader.Read())
         {
             T item = activator(reader);
@@ -68,7 +74,8 @@ public static class Extensions
     }
     public static IEnumerable<dynamic> AsEnumerable(this IDataReader reader, Type type)
     {
-        var activator = GetActivator(type);
+        CsvSchema schema = reader is CsvDataReader r ? r.Schema : Schema.From(type);
+        var activator = GetActivator(type, schema);
         while (reader.Read())
         {
             var item = activator(reader);

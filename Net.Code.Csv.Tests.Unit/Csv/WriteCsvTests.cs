@@ -9,7 +9,10 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 [TestFixture]
 public class WriteCsvTests
 {
-    private readonly string expected =
+    private readonly string expectedForClass =
+            $"First;Last;BirthDate;Quantity;Price;Count;Large value;SomeDateTimeOffset;IsActive;NullableCustom{NewLine}" +
+            $"John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;{NewLine}";
+    private readonly string expectedForRecord =
             $"First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom{NewLine}" +
             $"John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;{NewLine}";
     private readonly MyClass[] classItems =
@@ -57,7 +60,7 @@ public class WriteCsvTests
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(classItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.That(result, Is.EqualTo(expected));
+        Assert.That(result, Is.EqualTo(expectedForClass));
     }
 
     [Test]
@@ -65,7 +68,7 @@ public class WriteCsvTests
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.That(result, Is.EqualTo(expected));
+        Assert.That(result, Is.EqualTo(expectedForRecord));
     }
 
     [Test]
@@ -73,7 +76,7 @@ public class WriteCsvTests
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.That(result, Is.EqualTo(expected));
+        Assert.That(result, Is.EqualTo(expectedForRecord));
     }
     [Test]
     public async Task WriteCsv_ToStream_Record_WithCultureInfo_ToString()
@@ -84,7 +87,7 @@ public class WriteCsvTests
         stream.Position = 0;
         var sr = new StreamReader(stream);
         var result = sr.ReadToEnd();
-        Assert.That(result, Is.EqualTo(expected));
+        Assert.That(result, Is.EqualTo(expectedForRecord));
     }
 
     class Item { public decimal Value { get; set; } }

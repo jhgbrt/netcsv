@@ -268,6 +268,8 @@ public class MyClass : IMyItem
     [CsvFormat("yes|no")]
     public bool IsActive { get; set; }
     public Custom NullableCustom { get; set; }
+
+    public IEnumerable<Custom> Customers { get; set; } = [];
 }
 
 [TypeConverter(typeof(AmountConverter))]
