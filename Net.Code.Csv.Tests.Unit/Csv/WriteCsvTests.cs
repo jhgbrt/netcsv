@@ -9,11 +9,14 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 
 public class WriteCsvTests
 {
-    private readonly string expected =
+    private readonly string expectedForClass =
+            $"First;Last;BirthDate;Quantity;Price;Count;Large value;SomeDateTimeOffset;IsActive;NullableCustom{NewLine}" +
+            $"John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;{NewLine}";
+    private readonly string expectedForRecord =
             $"First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom{NewLine}" +
             $"John;Peters;19701115;123;US$ 5,98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;{NewLine}";
-    private readonly MyClass[] classItems = new[]
-    {
+    private readonly MyClass[] classItems =
+    [
                 new MyClass
                 {
                     First = "John",
@@ -26,7 +29,7 @@ public class WriteCsvTests
                     SomeDateTimeOffset = new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)),
                     IsActive = true
                 }
-            };
+            ];
 
     private async IAsyncEnumerable<MyRecord> GetRecordsAsync()
     {
@@ -36,8 +39,8 @@ public class WriteCsvTests
             yield return item;
         }
     }
-    private readonly MyRecord[] recordItems = new[]
-    {
+    private readonly MyRecord[] recordItems =
+    [
                 new MyRecord(
                     First: "John",
                     Last: new Custom("Peters"),
@@ -49,7 +52,7 @@ public class WriteCsvTests
                     SomeDateTimeOffset: new DateTimeOffset(2020, 11, 13, 10, 20, 30, TimeSpan.FromHours(2)),
                     IsActive: true
                     )
-            };
+            ];
 
 
     [Fact]
@@ -57,7 +60,7 @@ public class WriteCsvTests
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(classItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.Equal(expected, result);
+        Assert.Equal(expectedForClass, result);
     }
 
     [Fact]
@@ -65,7 +68,7 @@ public class WriteCsvTests
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.Equal(expected, result);
+        Assert.Equal(expectedForRecord, result);
     }
 
     [Fact]
@@ -73,7 +76,7 @@ public class WriteCsvTests
     {
         var cultureInfo = CultureInfo.CreateSpecificCulture("be");
         var result = WriteCsv.ToString(recordItems, ';', '"', '\\', true, cultureInfo: cultureInfo);
-        Assert.Equal(expected, result);
+        Assert.Equal(expectedForRecord, result);
     }
     [Fact]
     public async Task WriteCsv_ToStream_Record_WithCultureInfo_ToString()
@@ -84,7 +87,7 @@ public class WriteCsvTests
         stream.Position = 0;
         var sr = new StreamReader(stream);
         var result = sr.ReadToEnd();
-        Assert.Equal(expected, result);
+        Assert.Equal(expectedForRecord, result);
     }
 
     class Item { public decimal Value { get; set; } }

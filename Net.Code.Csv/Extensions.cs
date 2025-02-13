@@ -1,17 +1,23 @@
-﻿namespace Net.Code.Csv;
+﻿using System.Reflection;
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Net.Code.Csv;
 
 public static class Extensions
 {
-    static Func<IDataRecord, T> GetActivator<T>()
+    static Func<IDataRecord, T> GetActivator<T>(CsvSchema schema)
     {
         var type = typeof(T);
-        var activator = GetActivator(type);
+        var activator = GetActivator(type, schema);
         return record => (T)activator(record);
     }
 
-    private static Func<IDataRecord, object> GetActivator(Type type)
+    private static Func<IDataRecord, object> GetActivator(Type type, CsvSchema schema)
     {
-        var properties = type.GetProperties();
+        schema ??= Schema.From(type);
+        var properties =
+             from p in type.GetProperties()
+             join c in schema.Columns on p.Name equals c.PropertyName
+             select p;
 
         // if we find a record constructor with parameters matching the properties of the type, use that
         var constructor = type.GetConstructors()
@@ -21,14 +27,13 @@ public static class Extensions
         if (constructor is null)
         {
             // no such constructor; use the default constructor and set all properties with setter
-            constructor = type.GetConstructor(Array.Empty<Type>());
+            constructor = type.GetConstructor([]);
             return record =>
             {
-                var values = properties.Select(p => record.GetValue(record.GetOrdinal(p.Name)));
-                var item = constructor.Invoke(Array.Empty<Type>());
+                var item = constructor.Invoke([]);
                 foreach (var p in properties)
                 {
-                    p.SetValue(item, record.GetValue(record.GetOrdinal(p.Name)));
+                    p.SetValue(item, record.GetValue(record.GetOrdinal(GetName(p))));
                 }
                 return item;
             };
@@ -43,9 +48,16 @@ public static class Extensions
         }
     }
 
+    private static string GetName(PropertyInfo property)
+    {
+        return property.GetCustomAttribute<ColumnAttribute>()?.Name ?? property.Name;
+    }
+
     public static IEnumerable<T> AsEnumerable<T>(this IDataReader reader)
     {
-        var activator = GetActivator<T>();
+
+        CsvSchema schema = reader is CsvDataReader r ? r.Schema : Schema.From<T>();
+        var activator = GetActivator<T>(schema);
         while (reader.Read())
         {
             T item = activator(reader);
@@ -62,7 +74,8 @@ public static class Extensions
     }
     public static IEnumerable<dynamic> AsEnumerable(this IDataReader reader, Type type)
     {
-        var activator = GetActivator(type);
+        CsvSchema schema = reader is CsvDataReader r ? r.Schema : Schema.From(type);
+        var activator = GetActivator(type, schema);
         while (reader.Read())
         {
             var item = activator(reader);

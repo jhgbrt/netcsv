@@ -1,13 +1,19 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Net.Code.Csv.Tests.Unit.Csv;
 
 
 public class ReadCsvWithSchemaTests
 {
-    readonly string input =
+    readonly string myrecord =
             """
             First;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom
+            "John";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
+            """;
+    readonly string myclass =
+            """
+            First;Last;BirthDate;Quantity;Price;Count;Large value;SomeDateTimeOffset;IsActive;NullableCustom
             "John";Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
             """;
 
@@ -23,6 +29,7 @@ public class ReadCsvWithSchemaTests
         Assert.True(item.IsActive);
         Assert.Null(item.NullableCustom);
     }
+
     static void Verify(dynamic item)
     {
         Assert.Equal("John", item.First);
@@ -55,7 +62,7 @@ public class ReadCsvWithSchemaTests
 
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable<MyRecord>()
             .Single();
 
@@ -79,7 +86,7 @@ public class ReadCsvWithSchemaTests
             .Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable()
             .Single();
 
@@ -90,7 +97,7 @@ public class ReadCsvWithSchemaTests
     public void WithoutSchema_AllPropertiesAreStrings()
     {
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true)
             .AsEnumerable()
             .Single();
 
@@ -112,8 +119,8 @@ public class ReadCsvWithSchemaTests
             .Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyRecord))
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
+            .AsEnumerable<MyRecord>()
             .Single();
 
         Verify(item);
@@ -127,8 +134,8 @@ public class ReadCsvWithSchemaTests
             .Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyClass))
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
+            .AsEnumerable<MyClass>()
             .Single();
 
         Verify(item);
@@ -140,17 +147,10 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder()
             .From<MyClass>()
             .Schema;
-        var input =
-            """
-            First;Ignored;Last;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom
-            "John";SomeIgnoredValue;Peters;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;
-
-            """;
-
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyClass))
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
+            .AsEnumerable<MyClass>()
             .Single();
 
         Verify(item);
@@ -162,14 +162,10 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder()
             .From<MyClass>()
             .Schema;
-        var input =
-            "Last;First;BirthDate;Quantity;Price;Count;LargeValue;SomeDateTimeOffset;IsActive;NullableCustom\r\n" +
-            "\"Peters\";John;19701115;123;US$ 5.98;;2147483647;2020-11-13T10:20:30.0000000+02:00;yes;\r\n";
-
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
-            .AsEnumerable(typeof(MyClass))
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
+            .AsEnumerable<MyClass>()
             .Single();
 
         Verify(item);
@@ -181,7 +177,7 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder().From<MyRecord>().Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myrecord, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable<MyRecord>()
             .Single();
 
@@ -191,7 +187,7 @@ public class ReadCsvWithSchemaTests
     public void WhenSchemaImplicitlyCreatedFromRecord_ExpectedValuesAreReturned()
     {
         var item = ReadCsv
-            .FromString<MyRecord>(input, delimiter: ';', hasHeaders: true)
+            .FromString<MyRecord>(myrecord, delimiter: ';', hasHeaders: true)
             .Single();
 
         Verify(item);
@@ -202,7 +198,7 @@ public class ReadCsvWithSchemaTests
         CsvSchema schema = new CsvSchemaBuilder().From<MyClass>().Schema;
 
         var item = ReadCsv
-            .FromString(input, delimiter: ';', hasHeaders: true, schema: schema)
+            .FromString(myclass, delimiter: ';', hasHeaders: true, schema: schema)
             .AsEnumerable<MyClass>()
             .Single();
 
@@ -212,7 +208,7 @@ public class ReadCsvWithSchemaTests
     public void WhenSchemaImplicitlyCreatedFromClass_ExpectedValuesAreReturned()
     {
         var item = ReadCsv
-            .FromString<MyClass>(input, delimiter: ';', hasHeaders: true)
+            .FromString<MyClass>(myclass, delimiter: ';', hasHeaders: true)
             .Single();
 
         Verify(item);
@@ -224,10 +220,9 @@ public class CustomTypeConverter : TypeConverter
 }
 
 [TypeConverter(typeof(CustomTypeConverter))]
-public class Custom
+public class Custom(string value)
 {
-    public Custom(string value) { Value = value; }
-    public string Value { get; set; }
+    public string Value { get; set; } = value;
     public override string ToString() => Value;
 }
 public interface IMyItem
@@ -265,23 +260,21 @@ public class MyClass : IMyItem
     public int Quantity { get; set; }
     public Amount Price { get; set; }
     public int? Count { get; set; }
+    [Column("Large value")]
     public decimal LargeValue { get; set; }
     public DateTimeOffset SomeDateTimeOffset { get; set; }
     [CsvFormat("yes|no")]
     public bool IsActive { get; set; }
     public Custom NullableCustom { get; set; }
+
+    public IEnumerable<Custom> Customers { get; set; } = [];
 }
 
 [TypeConverter(typeof(AmountConverter))]
-public struct Amount
+public struct Amount(string currency, decimal value)
 {
-    public Amount(string currency, decimal value)
-    {
-        Currency = currency;
-        Value = value;
-    }
-    public string Currency { get; set; }
-    public decimal Value { get; set; }
+    public string Currency { get; set; } = currency;
+    public decimal Value { get; set; } = value;
     public static Amount Parse(string s, IFormatProvider provider)
     {
         var parts = s.Split(' ');
@@ -289,12 +282,12 @@ public struct Amount
         var decimalValue = decimal.Parse(parts[1], provider);
         return new Amount { Currency = currency, Value = decimalValue };
     }
-    public string ToString(IFormatProvider provider)
+    public readonly string ToString(IFormatProvider provider)
     {
         return $"{Currency} {Value.ToString(provider)}";
     }
 
-    public override string ToString() => ToString(CultureInfo.CurrentCulture);
+    public override readonly string ToString() => ToString(CultureInfo.CurrentCulture);
 }
 
 public class AmountConverter : TypeConverter

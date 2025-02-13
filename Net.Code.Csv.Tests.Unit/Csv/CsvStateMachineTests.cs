@@ -8,16 +8,9 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 
 public class CsvStateMachineTests
 {
-    private static IEnumerable<string> Split(string line)
-    {
-        return Split(line, new CsvLayout(), new CsvBehaviour());
-    }
-    private static IEnumerable<string> Split(string line, CsvLayout splitLineParams)
-    {
-        return Split(line, splitLineParams, new CsvBehaviour());
-    }
-
-    private static IEnumerable<string> Split(string line, CsvLayout splitLineParams, CsvBehaviour behaviour)
+    private static string[] Split(string line) => Split(line, new CsvLayout(), new CsvBehaviour());
+    private static string[] Split(string line, CsvLayout splitLineParams) => Split(line, splitLineParams, new CsvBehaviour());
+    private static string[] Split(string line, CsvLayout splitLineParams, CsvBehaviour behaviour)
     {
         var splitter = new CsvStateMachine(new StringReader(line), splitLineParams, behaviour);
         var result = splitter.Lines();

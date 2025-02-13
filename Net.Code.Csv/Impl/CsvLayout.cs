@@ -37,7 +37,7 @@ internal record CsvLayout(
     /// </summary>
     public static CsvLayout Default => new();
 
-    public IEnumerable<CsvSchema> Schemas => Schema == null ? Array.Empty<CsvSchema>() : Schema.Match(schema => new[] { schema }, schemas => schemas);
+    public IEnumerable<CsvSchema> Schemas => Schema == null ? [] : Schema.Match(s => [s], s => s);
 
     internal bool IsEscape(char currentChar, char? nextChar)
         => currentChar == Escape && (nextChar == Quote || nextChar == Escape);

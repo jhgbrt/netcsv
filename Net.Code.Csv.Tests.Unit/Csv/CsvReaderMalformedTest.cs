@@ -22,6 +22,8 @@
 
 // A special thanks goes to "shriop" at CodeProject for providing many of the standard and Unicode parsing tests.
 
+using Xunit;
+
 using System.Diagnostics;
 
 namespace Net.Code.Csv.Tests.Unit.IO.Csv;
@@ -242,6 +244,13 @@ public class MultiResultSetTests
             2;Item 2;1;50
             """";
 
+            (int Id, string FirstName, string LastName, DateTime OrderDate, decimal OrderTotal)[] expected1 =
+                [
+                    (1, "John", "Doe", new DateTime(2023,1,1), 100m),
+                    (2, "Jane", "Doe", new DateTime(2023,1,2), 110m),
+                ];
+
+            int i = 0;
             var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, delimiter: ';');
             while (reader.Read())
             {
@@ -250,8 +259,19 @@ public class MultiResultSetTests
                 var customerLastName = reader.GetString(reader.GetOrdinal("LastName"));
                 var orderDate = reader.GetDateTime(reader.GetOrdinal("OrderDate"));
                 var orderTotal = reader.GetDecimal(reader.GetOrdinal("OrderTotal"));
+                Assert.Equal((orderId, customerFirstName, customerLastName, orderDate, orderTotal), expected1[i]);
+                i++;
             }
 
+            (int Id, string ItemName, int Quantity, decimal Price)[] expected2 =
+                [
+                    (1, "Item 1", 2, 50m),
+                    (2, "Item 1", 1, 50m),
+                    (2, "Item 2", 1, 10m),
+                    (2, "Item 2", 1, 50m),
+                ];
+
+            i = 0;
             reader.NextResult();
             while (reader.Read())
             {
@@ -259,6 +279,8 @@ public class MultiResultSetTests
                 var itemName = reader.GetString(reader.GetOrdinal("ItemName"));
                 var quantity = reader.GetInt32(reader.GetOrdinal("Quantity"));
                 var price = reader.GetDecimal(reader.GetOrdinal("Price"));
+                Assert.Equal((orderId, itemName, quantity, price), expected2[i]);
+                i++;
             }
 
 
@@ -284,8 +306,21 @@ public class MultiResultSetTests
 
             var reader = ReadCsv.FromString(input, emptyLineAction: EmptyLineAction.NextResult, hasHeaders: true, delimiter: ';', schema: schemas);
 
+            Order[] expectedOrders = [
+                new (1, "John", "Doe", new DateTime(2023,1,1), 100m),
+                new (2, "Jane", "Doe", new DateTime(2023,1,2), 110m)
+            ];
             var orders = reader.AsEnumerable<Order>().ToList();
+            Assert.Equal(orders, expectedOrders);
+
             reader.NextResult();
+
+            OrderItem[] expectedItems = [
+                new (1, "Item 1", 2, 50m),
+                new (2, "Item 1", 1, 50m),
+                new (2, "Item 2", 1, 10m),
+                new (2, "Item 2", 1, 50m)
+                ];
             var items = reader.AsEnumerable<OrderItem>().ToList();
 
             Assert.Equal(2, orders.Count);

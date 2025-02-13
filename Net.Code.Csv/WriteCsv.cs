@@ -124,10 +124,13 @@ public static class WriteCsv
         CultureInfo cultureInfo = null
         )
     {
-        var properties = typeof(T).GetPropertiesWithCsvFormat();
+        var schema = Schema.From<T>();
+        var properties = from p in typeof(T).GetPropertiesWithCsvFormat()
+                         join c in schema.Columns on p.property.Name equals c.PropertyName
+                         select p;
         if (hasHeaders)
         {
-            writer.WriteLine(string.Join(delimiter.ToString(), properties.Select(p => p.property.Name)));
+            writer.WriteLine(string.Join(delimiter.ToString(), schema.Columns.Select(c => c.Name)));
         }
 
         cultureInfo ??= CultureInfo.InvariantCulture;

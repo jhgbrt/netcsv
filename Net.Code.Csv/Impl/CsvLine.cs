@@ -3,26 +3,28 @@ namespace Net.Code.Csv.Impl;
 /// <summary>
 /// A CSV line
 /// </summary>
-record struct CsvLine(string[] Fields, bool IsEmpty)
+readonly struct CsvLine(string[] fields, bool isEmpty)
 {
 
     /// <summary>
     /// An empty CSV line
     /// </summary>
-    public static readonly CsvLine Empty = new(Array.Empty<string>(), true);
+    public static readonly CsvLine Empty = new([], true);
 
-    public override string ToString() => string.Join(";", Fields);
-    public int Length => Fields.Length;
-    public string this[int field]
+    public override string ToString() => string.Join(";", fields);
+    public readonly int Length => fields.Length;
+    public readonly string[] Fields => fields;
+    public readonly bool IsEmpty => isEmpty;
+    public readonly string this[int field]
     {
         get
         {
-            if (field < Fields.Length)
+            if (field < fields.Length)
             {
-                return Fields[field];
+                return fields[field];
             }
 
-            if (IsEmpty)
+            if (isEmpty)
             {
                 return string.Empty;
             }

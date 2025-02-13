@@ -1,20 +1,19 @@
-﻿using System.Diagnostics;
-
-namespace Net.Code.Csv.Impl;
+﻿namespace Net.Code.Csv.Impl;
 internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
 {
-    private CsvChar _currentChar;
+    private char _currentChar;
+    private char? _next;
     private bool _quoted;
     private Location _location = Location.Origin().NextLine();
 
     private readonly StringBuilder _field = new();
     private readonly StringBuilder _tentative = new();
     private readonly StringBuilder _rawData = new();
-    private readonly List<string> _fields = new();
+    private readonly List<string> _fields = [];
 
     public string RawData => _rawData.ToString();
 
-    public CsvChar CurrentChar => _currentChar;
+    public CsvChar CurrentChar => new (_currentChar, layout, _next);
 
     public List<string> Fields => _fields;
 
@@ -34,7 +33,7 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
 
     internal CsvLineBuilder AddToField()
     {
-        _field.Append(_currentChar.Value);
+        _field.Append(_currentChar);
         return this;
     }
 
@@ -47,7 +46,7 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
 
     internal CsvLineBuilder AddToTentative()
     {
-        _tentative.Append(_currentChar.Value);
+        _tentative.Append(_currentChar);
         return this;
     }
 
@@ -63,7 +62,7 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
         {
             ValueTrimmingOptions.All => _field.Trim(),
             ValueTrimmingOptions.QuotedOnly when _quoted => _field.Trim(),
-            ValueTrimmingOptions.UnquotedOnly when !_quoted=> _field.Trim(),
+            ValueTrimmingOptions.UnquotedOnly when !_quoted => _field.Trim(),
             _ => _field.ToString()
         };
 
@@ -85,30 +84,32 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
     /// <returns></returns>
     internal CsvLine ToLine()
     {
-        var isEmpty = _fields.Count == 0 || (_fields.Count == 1 && string.IsNullOrEmpty(_fields[0]));
-
-        if (!FieldCount.HasValue && (!isEmpty || behaviour.EmptyLineAction != EmptyLineAction.Skip))
-        {
-            FieldCount = _fields.Count;
-        }
-
-
+        var lineIsEmpty = _fields is [] or [""];
         var count = _fields.Count;
-        if (!isEmpty && count < FieldCount && behaviour.MissingFieldAction == MissingFieldAction.ParseError)
+
+        if (!FieldCount.HasValue)
         {
-            throw new MissingFieldCsvException(RawData, Location, _fields.Count);
+            // this is either the first line, or previous lines where empty and should be skipped
+            if (!(lineIsEmpty && behaviour.EmptyLineAction == EmptyLineAction.Skip))
+            {
+                FieldCount = count;
+            }
         }
 
-        if (FieldCount.HasValue && isEmpty && behaviour.EmptyLineAction == EmptyLineAction.NextResult)
+        bool fieldsAreMissing = count < FieldCount;
+        var f = (fieldsAreMissing, lineIsEmpty, behaviour.MissingFieldAction) switch
         {
-        }
-        else if (count < FieldCount)
-        {
-            var s = behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : "";
-            _fields.AddRange(Enumerable.Repeat(s, FieldCount.Value - count));
-        }
+            // throw an error if the line is not empty and has less fields than the header
+            // do not throw an error, but add empty fields if the line *is* empty 
+            (fieldsAreMissing: true, lineIsEmpty: false, MissingFieldAction.ParseError) => throw new MissingFieldCsvException(RawData, Location, count),
+            (fieldsAreMissing: true, lineIsEmpty: true, MissingFieldAction.ParseError) => _fields.Concat(Enumerable.Repeat(string.Empty, FieldCount.Value - count)),
+            (fieldsAreMissing: true, lineIsEmpty: _, MissingFieldAction.ReplaceByEmpty) => _fields.Concat(Enumerable.Repeat(string.Empty, FieldCount.Value - count)),
+            (fieldsAreMissing: true, lineIsEmpty: _, MissingFieldAction.ReplaceByNull) => _fields.Concat(Enumerable.Repeat(default(string), FieldCount.Value - count)),
+            // no fields missing => return the fields
+            _ => _fields
+        };
 
-        var line = new CsvLine(_fields.ToArray(), isEmpty);
+        var line = new CsvLine([.. f], lineIsEmpty);
 
         PrepareNextLine();
 
@@ -121,9 +122,9 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
         if (i < 0) return false;
         var currentChar = (char)i;
         var peek = textReader.Peek();
-        var next = peek < 0 ? null : (char?)peek;
+        _next = peek < 0 ? null : (char?)peek;
         _location = _location.NextColumn();
-        _currentChar = new CsvChar(currentChar, layout, next);
+        _currentChar = currentChar;
         _rawData.Append(currentChar);
         if (_rawData.Length > 32) _rawData.Remove(0, 1);
         return true;

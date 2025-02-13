@@ -34,31 +34,19 @@ using ProcessStateFunc = Func<CsvLineBuilder, CsvBehaviour, ProcessingResult>;
 /// This class is internally used and should be maintained with care. Changes to the state machine logic can
 /// significantly impact the CSV parsing capabilities and correctness.
 /// </summary>
-internal class CsvStateMachine
+internal class CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
 {
-    private readonly TextReader _textReader;
-    private readonly CsvLayout _csvLayout;
-    private readonly CsvBehaviour _behaviour;
-
-    public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
-    {
-        _textReader = textReader;
-        _csvLayout = csvLayout;
-        _behaviour = behaviour;
-    }
-
     public int? FieldCount { get; set; }
 
     public IEnumerable<CsvLine> Lines() => LinesImpl().Where(line
-        => !line.IsEmpty || _behaviour.EmptyLineAction != EmptyLineAction.Skip);
+        => !line.IsEmpty || behaviour.EmptyLineAction != EmptyLineAction.Skip);
     private IEnumerable<CsvLine> LinesImpl()
     {
         ProcessStateFunc ProcessState = BeginningOfLine;
-        var state = new CsvLineBuilder(_csvLayout, _behaviour);
-        while (state.ReadNext(_textReader))
+        var state = new CsvLineBuilder(csvLayout, behaviour);
+        while (state.ReadNext(textReader))
         {
-            Trace.TraceInformation("");
-            var result = ProcessState(state, _behaviour);
+            var result = ProcessState(state, behaviour);
             var line = result.Line;
             if (line.HasValue)
             {
