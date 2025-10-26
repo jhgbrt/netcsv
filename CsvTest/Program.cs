@@ -1,61 +1,125 @@
-﻿using Net.Code.Csv;
+using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Text;
-using CsvTest;
-using System;
-using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+using CsvTest;
+using Net.Code.Csv;
 
-BenchmarkRunner.Run<CsvBenchmark>();
+BenchmarkRunner.Run<CsvReaderBenchmark>();
 
 [MemoryDiagnoser]
-public class CsvBenchmark
+public class CsvReaderBenchmark
 {
-    private void Experimental()
+    private const char Separator = ';';
+
+    [Params(1_000, 100_000)]
+    public int Rows { get; set; }
+
+    private string _tempFile = string.Empty;
+    private CsvSchema _schema = null!;
+    private string[] _templateRows = Array.Empty<string>();
+    private string _header = string.Empty;
+
+    [GlobalSetup]
+    public void Setup()
     {
-        var be = CultureInfo.CreateSpecificCulture("be");
-
-        var amount = Amount.Parse("$ 123.58", CultureInfo.InvariantCulture);
-        Console.WriteLine(amount.ToString(CultureInfo.InvariantCulture));
-        var converter = TypeDescriptor.GetConverter(typeof(Amount));
-        Console.WriteLine(converter.ConvertToString(null, be, amount));
-        Console.WriteLine(converter.ConvertFrom(null, be, "$ 123,58"));
-
-        Convert.ToString(new DateTime(), new MyFormatProvider());
+        _schema = Schema.From<MyItem>();
+        LoadTemplateRows();
+        _tempFile = Path.Combine(Path.GetTempPath(), $"netcodecsv-reader-bench-{Rows}-{Guid.NewGuid():N}.csv");
+        GenerateInputFile();
     }
 
-    [Benchmark]
-
-    public void Test()
+    [GlobalCleanup]
+    public void Cleanup()
     {
-        var schema = Schema.From<MyItem>();
+        if (!string.IsNullOrEmpty(_tempFile) && File.Exists(_tempFile))
+        {
+            File.Delete(_tempFile);
+        }
+    }
 
+    [Benchmark(Description = "IDataReader (no schema)")]
+    public decimal ReadDataReader()
+    {
         using var reader = ReadCsv.FromFile(
-            "test.csv",
+            _tempFile,
             encoding: Encoding.UTF8,
-            delimiter: ';',
-            hasHeaders: true,
-            schema: schema
-        );
+            delimiter: Separator,
+            hasHeaders: true);
 
-        var total = 0.0m;
+        var priceOrdinal = reader.GetOrdinal("Price");
+        decimal total = 0;
+        while (reader.Read())
+        {
+            total += reader.GetDecimal(priceOrdinal);
+        }
+        return total;
+    }
+
+    [Benchmark(Description = "Typed records (schema)")]
+    public decimal ReadTypedRecords()
+    {
+        using var reader = ReadCsv.FromFile(
+            _tempFile,
+            encoding: Encoding.UTF8,
+            delimiter: Separator,
+            hasHeaders: true,
+            schema: _schema);
+
+        decimal total = 0;
         foreach (var item in reader.AsEnumerable<MyItem>())
         {
             total += item.Price;
         }
+        return total;
     }
 
+    [Benchmark(Description = "No headers / layout detection")]
+    public int ReadWithoutHeaders()
+    {
+        using var reader = ReadCsv.FromFile(
+            _tempFile,
+            encoding: Encoding.UTF8,
+            delimiter: Separator,
+            hasHeaders: false);
+
+        int rows = 0;
+        while (reader.Read())
+        {
+            rows++;
+        }
+        return rows;
+    }
+
+    private void LoadTemplateRows()
+    {
+        var samplePath = Path.Combine(AppContext.BaseDirectory, "test.csv");
+        if (!File.Exists(samplePath))
+        {
+            throw new FileNotFoundException("Sample CSV not found for benchmark input generation.", samplePath);
+        }
+
+        var lines = File.ReadAllLines(samplePath);
+        _header = lines.First();
+        _templateRows = lines.Skip(1).ToArray();
+    }
+
+    private void GenerateInputFile()
+    {
+        using var stream = File.Create(_tempFile);
+        using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: 32 * 1024);
+
+        writer.WriteLine(_header);
+        for (int i = 0; i < Rows; i++)
+        {
+            writer.WriteLine(_templateRows[i % _templateRows.Length]);
+        }
+    }
 }
-
-//record Person(string FirstName, string LastName, [CsvFormat("yyyy-MM-dd")] DateTime BirthDate);
-
-//var people = new[] { new Person("John", "Peterson", new DateTime(1980, 5, 14)) };
-
-//WriteCsv.ToFile("out.csv",*/ people);
-
-
-
 
 namespace CsvTest
 {
