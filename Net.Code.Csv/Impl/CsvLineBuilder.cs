@@ -6,12 +6,42 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
     private bool _quoted;
     private Location _location = Location.Origin().NextLine();
 
+    private const int RawWindowSize = 32;
+
     private readonly StringBuilder _field = new();
     private readonly StringBuilder _tentative = new();
-    private readonly StringBuilder _rawData = new();
     private readonly List<string> _fields = [];
+    private readonly char[] _rawBuffer = new char[RawWindowSize];
 
-    public string RawData => _rawData.ToString();
+    private int _rawBufferCount;
+    private int _rawBufferIndex;
+
+    public string RawData
+    {
+        get
+        {
+            if (_rawBufferCount == 0)
+            {
+                return string.Empty;
+            }
+
+            var result = new char[_rawBufferCount];
+            var start = (_rawBufferIndex - _rawBufferCount + RawWindowSize) % RawWindowSize;
+
+            if (start + _rawBufferCount <= RawWindowSize)
+            {
+                Array.Copy(_rawBuffer, start, result, 0, _rawBufferCount);
+            }
+            else
+            {
+                var firstPart = RawWindowSize - start;
+                Array.Copy(_rawBuffer, start, result, 0, firstPart);
+                Array.Copy(_rawBuffer, 0, result, firstPart, _rawBufferCount - firstPart);
+            }
+
+            return new string(result);
+        }
+    }
 
     public CsvChar CurrentChar => new (_currentChar, layout, _next);
 
@@ -125,10 +155,19 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
         _next = peek < 0 ? null : (char?)peek;
         _location = _location.NextColumn();
         _currentChar = currentChar;
-        _rawData.Append(currentChar);
-        if (_rawData.Length > 32) _rawData.Remove(0, 1);
+        AppendRaw(currentChar);
         return true;
     }
 
     internal CsvLineBuilder Ignore() => this;
+
+    private void AppendRaw(char currentChar)
+    {
+        _rawBuffer[_rawBufferIndex] = currentChar;
+        _rawBufferIndex = (_rawBufferIndex + 1) % RawWindowSize;
+        if (_rawBufferCount < RawWindowSize)
+        {
+            _rawBufferCount++;
+        }
+    }
 }
