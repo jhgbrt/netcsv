@@ -37,8 +37,14 @@ public static class ReadCsv
         // caller should dispose IDataReader, which will indirectly also close the stream
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
         var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
-        var stream = File.OpenRead(path);
-        var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null);
+        var stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            FileOptions.SequentialScan);
+        var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, bufferSize: 32 * 1024);
         return FromReader(reader, layout, behaviour, cultureInfo);
     }
 
@@ -75,7 +81,7 @@ public static class ReadCsv
             OneOf<CsvSchema,CsvSchema[]> schema = null,
             CultureInfo cultureInfo = null)
     {
-        var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, 1024, true);
+        var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, bufferSize: 32 * 1024, leaveOpen: true);
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders,  schema);
         var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         return FromReader(reader, layout, behaviour, cultureInfo);

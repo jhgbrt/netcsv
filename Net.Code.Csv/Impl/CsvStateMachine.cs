@@ -1,5 +1,6 @@
 namespace Net.Code.Csv.Impl;
 
+using System;
 using System.Diagnostics;
 
 using ProcessStateFunc = Func<CsvLineBuilder, CsvBehaviour, ProcessingResult>;
@@ -34,19 +35,35 @@ using ProcessStateFunc = Func<CsvLineBuilder, CsvBehaviour, ProcessingResult>;
 /// This class is internally used and should be maintained with care. Changes to the state machine logic can
 /// significantly impact the CSV parsing capabilities and correctness.
 /// </summary>
-internal class CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
+internal class CsvStateMachine
 {
+    private readonly BufferedCharReader _reader;
+    private readonly CsvLayout _layout;
+    private readonly CsvBehaviour _behaviour;
+
+    public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
+        : this(new BufferedCharReader(textReader ?? throw new ArgumentNullException(nameof(textReader))), csvLayout, behaviour)
+    {
+    }
+
+    public CsvStateMachine(BufferedCharReader reader, CsvLayout csvLayout, CsvBehaviour behaviour)
+    {
+        _reader = reader ?? throw new ArgumentNullException(nameof(reader));
+        _layout = csvLayout ?? throw new ArgumentNullException(nameof(csvLayout));
+        _behaviour = behaviour ?? throw new ArgumentNullException(nameof(behaviour));
+    }
+
     public int? FieldCount { get; set; }
 
     public IEnumerable<CsvLine> Lines() => LinesImpl().Where(line
-        => !line.IsEmpty || behaviour.EmptyLineAction != EmptyLineAction.Skip);
+        => !line.IsEmpty || _behaviour.EmptyLineAction != EmptyLineAction.Skip);
     private IEnumerable<CsvLine> LinesImpl()
     {
         ProcessStateFunc ProcessState = BeginningOfLine;
-        var state = new CsvLineBuilder(csvLayout, behaviour);
-        while (state.ReadNext(textReader))
+        var state = new CsvLineBuilder(_layout, _behaviour);
+        while (state.ReadNext(_reader))
         {
-            var result = ProcessState(state, behaviour);
+            var result = ProcessState(state, _behaviour);
             var line = result.Line;
             if (line.HasValue)
             {

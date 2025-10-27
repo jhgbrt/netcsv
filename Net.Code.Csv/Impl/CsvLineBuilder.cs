@@ -146,13 +146,13 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
         return line;
     }
 
-    internal bool ReadNext(TextReader textReader)
+    internal bool ReadNext(BufferedCharReader reader)
     {
-        var i = textReader.Read();
-        if (i < 0) return false;
-        var currentChar = (char)i;
-        var peek = textReader.Peek();
-        _next = peek < 0 ? null : (char?)peek;
+        if (!reader.MoveNext(out var currentChar, out var next))
+        {
+            return false;
+        }
+        _next = next;
         _location = _location.NextColumn();
         _currentChar = currentChar;
         AppendRaw(currentChar);

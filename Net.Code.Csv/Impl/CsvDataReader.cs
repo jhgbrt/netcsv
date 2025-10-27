@@ -9,6 +9,7 @@ internal class CsvDataReader : IDataReader
     private readonly Converter _converter;
     private readonly CsvLayout _layout;
     private readonly CsvBehaviour _behaviour;
+    private readonly BufferedCharReader _charReader;
     private CsvHeader _header => _parser.Header;
     private CsvLine _line;
     private CsvParser _parser;
@@ -23,6 +24,7 @@ internal class CsvDataReader : IDataReader
         _reader = reader;
         _layout = csvLayout;
         _behaviour = csvBehaviour;
+        _charReader = new BufferedCharReader(reader);
         _converter = new Converter(cultureInfo ?? CultureInfo.InvariantCulture);
         _schemas = _layout.Schemas.GetEnumerator();
         InitializeResultSet();
@@ -30,7 +32,7 @@ internal class CsvDataReader : IDataReader
 
     private void InitializeResultSet()
     {
-        _parser = new CsvParser(_reader, _layout, _behaviour);
+        _parser = new CsvParser(_reader, _charReader, _layout, _behaviour);
         _line = CsvLine.Empty;
         _enumerator = _parser.GetEnumerator();
         if (_schemas?.MoveNext() ?? false)

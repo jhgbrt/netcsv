@@ -3,10 +3,9 @@
 This document lists performance bottlenecks and potential improvements found while reviewing the current implementation. References use `path:line` notation.
 
 ## Reader Pipeline
-- **Quadratic work while keeping the raw error buffer** – `CsvLineBuilder.ReadNext` trims `_rawData` by calling `StringBuilder.Remove(0, 1)` for every character once the buffer exceeds 32 chars (`Net.Code.Csv/Impl/CsvLineBuilder.cs:119-130`). Each `Remove` shifts the remaining characters and turns the hot path into O(n²) for large inputs. Switching to a ring buffer (e.g., fixed-size `char[]` with a rotating index) or `Queue<char>` backed by `ArrayPool<char>` would cap the cost to O(1) per character.
-- **Char-by-char `TextReader` calls with small I/O buffers** – The parser fetches a single char via `TextReader.Read()` and then immediately calls `Peek()` for lookahead (`Net.Code.Csv/Impl/CsvLineBuilder.cs:119-127`). Combined with the default `StreamReader` constructors that allocate only 1 KB buffers (`Net.Code.Csv/ReadCsv.cs:41` and `:78`), this results in two virtual calls per character and frequent kernel reads on large files. Consider:
-  - Passing a larger buffer size (e.g., 16–32 KB) and enabling `FileOptions.SequentialScan` when opening files.
-  - Replacing the per-character loop with block reads (`Read(Span<char>)`) and hand-rolled indexing to eliminate `Peek()` altogether.
+- **Raw error buffer** – Replaced the per-character `StringBuilder.Remove` loop with a fixed ring buffer (`Net.Code.Csv/Impl/CsvLineBuilder.cs:9-172`), eliminating O(n^2) behavior. Benchmarks show 17–21 % faster header/no-header runs and ~30 % lower allocations for 1k rows, plus ~18–21 % faster and ~31–36 % lower allocations on 100k-row scenarios.
+- **Stream/file buffering** – The parser now opens files with `FileOptions.SequentialScan`, 64 KB `FileStream`s, and 32 KB `StreamReader`s (`Net.Code.Csv/ReadCsv.cs:28-86`), trimming roughly 3 % off the 100k-row benchmarks and cutting allocations by ~1.2 MB.
+- **Shared buffered char stream** – Added `BufferedCharReader` and rewired the state machine, parser, and data reader to consume characters from a Span-friendly buffer that survives `EmptyLineAction.NextResult` transitions (`Net.Code.Csv/Impl/BufferedCharReader.cs`, `CsvStateMachine.cs`, `CsvParser.cs`, `CsvDataReader.cs`). This removes two virtual calls per character. On 100k-row inputs, the `IDataReader` scenario dropped from ~74.7 ms to ~71.0 ms (~5 %), typed records from ~137.9 ms to ~135.3 ms (~2 %), and the header-less case remains around 69 ms (±1 %).
 - **Missing-field padding allocates multiple enumerators per line** – When a line has fewer fields than expected, `CsvLineBuilder.ToLine` pads via `_fields.Concat(Enumerable.Repeat(...))` before copying into a new array (`Net.Code.Csv/Impl/CsvLineBuilder.cs:98-111`). This creates temporary iterators and a second pass through the data for every short line. A cheaper approach is to resize the backing list in place and fill the extra slots with pooled strings (empty or `null`) before creating the `CsvLine`.
 
 ## Writer Pipeline
@@ -20,7 +19,6 @@ This document lists performance bottlenecks and potential improvements found whi
 - **`GetBytes`/`GetChars` are non-streaming** – Both methods materialize the entire base64 or string payload before copying the requested slice (`Net.Code.Csv/Impl/CsvDataReader.cs:102-133`). Consumers that read large blobs in chunks incur repeated full decoding and temporary arrays. Holding onto the raw string and slicing via `Span<byte>`/`Span<char>` or caching the decoded buffer until the next row would make chunked reads effectively O(length requested).
 
 ## Suggested Next Steps
-1. Capture a baseline using the new `CsvReaderBenchmark` scenarios (covers IDataReader, typed schema reads, and header-less parsing for 1k/100k rows; `CsvTest/Program.cs:1-191`) before touching the reader hot paths.
-2. Prototype a buffered reader that processes `Span<char>` blocks and compare it to the current `Read()/Peek()` loop on multi-GB inputs.
-3. Refactor the writer pipeline to cache column mappings and eliminate duplicate string allocations; validate via BenchmarkDotNet.
-4. After baselines exist, experiment with pooled buffers (`ArrayPool<char/string>` or `ValueStringBuilder`) in both reader and writer paths, ensuring GC pressure stays flat via `dotnet-counters`.
+1. Extend the buffered reader so it can process larger `Span<char>` blocks per iteration (eliminating the remaining `Peek()` calls at chunk boundaries) and measure the impact on wide CSVs.
+2. Refactor the writer pipeline to cache column/property mappings and eliminate duplicate string materialization; validate via BenchmarkDotNet.
+3. After writer changes, experiment with pooled buffers (`ArrayPool<char/string>` or `ValueStringBuilder`) in both reader and writer paths, ensuring GC pressure stays flat via `dotnet-counters`.
