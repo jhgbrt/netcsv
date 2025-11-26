@@ -48,4 +48,8 @@ Parameters that specify the CSV format include the encoding, the quote character
 Other parameters specify the 'behaviour' of the CSV reader: what to do with empty lines or missing fields, 
 whether fields should be trimmed or not, etc.
 
-Form more documentation, check the [wiki](https://github.com/jhgbrt/netcsv/wiki)
+For more documentation, check the [wiki](https://github.com/jhgbrt/netcsv/wiki)
+
+## GitHub Copilot Usage
+
+For contributors using GitHub Copilot, see [COPILOT.md](COPILOT.md) for detailed instructions on using Copilot effectively with this repository, including recommended usage patterns, best practices, and repository-specific prompts.
