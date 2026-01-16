@@ -8,9 +8,9 @@ class CsvParser : IEnumerable<CsvLine>, IDisposable
     private bool _disposed;
     private readonly IDisposable _textReader;
 
-    public CsvParser(TextReader textReader, CsvLayout layOut, CsvBehaviour behaviour)
+    public CsvParser(TextReader textReader, BufferedCharReader bufferedReader, CsvLayout layOut, CsvBehaviour behaviour)
     {
-        _csvStateMachine = new CsvStateMachine(textReader, layOut, behaviour);
+        _csvStateMachine = new CsvStateMachine(bufferedReader, layOut, behaviour);
         _enumerator = _csvStateMachine.Lines().GetEnumerator();
         _textReader = textReader;
 

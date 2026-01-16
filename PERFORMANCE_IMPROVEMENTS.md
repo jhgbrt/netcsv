@@ -1,0 +1,24 @@
+# Performance Investigation
+
+This document lists performance bottlenecks and potential improvements found while reviewing the current implementation. References use `path:line` notation.
+
+## Reader Pipeline
+- **Raw error buffer** – Replaced the per-character `StringBuilder.Remove` loop with a fixed ring buffer (`Net.Code.Csv/Impl/CsvLineBuilder.cs:9-172`), eliminating O(n^2) behavior. Benchmarks show 17–21 % faster header/no-header runs and ~30 % lower allocations for 1k rows, plus ~18–21 % faster and ~31–36 % lower allocations on 100k-row scenarios.
+- **Stream/file buffering** – The parser now opens files with `FileOptions.SequentialScan`, 64 KB `FileStream`s, and 32 KB `StreamReader`s (`Net.Code.Csv/ReadCsv.cs:28-86`), trimming roughly 3 % off the 100k-row benchmarks and cutting allocations by ~1.2 MB.
+- **Shared buffered char stream** – Added `BufferedCharReader` and rewired the state machine, parser, and data reader to consume characters from a Span-friendly buffer that survives `EmptyLineAction.NextResult` transitions (`Net.Code.Csv/Impl/BufferedCharReader.cs`, `CsvStateMachine.cs`, `CsvParser.cs`, `CsvDataReader.cs`). This removes two virtual calls per character. On 100k-row inputs, the `IDataReader` scenario dropped from ~74.7 ms to ~71.0 ms (~5 %), typed records from ~137.9 ms to ~135.3 ms (~2 %), and the header-less case remains around 69 ms (±1 %).
+- **Missing-field padding allocates multiple enumerators per line** – When a line has fewer fields than expected, `CsvLineBuilder.ToLine` pads via `_fields.Concat(Enumerable.Repeat(...))` before copying into a new array (`Net.Code.Csv/Impl/CsvLineBuilder.cs:98-111`). This creates temporary iterators and a second pass through the data for every short line. A cheaper approach is to resize the backing list in place and fill the extra slots with pooled strings (empty or `null`) before creating the `CsvLine`.
+
+## Writer Pipeline
+- **Redundant allocations and LINQ joins in `WriteCsv.ToWriter`** – The synchronous writer builds `properties` with a deferred LINQ `Join` (`Net.Code.Csv/WriteCsv.cs:128-135`), causing the join lookup to be rebuilt for every row. Materializing this mapping once into an array avoids repeated hash table construction. Inside the write loop, each field string is produced inside `GetPropertyValuesAsString`, yet the outer loop ignores the yielded `v` and calls `sb.ToString()` again (`Net.Code.Csv/WriteCsv.cs:141-149`), effectively doubling string allocations per column. Writing `v` (or using `ValueStringBuilder`/`Span<char>` to stream directly to the `TextWriter`) would remove this overhead.
+
+## Schema Binding & Conversion
+- **Per-property ordinal lookups dominate row hydration** – During `AsEnumerable`, the generated activator executes `record.GetOrdinal(...)` for every property (`Net.Code.Csv/Extensions.cs:36-45`). `CsvDataReader.GetOrdinal` either scans the schema (`Net.Code.Csv/Impl/CsvSchemaBuilder.cs:11-22`) or the header list (`Net.Code.Csv/Impl/CsvHeader.cs:15-27`), so every property access becomes O(n). Compute ordinals once (e.g., build `(PropertyInfo property, int ordinal)` tuples) and have the activator read fields by index to linearize row materialization.
+- **Fallback conversion relies on `TypeDescriptor` per value** – When schema columns target arbitrary types, `CsvSchemaBuilder` stores converters that call `_converter.FromString(type, s)` (`Net.Code.Csv/CsvSchemaBuilder.cs:69-72`), which in turn invokes `TypeDescriptor.GetConverter(destinationType)` on every field (`Net.Code.Csv/Impl/Converter.cs:60`). `TypeDescriptor` lookups involve global locks and cache misses; caching the `TypeConverter` per column (or compiling delegates once when the schema is built) would significantly reduce CPU time when custom types are frequent.
+
+## IDataReader Surface
+- **`GetBytes`/`GetChars` are non-streaming** – Both methods materialize the entire base64 or string payload before copying the requested slice (`Net.Code.Csv/Impl/CsvDataReader.cs:102-133`). Consumers that read large blobs in chunks incur repeated full decoding and temporary arrays. Holding onto the raw string and slicing via `Span<byte>`/`Span<char>` or caching the decoded buffer until the next row would make chunked reads effectively O(length requested).
+
+## Suggested Next Steps
+1. Extend the buffered reader so it can process larger `Span<char>` blocks per iteration (eliminating the remaining `Peek()` calls at chunk boundaries) and measure the impact on wide CSVs.
+2. Refactor the writer pipeline to cache column/property mappings and eliminate duplicate string materialization; validate via BenchmarkDotNet.
+3. After writer changes, experiment with pooled buffers (`ArrayPool<char/string>` or `ValueStringBuilder`) in both reader and writer paths, ensuring GC pressure stays flat via `dotnet-counters`.

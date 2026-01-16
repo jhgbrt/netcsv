@@ -11,3 +11,5 @@ packages
 *.DotSettings
 *.coverage
 .vs
+BenchmarkDotNet.Artifacts/
+

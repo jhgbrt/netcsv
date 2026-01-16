@@ -95,7 +95,13 @@ public static class ReadCsv
     {
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
         var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
-        var stream = File.OpenRead(path);
+        var stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            FileOptions.SequentialScan);
         
         var effectiveEncoding = encoding;
         var detectBom = false;
@@ -110,7 +116,7 @@ public static class ReadCsv
             detectBom = true;
         }
         
-        var reader = new StreamReader(stream, effectiveEncoding, detectBom);
+        var reader = new StreamReader(stream, effectiveEncoding, detectBom, bufferSize: 32 * 1024);
         return FromReader(reader, layout, behaviour, cultureInfo);
     }
 
