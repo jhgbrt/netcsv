@@ -1,7 +1,66 @@
-﻿namespace Net.Code.Csv;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Text;
+using System.Globalization;
+using System.Linq;
+using Net.Code.Csv.Impl;
+using Ude;
+
+namespace Net.Code.Csv;
 
 public static class ReadCsv
 {
+    private static Encoding DetectEncoding(Stream stream)
+    {
+        if (stream == null)
+            throw new ArgumentNullException(nameof(stream));
+            
+        if (!stream.CanSeek)
+            return Encoding.UTF8;
+
+        var detector = new CharsetDetector();
+        var startPos = stream.Position;
+        var buffer = new byte[16 * 1024]; // Read up to 16KB for detection
+        
+        try
+        {
+            int read;
+            int totalRead = 0;
+            
+            // Only read up to buffer size to avoid loading too much data
+            while ((read = stream.Read(buffer, totalRead, buffer.Length - totalRead)) > 0)
+            {
+                totalRead += read;
+                if (totalRead >= buffer.Length)
+                    break;
+            }
+            
+            if (totalRead > 0)
+            {
+                detector.Feed(buffer, 0, totalRead);
+                detector.DataEnd();
+
+                if (string.IsNullOrWhiteSpace(detector.Charset)) return Encoding.UTF8;
+                try
+                {
+                    return Encoding.GetEncoding(detector.Charset);
+                }
+                catch (Exception e) when (e is ArgumentException or NotSupportedException)
+                {
+                    return Encoding.UTF8;
+                }
+            }
+        }
+        finally
+        {
+            stream.Position = startPos; // Reset position to beginning of file
+        }
+
+        return Encoding.UTF8; // Default to UTF8 if detection fails
+    }
+
     /// <summary>
     /// Read a file as CSV, using specific behaviour, layout and conversion options. Make sure to dispose the DataReader.
     /// </summary>
@@ -34,11 +93,24 @@ public static class ReadCsv
         OneOf<CsvSchema,CsvSchema[]> schema = null,
         CultureInfo cultureInfo = null)
     {
-        // caller should dispose IDataReader, which will indirectly also close the stream
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
         var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         var stream = File.OpenRead(path);
-        var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null);
+        
+        var effectiveEncoding = encoding;
+        var detectBom = false;
+        
+        if (effectiveEncoding == null) 
+        {
+            effectiveEncoding = DetectEncoding(stream);
+            detectBom = true;
+        }
+        else if (effectiveEncoding == Encoding.UTF8)
+        {
+            detectBom = true;
+        }
+        
+        var reader = new StreamReader(stream, effectiveEncoding, detectBom);
         return FromReader(reader, layout, behaviour, cultureInfo);
     }
 
@@ -47,7 +119,7 @@ public static class ReadCsv
     /// The stream will not be disposed by disposing the data reader.
     /// </summary>
     /// <param name="stream">The stream</param>
-    /// <param name="encoding">The encoding. Default is UTF8.</param>
+    /// <param name="encoding">The encoding. Default is auto-detected.</param>
     /// <param name="quote">The quote character. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
@@ -75,8 +147,24 @@ public static class ReadCsv
             OneOf<CsvSchema,CsvSchema[]> schema = null,
             CultureInfo cultureInfo = null)
     {
-        var reader = new StreamReader(stream, encoding ?? Encoding.UTF8, encoding == null, 1024, true);
-        var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders,  schema);
+        if (stream == null)
+            throw new ArgumentNullException(nameof(stream));
+            
+        var effectiveEncoding = encoding;
+        var detectBom = false;
+        
+        if (effectiveEncoding == null)
+        {
+            effectiveEncoding = DetectEncoding(stream);
+            detectBom = true;
+        }
+        else if (effectiveEncoding == Encoding.UTF8)
+        {
+            detectBom = true;
+        }
+        
+        var reader = new StreamReader(stream, effectiveEncoding, detectBom, 1024, true);
+        var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
         var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         return FromReader(reader, layout, behaviour, cultureInfo);
     }
@@ -171,7 +259,7 @@ public static class ReadCsv
     /// Deserializes each record into an instance of <typeparamref name="T"/>
     /// </summary>
     /// <param name="stream">The stream to process</param>
-    /// <param name="encoding">The encoding to use (default UTF-8)</param>
+    /// <param name="encoding">The encoding to use (default auto-detected)</param>
     /// <param name="quote">The quote character. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>

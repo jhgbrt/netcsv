@@ -2,7 +2,7 @@
 
 namespace Net.Code.Csv.Tests.Unit.SampleFiles;
 
-
+[Collection("B_WithCodePages")]
 public class EncodingTests
 {
     static EncodingTests()
