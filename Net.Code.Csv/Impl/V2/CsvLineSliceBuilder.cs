@@ -21,6 +21,11 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
     private int _rawBufferCount;
     private int _rawBufferIndex;
 
+    private ReadOnlyMemory<char> _directBuffer;
+    private int _directStart;
+    private int _directLength;
+    private bool _usingDirectSlice;
+
     public string RawData
     {
         get
@@ -70,6 +75,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
     internal CsvLineSliceBuilder AddToField()
     {
+        EnsureLineBufferForField();
         EnsureFieldStart();
         AppendLine(_currentChar);
         return this;
@@ -82,6 +88,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return this;
         }
 
+        EnsureLineBufferForField();
         EnsureFieldStart();
         EnsureLineCapacity(_lineLength + span.Length);
         span.CopyTo(_lineBuffer.AsSpan(_lineLength));
@@ -132,10 +139,38 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
     internal CsvLineSliceBuilder NextField()
     {
+        if (_usingDirectSlice)
+        {
+            var directStart = _directStart;
+            var directLength = _directLength;
+            var shouldTrimDirect = behaviour.TrimmingOptions switch
+            {
+                ValueTrimmingOptions.All => true,
+                ValueTrimmingOptions.QuotedOnly when _quoted => true,
+                ValueTrimmingOptions.UnquotedOnly when !_quoted => true,
+                _ => false
+            };
+
+            if (shouldTrimDirect)
+            {
+                (directStart, directLength) = TrimSlice(_directBuffer.Span, directStart, directLength);
+            }
+
+            _fields.Add(new FieldSliceInfo(_directBuffer, directStart, directLength, false, false));
+            _quoted = false;
+            _fieldStarted = false;
+            _usingDirectSlice = false;
+            _directBuffer = default;
+            _directStart = 0;
+            _directLength = 0;
+            _fieldStart = _lineLength;
+            return this;
+        }
+
         var start = _fieldStarted ? _fieldStart : _lineLength;
         var length = _fieldStarted ? _lineLength - _fieldStart : 0;
 
-        var trim = behaviour.TrimmingOptions switch
+        var shouldTrim = behaviour.TrimmingOptions switch
         {
             ValueTrimmingOptions.All => true,
             ValueTrimmingOptions.QuotedOnly when _quoted => true,
@@ -143,12 +178,12 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             _ => false
         };
 
-        if (trim)
+        if (shouldTrim)
         {
-            (start, length) = TrimSlice(start, length);
+            (start, length) = TrimSlice(_lineBuffer, start, length);
         }
 
-        _fields.Add(new FieldSliceInfo(start, length, false));
+        _fields.Add(new FieldSliceInfo(default, start, length, false, true));
         _quoted = false;
         _fieldStarted = false;
         _fieldStart = _lineLength;
@@ -188,14 +223,14 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             {
                 for (var i = 0; i < missingCount; i++)
                 {
-                    fields.Add(new FieldSliceInfo(0, 0, true));
+                    fields.Add(new FieldSliceInfo(default, 0, 0, true, true));
                 }
             }
             else
             {
                 for (var i = 0; i < missingCount; i++)
                 {
-                    fields.Add(new FieldSliceInfo(0, 0, false));
+                    fields.Add(new FieldSliceInfo(default, 0, 0, false, true));
                 }
             }
         }
@@ -207,7 +242,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             var field = fields[i];
             fieldArray[i] = field.IsNull
                 ? CsvField.FromString(null)
-                : CsvField.FromBuffer(bufferMemory, field.Start, field.Length);
+                : CsvField.FromBuffer(field.UseLineBuffer ? bufferMemory : field.Buffer, field.Start, field.Length);
         }
 
         var line = new CsvLineSlice(fieldArray, lineIsEmpty);
@@ -241,6 +276,21 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
     internal CsvLineSliceBuilder Ignore() => this;
 
+    internal bool TrySetDirectSlice(ReadOnlyMemory<char> buffer, int start, int length)
+    {
+        if (_fieldStarted || _tentativeLength != 0 || _usingDirectSlice)
+        {
+            return false;
+        }
+
+        _directBuffer = buffer;
+        _directStart = start;
+        _directLength = length;
+        _usingDirectSlice = true;
+        _fieldStarted = true;
+        return true;
+    }
+
     internal CsvLineSliceBuilder AdvanceSpan(ReadOnlySpan<char> span)
     {
         if (span.IsEmpty)
@@ -250,6 +300,39 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
         _location = _location with { Column = _location.Column + span.Length };
         AppendRaw(span);
+        return this;
+    }
+
+    internal CsvLineSliceBuilder MaterializeDirectSlices(ReadOnlyMemory<char> buffer)
+    {
+        if (_usingDirectSlice && _directBuffer.Equals(buffer))
+        {
+            EnsureLineBufferForField();
+        }
+
+        if (_fields.Count == 0)
+        {
+            return this;
+        }
+
+        for (var i = 0; i < _fields.Count; i++)
+        {
+            var field = _fields[i];
+            if (field.UseLineBuffer || field.IsNull)
+            {
+                continue;
+            }
+
+            if (!field.Buffer.Equals(buffer))
+            {
+                continue;
+            }
+
+            var copy = new char[field.Length];
+            field.Buffer.Span.Slice(field.Start, field.Length).CopyTo(copy);
+            _fields[i] = new FieldSliceInfo(copy, 0, field.Length, field.IsNull, false);
+        }
+
         return this;
     }
 
@@ -264,10 +347,43 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         _fieldStarted = true;
     }
 
+    private void EnsureLineBufferForField()
+    {
+        if (!_usingDirectSlice)
+        {
+            return;
+        }
+
+        if (!_fieldStarted)
+        {
+            _fieldStart = _lineLength;
+            _fieldStarted = true;
+        }
+
+        var directSpan = _directBuffer.Span.Slice(_directStart, _directLength);
+        AppendLineSpan(directSpan);
+        _usingDirectSlice = false;
+        _directBuffer = default;
+        _directStart = 0;
+        _directLength = 0;
+    }
+
     private void AppendLine(char c)
     {
         EnsureLineCapacity(_lineLength + 1);
         _lineBuffer[_lineLength++] = c;
+    }
+
+    private void AppendLineSpan(ReadOnlySpan<char> span)
+    {
+        if (span.IsEmpty)
+        {
+            return;
+        }
+
+        EnsureLineCapacity(_lineLength + span.Length);
+        span.CopyTo(_lineBuffer.AsSpan(_lineLength));
+        _lineLength += span.Length;
     }
 
     private void EnsureLineCapacity(int needed)
@@ -300,7 +416,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         Array.Resize(ref _tentativeBuffer, newSize);
     }
 
-    private (int start, int length) TrimSlice(int start, int length)
+    private (int start, int length) TrimSlice(char[] buffer, int start, int length)
     {
         if (length == 0)
         {
@@ -308,8 +424,21 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         }
 
         var end = start + length - 1;
-        while (start <= end && char.IsWhiteSpace(_lineBuffer[start])) start++;
-        while (end >= start && char.IsWhiteSpace(_lineBuffer[end])) end--;
+        while (start <= end && char.IsWhiteSpace(buffer[start])) start++;
+        while (end >= start && char.IsWhiteSpace(buffer[end])) end--;
+        return end < start ? (start, 0) : (start, end - start + 1);
+    }
+
+    private (int start, int length) TrimSlice(ReadOnlySpan<char> buffer, int start, int length)
+    {
+        if (length == 0)
+        {
+            return (start, 0);
+        }
+
+        var end = start + length - 1;
+        while (start <= end && char.IsWhiteSpace(buffer[start])) start++;
+        while (end >= start && char.IsWhiteSpace(buffer[end])) end--;
         return end < start ? (start, 0) : (start, end - start + 1);
     }
 
@@ -344,5 +473,5 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         }
     }
 
-    private readonly record struct FieldSliceInfo(int Start, int Length, bool IsNull);
+    private readonly record struct FieldSliceInfo(ReadOnlyMemory<char> Buffer, int Start, int Length, bool IsNull, bool UseLineBuffer);
 }

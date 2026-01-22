@@ -46,6 +46,10 @@ internal sealed class BufferedCharReader
         return true;
     }
 
+    public ReadOnlyMemory<char> CurrentBuffer => _buffer.AsMemory(0, _length);
+
+    public int CurrentIndex => _index;
+
     public void Advance(int count)
     {
         _index += count;
@@ -56,6 +60,17 @@ internal sealed class BufferedCharReader
         if (_index < _length)
         {
             return _buffer[_index];
+        }
+
+        var peek = _reader.Peek();
+        return peek < 0 ? null : (char?)peek;
+    }
+
+    public char? PeekAt(int absoluteIndex)
+    {
+        if (absoluteIndex < _length)
+        {
+            return _buffer[absoluteIndex];
         }
 
         var peek = _reader.Peek();

@@ -87,6 +87,8 @@ internal sealed class CsvStateMachineV2
                     return true;
                 }
 
+                var buffer = _reader.CurrentBuffer;
+                var baseIndex = _reader.CurrentIndex;
                 var i = 0;
                 while (i < span.Length)
                 {
@@ -95,15 +97,16 @@ internal sealed class CsvStateMachineV2
                         case ScanState.BeginningOfLine:
                         {
                             var c = span[i];
-                            var next = i + 1 < span.Length ? span[i + 1] : _reader.Peek();
-                            _builder.SetCurrent(c, next);
+                            var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                             if (c == '\r')
                             {
+                                _builder.SetCurrent(c, next);
                                 i++;
                                 break;
                             }
                             if (c == '\n')
                             {
+                                _builder.SetCurrent(c, next);
                                 var line = _builder.ToLine();
                                 _owner.FieldCount = _builder.FieldCount;
                                 if (ShouldReturn(line, i + 1))
@@ -115,12 +118,14 @@ internal sealed class CsvStateMachineV2
                             }
                             if (c == _layout.Comment)
                             {
+                                _builder.SetCurrent(c, next);
                                 _state = ScanState.InComment;
                                 i++;
                                 break;
                             }
                             if (c == _layout.Quote)
                             {
+                                _builder.SetCurrent(c, next);
                                 _builder.MarkQuoted();
                                 _state = ScanState.InsideQuotedField;
                                 i++;
@@ -128,22 +133,21 @@ internal sealed class CsvStateMachineV2
                             }
                             if (c == _layout.Delimiter)
                             {
+                                _builder.SetCurrent(c, next);
                                 _builder.NextField();
                                 _state = ScanState.OutsideField;
                                 i++;
                                 break;
                             }
 
-                            _builder.AddToField();
                             _state = ScanState.InsideField;
-                            i++;
-                            break;
+                            continue;
                         }
 
                         case ScanState.InComment:
                         {
                             var c = span[i];
-                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.Peek());
+                            var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                             if (c == '\r')
                             {
                                 i++;
@@ -174,13 +178,16 @@ internal sealed class CsvStateMachineV2
                             if (idx > 0)
                             {
                                 var run = slice.Slice(0, idx);
-                                _builder.AddToField(run);
+                                if (!_builder.TrySetDirectSlice(buffer, baseIndex + i, idx))
+                                {
+                                    _builder.AddToField(run);
+                                }
                                 _builder.AdvanceSpan(run);
                                 i += idx;
                             }
 
                             var c = span[i];
-                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.Peek());
+                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
                             if (c == '\r')
                             {
                                 i++;
@@ -214,14 +221,16 @@ internal sealed class CsvStateMachineV2
                         case ScanState.OutsideField:
                         {
                             var c = span[i];
-                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.Peek());
+                            var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                             if (c == '\r')
                             {
+                                _builder.SetCurrent(c, next);
                                 i++;
                                 break;
                             }
                             if (c == '\n')
                             {
+                                _builder.SetCurrent(c, next);
                                 _builder.AcceptTentative().NextField();
                                 var line = _builder.ToLine();
                                 _owner.FieldCount = _builder.FieldCount;
@@ -235,6 +244,7 @@ internal sealed class CsvStateMachineV2
                             }
                             if (c == _layout.Quote)
                             {
+                                _builder.SetCurrent(c, next);
                                 _builder.MarkQuoted().DiscardTentative();
                                 _state = ScanState.InsideQuotedField;
                                 i++;
@@ -242,6 +252,7 @@ internal sealed class CsvStateMachineV2
                             }
                             if (c == _layout.Delimiter)
                             {
+                                _builder.SetCurrent(c, next);
                                 _builder.AcceptTentative().NextField();
                                 _state = ScanState.OutsideField;
                                 i++;
@@ -249,21 +260,21 @@ internal sealed class CsvStateMachineV2
                             }
                             if (char.IsWhiteSpace(c))
                             {
+                                _builder.SetCurrent(c, next);
                                 _builder.AddToTentative();
                                 i++;
                                 break;
                             }
 
-                            _builder.AcceptTentative().AddToField();
+                            _builder.AcceptTentative();
                             _state = ScanState.InsideField;
-                            i++;
-                            break;
+                            continue;
                         }
 
                         case ScanState.Escaped:
                         {
                             var c = span[i];
-                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.Peek());
+                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
                             _builder.AddToField();
                             _state = ScanState.InsideQuotedField;
                             i++;
@@ -292,7 +303,7 @@ internal sealed class CsvStateMachineV2
                             }
 
                             var c = span[i];
-                            var next = i + 1 < span.Length ? span[i + 1] : _reader.Peek();
+                            var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                             _builder.SetCurrent(c, next);
                             if (_layout.IsEscape(c, next))
                             {
@@ -316,7 +327,7 @@ internal sealed class CsvStateMachineV2
                         case ScanState.AfterSecondQuote:
                         {
                             var c = span[i];
-                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.Peek());
+                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
                             if (c == _layout.Delimiter)
                             {
                                 _builder.DiscardTentative().NextField();
@@ -369,7 +380,7 @@ internal sealed class CsvStateMachineV2
                         case ScanState.ParseError:
                         {
                             var c = span[i];
-                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.Peek());
+                            _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
                             if (c == '\n')
                             {
                                 _builder.PrepareNextLine();
@@ -383,6 +394,7 @@ internal sealed class CsvStateMachineV2
                     }
                 }
 
+                _builder.MaterializeDirectSlices(buffer);
                 _reader.Advance(span.Length);
             }
         }
