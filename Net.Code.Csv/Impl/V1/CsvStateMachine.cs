@@ -55,9 +55,9 @@ internal class CsvStateMachine
 
     public int? FieldCount { get; set; }
 
-    public IEnumerable<CsvLine> Lines() => LinesImpl().Where(line
+    public IEnumerable<CsvLineSlice> Lines() => LinesImpl().Where(line
         => !line.IsEmpty || _behaviour.EmptyLineAction != EmptyLineAction.Skip);
-    private IEnumerable<CsvLine> LinesImpl()
+    private IEnumerable<CsvLineSlice> LinesImpl()
     {
         ProcessStateFunc ProcessState = BeginningOfLine;
         var state = new CsvLineBuilder(_layout, _behaviour);
@@ -227,4 +227,4 @@ internal class CsvStateMachine
             => new(ParseError, state.Ignore())
     };
 }
-record struct ProcessingResult(ProcessStateFunc Next, CsvLineBuilder State, CsvLine? Line = null);
+record struct ProcessingResult(ProcessStateFunc Next, CsvLineBuilder State, CsvLineSlice? Line = null);

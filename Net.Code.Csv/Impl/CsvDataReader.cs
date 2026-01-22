@@ -7,7 +7,7 @@ interface ICsvParser
 {
     CsvHeader Header { get; }
     int FieldCount { get; }
-    IEnumerator<CsvLine> GetEnumerator();
+    IEnumerator<CsvLineSlice> GetEnumerator();
     void Dispose();
 }
 
@@ -19,10 +19,10 @@ internal class CsvDataReader : IDataReader
     private readonly CsvBehaviour _behaviour;
     private readonly BufferedCharReader _charReader;
     private CsvHeader _header => _parser.Header;
-    private CsvLine _line;
+    private CsvLineSlice _line;
     private ICsvParser _parser;
     private bool _isDisposed;
-    private IEnumerator<CsvLine> _enumerator;
+    private IEnumerator<CsvLineSlice> _enumerator;
     private IEnumerator<CsvSchema> _schemas;
     private CsvSchema _schema;
     private bool _eof;
@@ -40,8 +40,8 @@ internal class CsvDataReader : IDataReader
 
     private void InitializeResultSet()
     {
-        _parser = new CsvParser(_reader, _charReader, _layout, _behaviour);
-        _line = CsvLine.Empty;
+        _parser = CsvParserFactory.Create(_reader, _charReader, _layout, _behaviour);
+        _line = CsvLineSlice.Empty;
         _enumerator = _parser.GetEnumerator();
         if (_schemas?.MoveNext() ?? false)
             _schema = _schemas.Current;
@@ -52,8 +52,14 @@ internal class CsvDataReader : IDataReader
         null => i,
         not null => _header.TryGetIndex(GetName(i), out var j) ? j : i
     };
-    private string GetRawValue(int i) => _line[GetIndex(i)];
-    private ReadOnlySpan<char> GetRawValueSpan(int i) => GetRawValue(i).AsSpan();
+    private CsvField GetField(int i) => _line.GetField(GetIndex(i));
+    private string GetRawValue(int i) => GetField(i).GetString();
+    private ReadOnlySpan<char> GetRawValueSpan(int i, out bool isNull)
+    {
+        var field = GetField(i);
+        isNull = field.IsNull;
+        return field.Span;
+    }
 
     public string GetName(int i) => _schema?.GetName(i) ?? _header[i];
 
@@ -68,7 +74,11 @@ internal class CsvDataReader : IDataReader
             return GetRawValue(i);
         }
 
-        var span = GetRawValueSpan(i);
+        var span = GetRawValueSpan(i, out var isNull);
+        if (isNull)
+        {
+            return null;
+        }
         if (span.Length == 0)
         {
             return null;

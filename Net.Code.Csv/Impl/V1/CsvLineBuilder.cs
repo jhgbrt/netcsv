@@ -109,10 +109,9 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
     }
 
     /// <summary>
-    /// Generate a CsvLine and prepare for next
+    /// Generate a CsvLineSlice and prepare for next
     /// </summary>
-    /// <returns></returns>
-    internal CsvLine ToLine()
+    internal CsvLineSlice ToLine()
     {
         var lineIsEmpty = _fields is [] or [""];
         var count = _fields.Count;
@@ -139,7 +138,7 @@ internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
             _ => _fields
         };
 
-        var line = new CsvLine([.. f], lineIsEmpty);
+        var line = new CsvLineSlice(f.Select(CsvField.FromString).ToArray(), lineIsEmpty);
 
         PrepareNextLine();
 

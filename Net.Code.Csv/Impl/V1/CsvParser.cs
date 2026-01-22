@@ -2,7 +2,7 @@ namespace Net.Code.Csv.Impl;
 
 // The parser takes care of processing the actual content of the file
 // It does not take into account schema information, so it only works with strings
-class CsvParser : ICsvParser, IEnumerable<CsvLine>, IDisposable
+class CsvParser : ICsvParser, IEnumerable<CsvLineSlice>, IDisposable
 {
     private readonly CsvStateMachine _csvStateMachine;
     private bool _disposed;
@@ -14,12 +14,12 @@ class CsvParser : ICsvParser, IEnumerable<CsvLine>, IDisposable
         _enumerator = _csvStateMachine.Lines().GetEnumerator();
         _textReader = textReader;
 
-        CsvLine? firstLine = Lines().OfType<CsvLine?>().FirstOrDefault();
+        CsvLineSlice? firstLine = ReadFirstLine();
 
         Header = (layOut, firstLine) switch
         {
             ({ HasHeaders: true }, firstLine: not null)
-                => CsvHeader.Create(firstLine.Value.Fields),
+                => CsvHeader.Create(firstLine.Value.GetStrings()),
 
             ({ HasHeaders: false }, firstLine: not null)
                 => CsvHeader.Default(firstLine.Value.Length),
@@ -32,15 +32,15 @@ class CsvParser : ICsvParser, IEnumerable<CsvLine>, IDisposable
             _cachedLine = firstLine;
     }
 
-    private CsvLine? _cachedLine;
+    private CsvLineSlice? _cachedLine;
 
-    private readonly IEnumerator<CsvLine> _enumerator;
+    private readonly IEnumerator<CsvLineSlice> _enumerator;
 
     public CsvHeader Header { get; }
 
     public int FieldCount => _csvStateMachine.FieldCount ?? -1;
 
-    private IEnumerable<CsvLine> Lines()
+    private IEnumerable<CsvLineSlice> Lines()
     {
         if (_cachedLine != null)
         {
@@ -56,7 +56,7 @@ class CsvParser : ICsvParser, IEnumerable<CsvLine>, IDisposable
         }
     }
 
-    public IEnumerator<CsvLine> GetEnumerator() => Lines().GetEnumerator();
+    public IEnumerator<CsvLineSlice> GetEnumerator() => Lines().GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -71,4 +71,13 @@ class CsvParser : ICsvParser, IEnumerable<CsvLine>, IDisposable
         _disposed = true;
     }
 
+    private CsvLineSlice? ReadFirstLine()
+    {
+        using var enumerator = Lines().GetEnumerator();
+        if (enumerator.MoveNext())
+        {
+            return enumerator.Current;
+        }
+        return null;
+    }
 }

@@ -6,6 +6,7 @@ Eliminate per-field string allocations during parsing by scanning the input once
 ## Compatibility Seams
 - ReadCsv entrypoints (`ReadCsv.FromFile`, `ReadCsv.FromStream`, `ReadCsv.FromString`) remain the public API.
 - IDataReader behavior remains compatible: same column naming, schema behavior, and exceptions.
+- Converters are now span-based (breaking change): schema conversion delegates take `ReadOnlySpan<char>`.
 
 ## Non-Goals
 - Do not change CSV format semantics (quotes, escapes, missing fields, empty line behavior).
@@ -103,9 +104,10 @@ If a field has `ContainsEscapes = true`, unescape into a temporary buffer before
 
 ## Conversion Strategy
 ### Span Converters
-Introduce a new converter method family:
-- `bool TryConvert<T>(ReadOnlySpan<char> input, string format, out T value)`
-- Specific implementations for primitives and DateTime using span-based `TryParse` overloads.
+Use the single span-based converter implementation:
+- `Converter` methods accept `ReadOnlySpan<char>` for primitives, `DateTime`, `DateTimeOffset`, `Guid`, etc.
+- `CsvSchemaBuilder` now builds `CsvColumn` entries with span-based delegates.
+- Custom schema converters must accept `ReadOnlySpan<char>` and may materialize via `span.ToString()` if needed.
 
 ### String Columns
 If the target type is string, allocate only at conversion time:
@@ -113,7 +115,7 @@ If the target type is string, allocate only at conversion time:
 - For escaped or quoted content, unescape into a pooled buffer, then materialize.
 
 ### Existing Converter
-Keep existing `Converter` for non-span paths (fallback or compatibility). A bridging layer can call `Converter.FromString` by materializing when no span parser is available.
+There is only one converter implementation, and it is span-based. Fallback for custom types uses `TypeDescriptor` by materializing the span to string.
 
 ## IDataReader Implementation
 Replace current `CsvLine` with `CsvLineSlice` in the reader.
@@ -152,6 +154,35 @@ Keep `RawData` sampling for exceptions. Raw data capture can be retained as a fi
 2. Implement span-based converter set; use fallback to existing converters.
 3. Switch IDataReader to use slices while keeping public API unchanged.
 4. Benchmark with existing BenchmarkDotNet suite.
+
+## Implementation Strategy (V1/V2 Switch)
+### Goals
+- Easy, programmatic selection between V1 and V2 parser implementations.
+- Test suite remains unchanged; can be executed against either parser (or both) without duplicating tests.
+
+### Internal Parser Selector
+Introduce an internal selector that chooses the parser implementation:
+- `CsvParserKind` enum: `V1`, `V2`.
+- `CsvParserFactory.Create(TextReader, BufferedCharReader, CsvLayout, CsvBehaviour, CsvParserKind kind)` returns `ICsvParser`.
+- Default `kind` is `V1` for stability until V2 is complete.
+
+### Public/Config Hook (Non-breaking)
+Expose selection via behavior/config only (no public API change required):
+- Add `CsvBehaviour.ParserKind` (internal or public) with default `V1`.
+- Alternatively, add an internal static switch (e.g., `CsvParserSwitch.CurrentKind`) for testing and benchmarks.
+- `CsvDataReader.InitializeResultSet()` uses the factory + selector.
+
+### Test Strategy (Unchanged Tests)
+Keep all tests intact and run them against each parser:
+- Add a test assembly fixture or collection fixture that sets the parser selector before tests run.
+- Provide two test runs:
+  - Default (V1): no changes.
+  - V2: set selector once at assembly startup (e.g., module initializer or xUnit collection fixture).
+- No test code should need to know about V1/V2; tests stay identical.
+
+### Comparison Workflow
+- In CI or local runs, execute tests twice (once per parser) using the selector.
+- For quick local toggling: set an environment variable (e.g., `NETCSV_PARSER=V2`) read by the selector.
 
 ## Risks and Mitigations
 - Buffer boundary handling is complex: cover with unit tests for long fields and quoted fields across buffer edges.

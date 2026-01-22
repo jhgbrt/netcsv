@@ -22,6 +22,11 @@ public record CsvBehaviour(
             QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore)
 {
     /// <summary>
+    /// Selects the parser implementation. Default uses environment/config selection.
+    /// </summary>
+    public CsvParserKind ParserKind { get; init; } = CsvParserKind.Default;
+
+    /// <summary>
     /// The default behaviour of the Csv parser: trim unquoted fields,
     /// throw exception when a line contains too little fields, 
     /// skip empty lines and ignore quotes inside quoted fields.
