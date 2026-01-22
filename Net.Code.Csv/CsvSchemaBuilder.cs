@@ -16,11 +16,14 @@ public record CsvSchema(IList<CsvColumn> Columns)
     }
 }
 
+public delegate T CsvSpanConverter<out T>(ReadOnlySpan<char> value);
+public delegate T CsvSpanConverterWithFormat<out T>(ReadOnlySpan<char> value, string format);
+
 public record struct CsvColumn(
     string Name,
     string PropertyName,
     Type Type,
-    Func<string, object> FromString,
+    CsvSpanConverter<object> FromSpan,
     bool AllowNull);
 
 public static class Schema
@@ -48,18 +51,18 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
     public CsvSchemaBuilder() : this(CultureInfo.InvariantCulture)
     {
     }
-    public CsvSchemaBuilder Add<T>(string name, Func<string, T> convert, bool allowNull)
+    public CsvSchemaBuilder Add<T>(string name, CsvSpanConverter<T> convert, bool allowNull)
     {
         _columns.Add(new(name, name, typeof(T), s => convert(s), allowNull));
         return this;
     }
-    public CsvSchemaBuilder Add<T>((string columnName, string propertyName) name, Func<string, T> convert, bool allowNull)
+    public CsvSchemaBuilder Add<T>((string columnName, string propertyName) name, CsvSpanConverter<T> convert, bool allowNull)
     {
         _columns.Add(new (name.columnName, name.propertyName, typeof(T), s => convert(s), allowNull));
         return this;
     }
 
-    private CsvSchemaBuilder Add<T>((string columnName, string propertyName)  name, string format, Func<string, string, T> convert, bool allowNull)
+    private CsvSchemaBuilder Add<T>((string columnName, string propertyName)  name, string format, CsvSpanConverterWithFormat<T> convert, bool allowNull)
     {
         _columns.Add(new (name.columnName, name.propertyName, typeof(T), s => convert(s, format), allowNull));
         return this;
@@ -68,11 +71,11 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
 
     private CsvSchemaBuilder Add((string columnName, string propertyName) name, Type type, bool allowNull)
     {
-        _columns.Add(new (name.columnName, name.propertyName, type, s => _converter.FromString(type, s), allowNull));
+        _columns.Add(new (name.columnName, name.propertyName, type, s => _converter.FromSpan(type, s), allowNull));
         return this;
     }
 
-    public CsvSchemaBuilder AddString((string columnName, string propertyName) name, bool allowNull = false) => Add(name, s => s, allowNull);
+    public CsvSchemaBuilder AddString((string columnName, string propertyName) name, bool allowNull = false) => Add(name, s => s.ToString(), allowNull);
     public CsvSchemaBuilder AddBoolean((string columnName, string propertyName) name, bool allowNull = false) => Add(name, _converter.ToBoolean, allowNull);
     public CsvSchemaBuilder AddBoolean((string columnName, string propertyName) name, string @true, string @false, bool allowNull = false) => Add(name, $"{@true}|{@false}", _converter.ToBoolean, allowNull);
     public CsvSchemaBuilder AddBoolean((string columnName, string propertyName) name, string format, bool allowNull = false) => Add(name, format, _converter.ToBoolean, allowNull);
@@ -91,7 +94,7 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
     public CsvSchemaBuilder AddGuid((string columnName, string propertyName) name, bool allowNull = false) => Add(name, _converter.ToGuid, allowNull);
     public CsvSchemaBuilder AddDateTime((string columnName, string propertyName) name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTime, allowNull);
     public CsvSchemaBuilder AddDateTimeOffset((string columnName, string propertyName) name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTimeOffset, allowNull);
-    public CsvSchemaBuilder AddString(string name, bool allowNull = false) => Add((name, name), s => s, allowNull);
+    public CsvSchemaBuilder AddString(string name, bool allowNull = false) => Add((name, name), s => s.ToString(), allowNull);
     public CsvSchemaBuilder AddBoolean(string name, bool allowNull = false) => Add((name, name), _converter.ToBoolean, allowNull);
     public CsvSchemaBuilder AddBoolean(string name, string @true, string @false, bool allowNull = false) => Add((name, name), $"{@true}|{@false}", _converter.ToBoolean, allowNull);
     public CsvSchemaBuilder AddBoolean(string name, string format, bool allowNull = false) => Add((name, name), format, _converter.ToBoolean, allowNull);

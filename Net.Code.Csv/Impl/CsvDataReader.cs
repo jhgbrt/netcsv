@@ -1,7 +1,15 @@
+using Net.Code.Csv;
 using static System.Data.Common.SchemaTableColumn;
 using static System.Data.Common.SchemaTableOptionalColumn;
 
 namespace Net.Code.Csv.Impl;
+interface ICsvParser
+{
+    CsvHeader Header { get; }
+    int FieldCount { get; }
+    IEnumerator<CsvLine> GetEnumerator();
+    void Dispose();
+}
 
 internal class CsvDataReader : IDataReader
 {
@@ -12,7 +20,7 @@ internal class CsvDataReader : IDataReader
     private readonly BufferedCharReader _charReader;
     private CsvHeader _header => _parser.Header;
     private CsvLine _line;
-    private CsvParser _parser;
+    private ICsvParser _parser;
     private bool _isDisposed;
     private IEnumerator<CsvLine> _enumerator;
     private IEnumerator<CsvSchema> _schemas;
@@ -45,6 +53,7 @@ internal class CsvDataReader : IDataReader
         not null => _header.TryGetIndex(GetName(i), out var j) ? j : i
     };
     private string GetRawValue(int i) => _line[GetIndex(i)];
+    private ReadOnlySpan<char> GetRawValueSpan(int i) => GetRawValue(i).AsSpan();
 
     public string GetName(int i) => _schema?.GetName(i) ?? _header[i];
 
@@ -52,15 +61,21 @@ internal class CsvDataReader : IDataReader
 
     public Type GetFieldType(int i) => _schema?[i].Type ?? typeof(string);
 
-    public object GetValue(int i) => _schema switch
+    public object GetValue(int i)
     {
-        not null => GetRawValue(i) switch
+        if (_schema is null)
         {
-            "" => null,
-            string s => _schema[i].FromString(s)
-        },
-        _ => GetRawValue(i)
-    };
+            return GetRawValue(i);
+        }
+
+        var span = GetRawValueSpan(i);
+        if (span.Length == 0)
+        {
+            return null;
+        }
+
+        return _schema[i].FromSpan(span);
+    }
 
     public int GetValues(object[] values)
     {
@@ -146,7 +161,7 @@ internal class CsvDataReader : IDataReader
 
     public double GetDouble(int i) => GetValue(i, _converter.ToDouble);
 
-    public string GetString(int i) => GetValue(i, s => s);
+    public string GetString(int i) => GetValue(i, s => s.ToString());
 
     public decimal GetDecimal(int i) => GetValue(i, _converter.ToDecimal);
 
@@ -162,11 +177,11 @@ internal class CsvDataReader : IDataReader
 
     object IDataRecord.this[string name] => GetValue(GetOrdinal(name));
 
-    private T GetValue<T>(int i, Func<string, T> convert)
+    private T GetValue<T>(int i, CsvSpanConverter<T> convert)
     {
         var value = GetValue(i);
         if (value is T t) return t;
-        return convert((string)value);
+        return convert(((string)value).AsSpan());
     }
 
     public void Dispose()

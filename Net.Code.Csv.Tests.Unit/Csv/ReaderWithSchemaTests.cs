@@ -49,15 +49,15 @@ public class ReadCsvWithSchemaTests
     {
         CsvSchema schema = new CsvSchemaBuilder()
             .AddString(nameof(MyRecord.First))
-            .Add(nameof(MyRecord.Last), s => new Custom(s), true)
+            .Add(nameof(MyRecord.Last), s => new Custom(s.ToString()), true)
             .AddDateTime(nameof(MyRecord.BirthDate), "yyyyMMdd")
             .AddInt32(nameof(MyRecord.Quantity))
-            .Add(nameof(MyRecord.Price), s => Amount.Parse(s, CultureInfo.InvariantCulture), false)
+            .Add(nameof(MyRecord.Price), s => Amount.Parse(s.ToString(), CultureInfo.InvariantCulture), false)
             .AddInt16(nameof(MyRecord.Count))
             .AddDecimal(nameof(MyRecord.LargeValue))
             .AddDateTimeOffset(nameof(MyRecord.SomeDateTimeOffset))
             .AddBoolean(nameof(MyRecord.IsActive), "yes", "no")
-            .Add(nameof(MyRecord.NullableCustom), s => new Custom(s), true)
+            .Add(nameof(MyRecord.NullableCustom), s => new Custom(s.ToString()), true)
             .Schema;
 
 
@@ -74,15 +74,15 @@ public class ReadCsvWithSchemaTests
     {
         CsvSchema schema = new CsvSchemaBuilder()
             .AddString(nameof(MyRecord.First))
-            .Add(nameof(MyRecord.Last), s => new Custom(s), false)
+            .Add(nameof(MyRecord.Last), s => new Custom(s.ToString()), false)
             .AddDateTime(nameof(MyRecord.BirthDate), "yyyyMMdd")
             .AddInt32(nameof(MyRecord.Quantity))
-            .Add(nameof(MyRecord.Price), s => Amount.Parse(s, CultureInfo.InvariantCulture), false)
+            .Add(nameof(MyRecord.Price), s => Amount.Parse(s.ToString(), CultureInfo.InvariantCulture), false)
             .AddInt16(nameof(MyRecord.Count))
             .AddDecimal(nameof(MyRecord.LargeValue))
             .AddDateTimeOffset(nameof(MyRecord.SomeDateTimeOffset))
             .AddBoolean(nameof(MyRecord.IsActive), "yes", "no")
-            .Add(nameof(MyRecord.NullableCustom), s => new Custom(s), true)
+            .Add(nameof(MyRecord.NullableCustom), s => new Custom(s.ToString()), true)
             .Schema;
 
         var item = ReadCsv

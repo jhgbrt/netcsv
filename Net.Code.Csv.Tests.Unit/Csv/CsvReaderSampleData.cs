@@ -86,7 +86,7 @@ public class CsvReaderSampleData
         .AddString(typeof(string).FullName)
         .AddGuid(typeof(Guid).FullName)
         .Add(typeof(System.DBNull).FullName, s => DBNull.Value, true)
-        .Add(typeof(System.Byte[]).FullName, s => Convert.FromBase64String(s), true)
+        .Add(typeof(System.Byte[]).FullName, s => Convert.FromBase64String(s.ToString()), true)
         .Schema;
 
     public const string SampleTypedData1 = """

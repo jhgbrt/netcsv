@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 
 namespace Net.Code.Csv.Impl;
 
@@ -10,55 +11,68 @@ class Converter(CultureInfo cultureInfo)
 {
     private readonly CultureInfo _cultureInfo = cultureInfo ?? CultureInfo.InvariantCulture;
 
-    public bool ToBoolean(string value) => Convert.ToBoolean(value, _cultureInfo);
-    public bool ToBoolean(string value, string format)
+    public bool ToBoolean(ReadOnlySpan<char> value)
+        => bool.Parse(value);
+    public bool ToBoolean(ReadOnlySpan<char> value, string format)
     {
-        var (@true, @false) = GetBooleanFormats(format);
-        return value switch
+        var formatSpan = format.AsSpan();
+        var (@true, @false) = GetBooleanFormats(formatSpan);
+        if (value.SequenceEqual(formatSpan[@true]))
         {
-            string v when v == @true => true,
-            string v when v == @false => false,
-            _ => throw new FormatException($"Unrecognized value '{value}' for true/false. Expected {@true} or {@false}.")
-        };
+            return true;
+        }
+        if (value.SequenceEqual(formatSpan[@false]))
+        {
+            return false;
+        }
+
+        throw new FormatException($"Unrecognized value '{value.ToString()}' for true/false. Expected {@true} or {@false}.");
     }
 
-    (string @true, string @false) GetBooleanFormats(string format)
+    (Range @true, Range @false) GetBooleanFormats(ReadOnlySpan<char> format)
     {
         var i = format.IndexOf('|');
         if (i <= 0 || i == format.Length - 1)
-            throw new FormatException($"Invalid format string '{format}' for Boolean. Should be of the form \"[true]|[false]\", for example \"yes|no\"");
-        var @true = format.Substring(0, format.IndexOf('|'));
-        var @false = format.Substring(format.IndexOf('|') + 1);
+            throw new FormatException($"Invalid format string '{format.ToString()}' for Boolean. Should be of the form \"[true]|[false]\", for example \"yes|no\"");
+        Range @true = 0..i;
+        Range @false = (i + 1)..format.Length;
         return (@true, @false);
     }
-    public byte ToByte(string value) => Convert.ToByte(value, _cultureInfo);
-    public char ToChar(string value) => Convert.ToChar(value, _cultureInfo);
-    public DateTime ToDateTime(string value) => ToDateTime(value, null);
-    public DateTime ToDateTime(string value, string format) => format switch
+    public byte ToByte(ReadOnlySpan<char> value) => byte.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public char ToChar(ReadOnlySpan<char> value)
+    {
+        if (value.Length == 1)
+        {
+            return value[0];
+        }
+        throw new FormatException("String must be exactly one character long.");
+    }
+    public DateTime ToDateTime(ReadOnlySpan<char> value) => ToDateTime(value, null);
+    public DateTime ToDateTime(ReadOnlySpan<char> value, string format) => format switch
     {
         not null => DateTime.ParseExact(value, format, _cultureInfo),
         _ => DateTime.Parse(value, _cultureInfo)
     };
-    public DateTimeOffset ToDateTimeOffset(string value, string format = null) => format switch
+    public DateTimeOffset ToDateTimeOffset(ReadOnlySpan<char> value, string format = null) => format switch
     {
         not null => DateTimeOffset.ParseExact(value, format, _cultureInfo),
         _ => DateTimeOffset.Parse(value, _cultureInfo)
     };
-    public decimal ToDecimal(string value) => Convert.ToDecimal(value, _cultureInfo);
-    public Guid ToGuid(string value) => Guid.Parse(value);
-    public short ToInt16(string value) => Convert.ToInt16(value, _cultureInfo);
-    public int ToInt32(string value) => Convert.ToInt32(value, _cultureInfo);
-    public long ToInt64(string value) => Convert.ToInt64(value, _cultureInfo);
-    public sbyte ToSByte(string value) => Convert.ToSByte(value, _cultureInfo);
-    public float ToSingle(string value) => Convert.ToSingle(value, _cultureInfo);
-    public double ToDouble(string value) => Convert.ToDouble(value, _cultureInfo);
-    public ushort ToUInt16(string value) => Convert.ToUInt16(value, _cultureInfo);
-    public uint ToUInt32(string value) => Convert.ToUInt32(value, _cultureInfo);
-    public ulong ToUInt64(string value) => Convert.ToUInt64(value, _cultureInfo);
-    public object FromString(Type destinationType, string value)
+    public decimal ToDecimal(ReadOnlySpan<char> value) => decimal.Parse(value, NumberStyles.Number, _cultureInfo);
+    public Guid ToGuid(ReadOnlySpan<char> value) => Guid.Parse(value);
+    public short ToInt16(ReadOnlySpan<char> value) => short.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public int ToInt32(ReadOnlySpan<char> value) => int.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public long ToInt64(ReadOnlySpan<char> value) => long.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public sbyte ToSByte(ReadOnlySpan<char> value) => sbyte.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public float ToSingle(ReadOnlySpan<char> value) => float.Parse(value, NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo);
+    public double ToDouble(ReadOnlySpan<char> value) => double.Parse(value, NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo);
+    public ushort ToUInt16(ReadOnlySpan<char> value) => ushort.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public uint ToUInt32(ReadOnlySpan<char> value) => uint.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public ulong ToUInt64(ReadOnlySpan<char> value) => ulong.Parse(value, NumberStyles.Integer, _cultureInfo);
+    public object FromSpan(Type destinationType, ReadOnlySpan<char> value)
     {
         var converter = TypeDescriptor.GetConverter(destinationType);
-        return converter.ConvertFromString(null, _cultureInfo, value);
+        return converter.ConvertFromString(null, _cultureInfo, value.ToString());
     }
     public string ToString(object value, string format) => value switch
     {
@@ -67,7 +81,10 @@ class Converter(CultureInfo cultureInfo)
         bool b => format switch
         {
             null or "" => b.ToString(),
-            _ => b ? GetBooleanFormats(format).@true : GetBooleanFormats(format).@false
+            _ =>
+            b
+                ? format[GetBooleanFormats(format.AsSpan()).@true]
+                : format[GetBooleanFormats(format.AsSpan()).@false]
         },
         object o => TryToConvertToString(value) ?? Convert.ToString(o, _cultureInfo),
         null => string.Empty
