@@ -125,9 +125,7 @@ public static class WriteCsv
         )
     {
         var schema = Schema.From<T>();
-        var properties = from p in typeof(T).GetPropertiesWithCsvFormat()
-                         join c in schema.Columns on p.property.Name equals c.PropertyName
-                         select p;
+        var properties = GetPropertiesForSchema<T>(schema);
         if (hasHeaders)
         {
             writer.WriteLine(string.Join(delimiter.ToString(), schema.Columns.Select(c => c.Name)));
@@ -138,16 +136,7 @@ public static class WriteCsv
         var sb = new StringBuilder();
         foreach (var item in items)
         {
-            var values = GetPropertyValuesAsString(item, properties, delimiter, quote, escape, converter, sb);
-
-            bool writeDelimiter = false;
-            foreach (var v in values)
-            {
-                if (writeDelimiter) writer.Write(delimiter);
-                else writeDelimiter = true;
-                writer.Write(sb.ToString());
-            }
-
+            WriteValues(item, properties, writer, delimiter, quote, escape, converter, sb);
             writer.WriteLine();
         }
     }
@@ -162,7 +151,7 @@ public static class WriteCsv
         CultureInfo cultureInfo = null
         )
     {
-        var properties = typeof(T).GetPropertiesWithCsvFormat();
+        var properties = typeof(T).GetPropertiesWithCsvFormat().ToArray();
         if (hasHeaders)
         {
             writer.WriteLine(string.Join(delimiter.ToString(), properties.Select(p => p.property.Name)));
@@ -173,29 +162,87 @@ public static class WriteCsv
         var sb = new StringBuilder();
         await foreach (var item in items)
         {
-            var values = GetPropertyValuesAsString(item, properties, delimiter, quote, escape, converter, sb);
-
-            bool writeDelimiter = false;
-            foreach (var v in values)
-            {
-                if (writeDelimiter) await writer.WriteAsync(delimiter);
-                else writeDelimiter = true;
-                await writer.WriteAsync(v);
-            }
-
+            await WriteValuesAsync(item, properties, writer, delimiter, quote, escape, converter, sb);
             await writer.WriteLineAsync();
         }
     }
 
-    /// <summary>
-    /// This method returns an unmaterialized LINQ query for all properties of an item of type T
-    /// the StringBuilder parameter should be allocated once and is passed in to avoid the 
-    /// allocation of a new StringBuilder for each item in the list.
-    /// In the query, the StringBuilder is cleared for each resulting value, in order to avoid unnecessary allocations.
-    /// </summary>
-    private static IEnumerable<string> GetPropertyValuesAsString(object item, IEnumerable<(PropertyInfo property, string format)> properties, char delimiter, char quote, char escape, Converter converter, StringBuilder sb)
-    => from pf in properties
-       let value = pf.property.GetValue(item)
-       let s = converter.ToString(value, pf.format)
-       select sb.Clear().Append(s).QuoteIfNecessary(quote, delimiter, escape).ToString();
+    private static (PropertyInfo property, string format)[] GetPropertiesForSchema<T>(CsvSchema schema)
+    {
+        var properties = typeof(T).GetPropertiesWithCsvFormat().ToArray();
+        var lookup = new Dictionary<string, (PropertyInfo property, string format)>(properties.Length, StringComparer.Ordinal);
+        foreach (var property in properties)
+        {
+            lookup[property.property.Name] = property;
+        }
+
+        var result = new (PropertyInfo property, string format)[schema.Columns.Count];
+        var count = 0;
+        foreach (var column in schema.Columns)
+        {
+            if (lookup.TryGetValue(column.PropertyName, out var property))
+            {
+                result[count++] = property;
+            }
+        }
+
+        if (count == result.Length)
+        {
+            return result;
+        }
+
+        Array.Resize(ref result, count);
+        return result;
+    }
+
+    private static void WriteValues(
+        object item,
+        (PropertyInfo property, string format)[] properties,
+        TextWriter writer,
+        char delimiter,
+        char quote,
+        char escape,
+        Converter converter,
+        StringBuilder sb)
+    {
+        for (var i = 0; i < properties.Length; i++)
+        {
+            if (i > 0)
+            {
+                writer.Write(delimiter);
+            }
+
+            var (property, format) = properties[i];
+            var value = property.GetValue(item);
+            var s = converter.ToString(value, format);
+            sb.Clear().Append(s).QuoteIfNecessary(quote, delimiter, escape);
+            writer.Write(sb.ToString());
+        }
+    }
+
+    private static async Task WriteValuesAsync(
+        object item,
+        (PropertyInfo property, string format)[] properties,
+        TextWriter writer,
+        char delimiter,
+        char quote,
+        char escape,
+        Converter converter,
+        StringBuilder sb)
+    {
+        for (var i = 0; i < properties.Length; i++)
+        {
+            if (i > 0)
+            {
+                await writer.WriteAsync(delimiter);
+            }
+
+            var (property, format) = properties[i];
+            var value = property.GetValue(item);
+            var s = converter.ToString(value, format);
+            sb.Clear().Append(s).QuoteIfNecessary(quote, delimiter, escape);
+            await writer.WriteAsync(sb.ToString());
+        }
+    }
+
 }

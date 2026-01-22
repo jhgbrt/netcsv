@@ -9,7 +9,7 @@ using BenchmarkDotNet.Running;
 using CsvTest;
 using Net.Code.Csv;
 
-BenchmarkRunner.Run<CsvReaderBenchmark>();
+BenchmarkSwitcher.FromAssembly(typeof(CsvReaderBenchmark).Assembly).Run(args);
 
 [MemoryDiagnoser]
 public class CsvReaderBenchmark
