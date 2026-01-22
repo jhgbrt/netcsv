@@ -34,6 +34,34 @@ internal sealed class BufferedCharReader
         return _length > 0;
     }
 
+    public bool TryGetSpan(out ReadOnlySpan<char> span)
+    {
+        if (!EnsureData())
+        {
+            span = ReadOnlySpan<char>.Empty;
+            return false;
+        }
+
+        span = _buffer.AsSpan(_index, _length - _index);
+        return true;
+    }
+
+    public void Advance(int count)
+    {
+        _index += count;
+    }
+
+    public char? Peek()
+    {
+        if (_index < _length)
+        {
+            return _buffer[_index];
+        }
+
+        var peek = _reader.Peek();
+        return peek < 0 ? null : (char?)peek;
+    }
+
     public bool MoveNext(out char current, out char? next)
     {
         if (!EnsureData())

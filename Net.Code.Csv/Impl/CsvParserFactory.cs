@@ -8,7 +8,7 @@ internal static class CsvParserFactory
         return kind switch
         {
             CsvParserKind.V1 => new CsvParser(reader, charReader, layout, behaviour),
-            CsvParserKind.V2 => throw new NotSupportedException("Span-based parser is not implemented yet."),
+            CsvParserKind.V2 => new CsvParserV2(reader, charReader, layout, behaviour),
             _ => new CsvParser(reader, charReader, layout, behaviour)
         };
     }
