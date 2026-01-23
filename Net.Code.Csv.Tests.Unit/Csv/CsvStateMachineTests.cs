@@ -1,6 +1,7 @@
 ﻿using System.IO;
 
 using Net.Code.Csv.Impl;
+using Net.Code.Csv.Impl.V1;
 using Net.Code.Csv.Tests.Unit.IO.Csv;
 
 namespace Net.Code.Csv.Tests.Unit.Csv;

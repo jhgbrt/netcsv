@@ -1,4 +1,4 @@
-namespace Net.Code.Csv.Impl;
+namespace Net.Code.Csv.Impl.V1;
 
 // The parser takes care of processing the actual content of the file
 // It does not take into account schema information, so it only works with strings

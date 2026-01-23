@@ -1,4 +1,4 @@
-namespace Net.Code.Csv.Impl;
+namespace Net.Code.Csv.Impl.V2;
 
 internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behaviour)
 {

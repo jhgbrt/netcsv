@@ -1,4 +1,4 @@
-﻿namespace Net.Code.Csv.Impl;
+﻿namespace Net.Code.Csv.Impl.V1;
 internal class CsvLineBuilder(CsvLayout layout, CsvBehaviour behaviour)
 {
     private char _currentChar;

@@ -1,6 +1,5 @@
-namespace Net.Code.Csv.Impl;
+namespace Net.Code.Csv.Impl.V2;
 
-// Span-based parser placeholder that currently delegates to the V1 state machine.
 internal sealed class CsvParserV2 : ICsvParser, IEnumerable<CsvLineSlice>, IDisposable
 {
     private readonly CsvStateMachineV2 _csvStateMachine;

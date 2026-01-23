@@ -1,10 +1,6 @@
-namespace Net.Code.Csv.Impl;
-
-using System;
-using System.Collections;
-using System.Collections.Generic;
-
-internal sealed class CsvStateMachineV2
+namespace Net.Code.Csv.Impl.V2
+{
+    internal sealed class CsvStateMachineV2
 {
     private readonly BufferedCharReader _reader;
     private readonly CsvLayout _layout;
@@ -415,6 +411,7 @@ internal sealed class CsvStateMachineV2
         public void Dispose()
         {
         }
+    }
     }
 }
 
