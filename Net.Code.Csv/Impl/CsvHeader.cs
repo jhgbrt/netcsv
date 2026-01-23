@@ -9,6 +9,22 @@ struct CsvHeader(string[] fields)
     public static CsvHeader None = new(Array.Empty<string>());
     public static CsvHeader Default(int length) => new(Enumerable.Range(0, length).Select(i => $"Column{i}").ToArray());
     public static CsvHeader Create(string[] names) => new(names.Select((f, i) => string.IsNullOrWhiteSpace(f) ? $"Column{i}" : f).ToArray());
+    public static CsvHeader Create(CsvLineSlice line)
+    {
+        var count = line.Length;
+        if (count == 0)
+        {
+            return None;
+        }
+
+        var names = new string[count];
+        for (var i = 0; i < count; i++)
+        {
+            var value = line.GetString(i);
+            names[i] = string.IsNullOrWhiteSpace(value) ? $"Column{i}" : value;
+        }
+        return new CsvHeader(names);
+    }
 
     public readonly override string ToString() => string.Join(";", fields);
     public readonly int Length => fields.Length;

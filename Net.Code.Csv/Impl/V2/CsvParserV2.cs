@@ -19,7 +19,7 @@ internal sealed class CsvParserV2 : ICsvParser, IEnumerable<CsvLineSlice>, IDisp
         Header = (layOut, firstLine) switch
         {
             ({ HasHeaders: true }, firstLine: not null)
-                => CsvHeader.Create(firstLine.Value.GetStrings()),
+                => CsvHeader.Create(firstLine.Value),
 
             ({ HasHeaders: false }, firstLine: not null)
                 => CsvHeader.Default(firstLine.Value.Length),

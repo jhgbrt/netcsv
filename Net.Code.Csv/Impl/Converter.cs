@@ -96,4 +96,5 @@ class Converter(CultureInfo cultureInfo)
         if (converter is not null && converter.CanConvertTo(typeof(string))) return converter.ConvertToString(null, _cultureInfo, o);
         return null;
     }
+
 }

@@ -247,6 +247,7 @@ public class ReadCsvWithSchemaTests
         Assert.True(item.IsActive);
         Assert.Equal(new DateTime(1970, 11, 15), item.BirthDate);
     }
+
 }
 public class CustomTypeConverter : TypeConverter
 {
@@ -317,6 +318,7 @@ public class FormatClass
     [CsvFormat("yyyy|MM|dd")]
     public DateTime BirthDate { get; set; }
 }
+
 
 [TypeConverter(typeof(AmountConverter))]
 public struct Amount(string currency, decimal value)
