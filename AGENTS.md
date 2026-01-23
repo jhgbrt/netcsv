@@ -3,15 +3,18 @@
 ## Project Structure & Module Organization
 - `Net.Code.Csv/`: Core library (targets `netstandard2.1`); public entry points in `ReadCsv.cs` and `WriteCsv.cs`; internal engines under `Impl/` (parser, state machine, layout).
 - `Net.Code.Csv.Tests.Unit/`: xUnit tests targeting `net9.0`; sample inputs under `SampleFiles/`.
-- `CsvTest/`: Small console app/benchmarks using the library; run locally for manual checks.
+- `CsvTest/`: Small console app/benchmarks using the library; run locally for manual checks and benchmarks.
 - `.github/workflows/`: CI for build, tests, and publishing.
 
 ## Build, Test, and Development Commands
 - Prerequisite: .NET SDK 9.0 or later (`dotnet --version`).
 - Restore: `dotnet restore Net.Code.Csv.sln`.
 - Build: `dotnet build Net.Code.Csv.sln -c Release`.
-- Test: `dotnet test Net.Code.Csv.Tests.Unit -c Release` (xUnit; runs all tests).
-- Sample run: `dotnet run --project CsvTest -c Debug` (uses `CsvTest/test.csv`).
+- Test:
+  Always run all tests with both parser versions by setting the environment variable.
+  In PowerShell: 
+  `$env:NETCSV_PARSER='V1'; dotnet test -c Release; $env:NETCSV_PARSER='V2'; dotnet test -c Release;` 
+- Sample run: `dotnet run --project CsvTest -c Release` (uses `CsvTest/test.csv`).
 - Pack (NuGet): `dotnet pack Net.Code.Csv -c Release -o ./artifacts`.
 
 ## Coding Style & Naming Conventions
@@ -31,6 +34,7 @@
 - Capture a BenchmarkDotNet baseline by running `dotnet run --project CsvTest -c Release` (records are emitted by `CsvReaderBenchmark`); save the relevant table for reference.
 - Implement exactly one performance-focused change in the hot path, keeping unrelated refactors for later.
 - Re-run the benchmark command, compare against the saved baseline, and summarize the delta (positive or negative) in your PR description.
+- Focus improving performance efforts for the V2 parser
 
 ## Commit & Pull Request Guidelines
 - Commits: imperative mood (“Add CsvStateMachine test”); keep focused; reference issues (`#123`) when applicable.
