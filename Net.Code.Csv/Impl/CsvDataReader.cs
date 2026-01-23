@@ -61,6 +61,229 @@ internal class CsvDataReader : IDataReader
         return field.Span;
     }
 
+    private bool TryGetSpan(int i, out ReadOnlySpan<char> span)
+    {
+        span = GetRawValueSpan(i, out var isNull);
+        return !isNull && span.Length > 0;
+    }
+
+    internal string GetStringRaw(int i)
+    {
+        return TryGetSpan(i, out var span) ? span.ToString() : null;
+    }
+
+    internal bool GetBooleanRaw(int i, string format)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return format is null ? _converter.ToBoolean(span) : _converter.ToBoolean(span, format);
+    }
+
+    internal bool? GetBooleanNullableRaw(int i, string format)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return format is null ? _converter.ToBoolean(span) : _converter.ToBoolean(span, format);
+    }
+
+    internal DateTime GetDateTimeRaw(int i, string format)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToDateTime(span, format);
+    }
+
+    internal DateTime? GetDateTimeNullableRaw(int i, string format)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToDateTime(span, format);
+    }
+
+    internal DateTimeOffset GetDateTimeOffsetRaw(int i, string format)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToDateTimeOffset(span, format);
+    }
+
+    internal DateTimeOffset? GetDateTimeOffsetNullableRaw(int i, string format)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToDateTimeOffset(span, format);
+    }
+
+    internal Guid GetGuidRaw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToGuid(span);
+    }
+
+    internal Guid? GetGuidNullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToGuid(span);
+    }
+
+    internal char GetCharRaw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToChar(span);
+    }
+
+    internal char? GetCharNullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToChar(span);
+    }
+
+    internal byte GetByteRaw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToByte(span);
+    }
+
+    internal byte? GetByteNullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToByte(span);
+    }
+
+    internal sbyte GetSByteRaw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToSByte(span);
+    }
+
+    internal sbyte? GetSByteNullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToSByte(span);
+    }
+
+    internal short GetInt16Raw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToInt16(span);
+    }
+
+    internal short? GetInt16NullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToInt16(span);
+    }
+
+    internal int GetInt32Raw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToInt32(span);
+    }
+
+    internal int? GetInt32NullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToInt32(span);
+    }
+
+    internal long GetInt64Raw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToInt64(span);
+    }
+
+    internal long? GetInt64NullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToInt64(span);
+    }
+
+    internal ushort GetUInt16Raw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToUInt16(span);
+    }
+
+    internal ushort? GetUInt16NullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToUInt16(span);
+    }
+
+    internal uint GetUInt32Raw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToUInt32(span);
+    }
+
+    internal uint? GetUInt32NullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToUInt32(span);
+    }
+
+    internal ulong GetUInt64Raw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToUInt64(span);
+    }
+
+    internal ulong? GetUInt64NullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToUInt64(span);
+    }
+
+    internal float GetSingleRaw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToSingle(span);
+    }
+
+    internal float? GetSingleNullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToSingle(span);
+    }
+
+    internal double GetDoubleRaw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToDouble(span);
+    }
+
+    internal double? GetDoubleNullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToDouble(span);
+    }
+
+    internal decimal GetDecimalRaw(int i)
+    {
+        var span = GetRawValueSpan(i, out _);
+        return _converter.ToDecimal(span);
+    }
+
+    internal decimal? GetDecimalNullableRaw(int i)
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return _converter.ToDecimal(span);
+    }
+
+    internal T GetCustomRaw<T>(int i)
+    {
+        var span = GetRawValueSpan(i, out var isNull);
+        if (isNull || span.Length == 0)
+        {
+            if (typeof(T).IsValueType)
+            {
+                return (T)_converter.FromSpan(typeof(T), span);
+            }
+            return default;
+        }
+        return (T)_converter.FromSpan(typeof(T), span);
+    }
+
+    internal T? GetCustomNullableRaw<T>(int i) where T : struct
+    {
+        if (!TryGetSpan(i, out var span)) return null;
+        return (T)_converter.FromSpan(typeof(T), span);
+    }
+
     public string GetName(int i) => _schema?.GetName(i) ?? _header[i];
 
     public string GetDataTypeName(int i) => GetFieldType(i).FullName;

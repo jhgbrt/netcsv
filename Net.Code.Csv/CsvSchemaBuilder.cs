@@ -24,7 +24,10 @@ public record struct CsvColumn(
     string PropertyName,
     Type Type,
     CsvSpanConverter<object> FromSpan,
-    bool AllowNull);
+    bool AllowNull)
+{
+    public string Format { get; init; }
+}
 
 public static class Schema
 {
@@ -64,7 +67,10 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
 
     private CsvSchemaBuilder Add<T>((string columnName, string propertyName)  name, string format, CsvSpanConverterWithFormat<T> convert, bool allowNull)
     {
-        _columns.Add(new (name.columnName, name.propertyName, typeof(T), s => convert(s, format), allowNull));
+        _columns.Add(new (name.columnName, name.propertyName, typeof(T), s => convert(s, format), allowNull)
+        {
+            Format = format
+        });
         return this;
     }
 

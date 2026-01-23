@@ -213,6 +213,40 @@ public class ReadCsvWithSchemaTests
 
         Verify(item);
     }
+
+    [Fact]
+    public void WithSchemaFromRecord_UsesBooleanAndDateTimeFormats()
+    {
+        const string csv =
+            """
+            First;IsActive;BirthDate
+            John;yes;1970|11|15
+            """;
+
+        var item = ReadCsv
+            .FromString<FormatRecord>(csv, delimiter: ';', hasHeaders: true)
+            .Single();
+
+        Assert.True(item.IsActive);
+        Assert.Equal(new DateTime(1970, 11, 15), item.BirthDate);
+    }
+
+    [Fact]
+    public void WithSchemaFromClass_UsesBooleanAndDateTimeFormats()
+    {
+        const string csv =
+            """
+            First;IsActive;BirthDate
+            John;yes;1970|11|15
+            """;
+
+        var item = ReadCsv
+            .FromString<FormatClass>(csv, delimiter: ';', hasHeaders: true)
+            .Single();
+
+        Assert.True(item.IsActive);
+        Assert.Equal(new DateTime(1970, 11, 15), item.BirthDate);
+    }
 }
 public class CustomTypeConverter : TypeConverter
 {
@@ -268,6 +302,20 @@ public class MyClass : IMyItem
     public Custom NullableCustom { get; set; }
 
     public IEnumerable<Custom> Customers { get; set; } = [];
+}
+
+public record FormatRecord(
+    string First,
+    [CsvFormat("yes|no")] bool IsActive,
+    [CsvFormat("yyyy|MM|dd")] DateTime BirthDate);
+
+public class FormatClass
+{
+    public string First { get; set; }
+    [CsvFormat("yes|no")]
+    public bool IsActive { get; set; }
+    [CsvFormat("yyyy|MM|dd")]
+    public DateTime BirthDate { get; set; }
 }
 
 [TypeConverter(typeof(AmountConverter))]
