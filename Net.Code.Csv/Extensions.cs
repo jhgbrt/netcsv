@@ -5,6 +5,8 @@ namespace Net.Code.Csv;
 
 public static class Extensions
 {
+    private static readonly Dictionary<ActivatorCacheKey, Func<CsvDataReader, object>> FastActivatorCache = new();
+
     private readonly record struct PropertyMapping(
         PropertyInfo Property,
         string ColumnName,
@@ -26,7 +28,7 @@ public static class Extensions
         var properties = mappings.Select(m => m.Property).ToArray();
 
         var slowActivator = BuildSlowActivator(type, mappings, properties);
-        var fastActivator = TryBuildFastActivator(type, mappings, properties);
+        var fastActivator = GetOrBuildFastActivator(type, schema, mappings, properties);
 
         if (fastActivator is null)
         {
@@ -95,6 +97,36 @@ public static class Extensions
         };
     }
 
+    private static Func<CsvDataReader, object> GetOrBuildFastActivator(Type type, CsvSchema schema, PropertyMapping[] mappings, PropertyInfo[] properties)
+    {
+        if (mappings.Length == 0)
+        {
+            return null;
+        }
+
+        var key = ActivatorCacheKey.Create(type, schema, mappings);
+        lock (FastActivatorCache)
+        {
+            if (FastActivatorCache.TryGetValue(key, out var cached))
+            {
+                return cached;
+            }
+        }
+
+        var built = TryBuildFastActivator(type, mappings, properties);
+        if (built is null)
+        {
+            return null;
+        }
+
+        lock (FastActivatorCache)
+        {
+            FastActivatorCache[key] = built;
+        }
+
+        return built;
+    }
+
     private static Func<CsvDataReader, object> TryBuildFastActivator(Type type, PropertyMapping[] mappings, PropertyInfo[] properties)
     {
         if (mappings.Length == 0)
@@ -150,117 +182,20 @@ public static class Extensions
         var underlyingType = propertyType.GetUnderlyingType();
         var isNullable = propertyType.IsNullableType();
         var ordinalExpression = Expression.Constant(mapping.SchemaOrdinal);
-        var formatExpression = Expression.Constant(mapping.Format, typeof(string));
 
         if (underlyingType == typeof(string))
         {
             return Expression.Call(reader, Methods.GetStringRaw, ordinalExpression);
         }
 
-        if (underlyingType == typeof(bool))
-        {
-            var method = isNullable ? Methods.GetBooleanNullableRaw : Methods.GetBooleanRaw;
-            return Expression.Call(reader, method, ordinalExpression, formatExpression);
-        }
-
-        if (underlyingType == typeof(DateTime))
-        {
-            var method = isNullable ? Methods.GetDateTimeNullableRaw : Methods.GetDateTimeRaw;
-            return Expression.Call(reader, method, ordinalExpression, formatExpression);
-        }
-
-        if (underlyingType == typeof(DateTimeOffset))
-        {
-            var method = isNullable ? Methods.GetDateTimeOffsetNullableRaw : Methods.GetDateTimeOffsetRaw;
-            return Expression.Call(reader, method, ordinalExpression, formatExpression);
-        }
-
-        if (underlyingType == typeof(Guid))
-        {
-            var method = isNullable ? Methods.GetGuidNullableRaw : Methods.GetGuidRaw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(char))
-        {
-            var method = isNullable ? Methods.GetCharNullableRaw : Methods.GetCharRaw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(byte))
-        {
-            var method = isNullable ? Methods.GetByteNullableRaw : Methods.GetByteRaw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(sbyte))
-        {
-            var method = isNullable ? Methods.GetSByteNullableRaw : Methods.GetSByteRaw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(short))
-        {
-            var method = isNullable ? Methods.GetInt16NullableRaw : Methods.GetInt16Raw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(int))
-        {
-            var method = isNullable ? Methods.GetInt32NullableRaw : Methods.GetInt32Raw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(long))
-        {
-            var method = isNullable ? Methods.GetInt64NullableRaw : Methods.GetInt64Raw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(ushort))
-        {
-            var method = isNullable ? Methods.GetUInt16NullableRaw : Methods.GetUInt16Raw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(uint))
-        {
-            var method = isNullable ? Methods.GetUInt32NullableRaw : Methods.GetUInt32Raw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(ulong))
-        {
-            var method = isNullable ? Methods.GetUInt64NullableRaw : Methods.GetUInt64Raw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(float))
-        {
-            var method = isNullable ? Methods.GetSingleNullableRaw : Methods.GetSingleRaw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(double))
-        {
-            var method = isNullable ? Methods.GetDoubleNullableRaw : Methods.GetDoubleRaw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
-        if (underlyingType == typeof(decimal))
-        {
-            var method = isNullable ? Methods.GetDecimalNullableRaw : Methods.GetDecimalRaw;
-            return Expression.Call(reader, method, ordinalExpression);
-        }
-
         if (isNullable)
         {
-            var method = Methods.GetCustomNullableRaw.MakeGenericMethod(underlyingType);
+            var method = Methods.GetSchemaNullableRaw.MakeGenericMethod(underlyingType);
             return Expression.Call(reader, method, ordinalExpression);
         }
 
-        var customMethod = Methods.GetCustomRaw.MakeGenericMethod(underlyingType);
-        return Expression.Call(reader, customMethod, ordinalExpression);
+        var schemaMethod = Methods.GetSchemaRaw.MakeGenericMethod(underlyingType);
+        return Expression.Call(reader, schemaMethod, ordinalExpression);
     }
 
     private static PropertyMapping[] GetPropertyMappings(Type type, CsvSchema schema)
@@ -288,43 +223,45 @@ public static class Extensions
         return [.. mappings];
     }
 
+    private readonly record struct ActivatorCacheKey(Type Type, string Signature)
+    {
+        public static ActivatorCacheKey Create(Type type, CsvSchema schema, PropertyMapping[] mappings)
+        {
+            var columns = schema.Columns;
+            var builder = new StringBuilder(columns.Count * 32);
+            for (var i = 0; i < columns.Count; i++)
+            {
+                var column = columns[i];
+                builder.Append(column.Name)
+                    .Append('|')
+                    .Append(column.PropertyName)
+                    .Append('|')
+                    .Append(column.Type.FullName)
+                    .Append('|')
+                    .Append(column.AllowNull)
+                    .Append('|')
+                    .Append(column.Format)
+                    .Append(';');
+            }
+
+            builder.Append('#');
+            for (var i = 0; i < mappings.Length; i++)
+            {
+                builder.Append(mappings[i].Property.Name)
+                    .Append('|')
+                    .Append(mappings[i].Format)
+                    .Append(';');
+            }
+
+            return new ActivatorCacheKey(type, builder.ToString());
+        }
+    }
+
     private static class Methods
     {
         public static readonly MethodInfo GetStringRaw = Get(nameof(CsvDataReader.GetStringRaw), 1);
-        public static readonly MethodInfo GetBooleanRaw = Get(nameof(CsvDataReader.GetBooleanRaw), 2);
-        public static readonly MethodInfo GetBooleanNullableRaw = Get(nameof(CsvDataReader.GetBooleanNullableRaw), 2);
-        public static readonly MethodInfo GetDateTimeRaw = Get(nameof(CsvDataReader.GetDateTimeRaw), 2);
-        public static readonly MethodInfo GetDateTimeNullableRaw = Get(nameof(CsvDataReader.GetDateTimeNullableRaw), 2);
-        public static readonly MethodInfo GetDateTimeOffsetRaw = Get(nameof(CsvDataReader.GetDateTimeOffsetRaw), 2);
-        public static readonly MethodInfo GetDateTimeOffsetNullableRaw = Get(nameof(CsvDataReader.GetDateTimeOffsetNullableRaw), 2);
-        public static readonly MethodInfo GetGuidRaw = Get(nameof(CsvDataReader.GetGuidRaw), 1);
-        public static readonly MethodInfo GetGuidNullableRaw = Get(nameof(CsvDataReader.GetGuidNullableRaw), 1);
-        public static readonly MethodInfo GetCharRaw = Get(nameof(CsvDataReader.GetCharRaw), 1);
-        public static readonly MethodInfo GetCharNullableRaw = Get(nameof(CsvDataReader.GetCharNullableRaw), 1);
-        public static readonly MethodInfo GetByteRaw = Get(nameof(CsvDataReader.GetByteRaw), 1);
-        public static readonly MethodInfo GetByteNullableRaw = Get(nameof(CsvDataReader.GetByteNullableRaw), 1);
-        public static readonly MethodInfo GetSByteRaw = Get(nameof(CsvDataReader.GetSByteRaw), 1);
-        public static readonly MethodInfo GetSByteNullableRaw = Get(nameof(CsvDataReader.GetSByteNullableRaw), 1);
-        public static readonly MethodInfo GetInt16Raw = Get(nameof(CsvDataReader.GetInt16Raw), 1);
-        public static readonly MethodInfo GetInt16NullableRaw = Get(nameof(CsvDataReader.GetInt16NullableRaw), 1);
-        public static readonly MethodInfo GetInt32Raw = Get(nameof(CsvDataReader.GetInt32Raw), 1);
-        public static readonly MethodInfo GetInt32NullableRaw = Get(nameof(CsvDataReader.GetInt32NullableRaw), 1);
-        public static readonly MethodInfo GetInt64Raw = Get(nameof(CsvDataReader.GetInt64Raw), 1);
-        public static readonly MethodInfo GetInt64NullableRaw = Get(nameof(CsvDataReader.GetInt64NullableRaw), 1);
-        public static readonly MethodInfo GetUInt16Raw = Get(nameof(CsvDataReader.GetUInt16Raw), 1);
-        public static readonly MethodInfo GetUInt16NullableRaw = Get(nameof(CsvDataReader.GetUInt16NullableRaw), 1);
-        public static readonly MethodInfo GetUInt32Raw = Get(nameof(CsvDataReader.GetUInt32Raw), 1);
-        public static readonly MethodInfo GetUInt32NullableRaw = Get(nameof(CsvDataReader.GetUInt32NullableRaw), 1);
-        public static readonly MethodInfo GetUInt64Raw = Get(nameof(CsvDataReader.GetUInt64Raw), 1);
-        public static readonly MethodInfo GetUInt64NullableRaw = Get(nameof(CsvDataReader.GetUInt64NullableRaw), 1);
-        public static readonly MethodInfo GetSingleRaw = Get(nameof(CsvDataReader.GetSingleRaw), 1);
-        public static readonly MethodInfo GetSingleNullableRaw = Get(nameof(CsvDataReader.GetSingleNullableRaw), 1);
-        public static readonly MethodInfo GetDoubleRaw = Get(nameof(CsvDataReader.GetDoubleRaw), 1);
-        public static readonly MethodInfo GetDoubleNullableRaw = Get(nameof(CsvDataReader.GetDoubleNullableRaw), 1);
-        public static readonly MethodInfo GetDecimalRaw = Get(nameof(CsvDataReader.GetDecimalRaw), 1);
-        public static readonly MethodInfo GetDecimalNullableRaw = Get(nameof(CsvDataReader.GetDecimalNullableRaw), 1);
-        public static readonly MethodInfo GetCustomRaw = GetGeneric(nameof(CsvDataReader.GetCustomRaw), 1);
-        public static readonly MethodInfo GetCustomNullableRaw = GetGeneric(nameof(CsvDataReader.GetCustomNullableRaw), 1);
+        public static readonly MethodInfo GetSchemaRaw = GetGeneric(nameof(CsvDataReader.GetSchemaRaw), 1);
+        public static readonly MethodInfo GetSchemaNullableRaw = GetGeneric(nameof(CsvDataReader.GetSchemaNullableRaw), 1);
 
         private static MethodInfo Get(string name, int parameterCount)
         {

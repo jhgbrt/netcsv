@@ -72,7 +72,8 @@ internal sealed class CsvParserV2 : ICsvParser, IEnumerable<CsvLineSlice>, IDisp
         using var enumerator = Lines().GetEnumerator();
         if (enumerator.MoveNext())
         {
-            return enumerator.Current;
+            // The header line may outlive the enumerator; make it owned to avoid pooled buffers being returned.
+            return enumerator.Current.ToOwned();
         }
         return null;
     }

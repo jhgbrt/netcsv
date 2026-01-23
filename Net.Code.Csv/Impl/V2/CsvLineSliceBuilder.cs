@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace Net.Code.Csv.Impl.V2;
 
 internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behaviour)
@@ -236,8 +238,16 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         }
 
         var bufferMemory = new ReadOnlyMemory<char>(_lineBuffer, 0, _lineLength);
-        var fieldArray = new CsvField[fields.Count];
-        for (var i = 0; i < fields.Count; i++)
+        var totalCount = fields.Count;
+        if (totalCount == 0)
+        {
+            var emptyLine = new CsvLineSlice(Array.Empty<CsvField>(), 0, lineIsEmpty, false);
+            PrepareNextLine();
+            return emptyLine;
+        }
+
+        var fieldArray = ArrayPool<CsvField>.Shared.Rent(totalCount);
+        for (var i = 0; i < totalCount; i++)
         {
             var field = fields[i];
             fieldArray[i] = field.IsNull
@@ -245,7 +255,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
                 : CsvField.FromBuffer(field.UseLineBuffer ? bufferMemory : field.Buffer, field.Start, field.Length);
         }
 
-        var line = new CsvLineSlice(fieldArray, lineIsEmpty);
+        var line = new CsvLineSlice(fieldArray, totalCount, lineIsEmpty, true);
 
         PrepareNextLine();
 

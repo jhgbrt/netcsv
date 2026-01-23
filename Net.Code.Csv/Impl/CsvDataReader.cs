@@ -72,6 +72,27 @@ internal class CsvDataReader : IDataReader
         return TryGetSpan(i, out var span) ? span.ToString() : null;
     }
 
+    internal T GetSchemaRaw<T>(int i)
+    {
+        var span = GetRawValueSpan(i, out var isNull);
+        if (isNull || span.Length == 0)
+        {
+            return default;
+        }
+
+        return (T)_schema[i].FromSpan(span);
+    }
+
+    internal T? GetSchemaNullableRaw<T>(int i) where T : struct
+    {
+        if (!TryGetSpan(i, out var span))
+        {
+            return null;
+        }
+
+        return (T)_schema[i].FromSpan(span);
+    }
+
     internal bool GetBooleanRaw(int i, string format)
     {
         var span = GetRawValueSpan(i, out _);

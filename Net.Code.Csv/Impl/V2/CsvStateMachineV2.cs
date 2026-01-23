@@ -46,6 +46,7 @@ namespace Net.Code.Csv.Impl.V2
         private ScanState _state;
         private CsvLineSlice _current;
         private bool _finished;
+        private bool _returnedCurrent;
 
         public LineEnumerator(CsvStateMachineV2 owner)
         {
@@ -68,6 +69,13 @@ namespace Net.Code.Csv.Impl.V2
                 return false;
             }
 
+            if (!_returnedCurrent)
+            {
+                // Return the previous line's pooled buffer once we advance.
+                _current.ReturnToPool();
+                _returnedCurrent = true;
+            }
+
             while (true)
             {
                 if (!_reader.TryGetSpan(out var span))
@@ -77,9 +85,12 @@ namespace Net.Code.Csv.Impl.V2
                     _finished = true;
                     if (_behaviour.EmptyLineAction == EmptyLineAction.Skip && finalLine.IsEmpty)
                     {
+                        // Empty lines don't escape; return their pooled storage immediately.
+                        finalLine.ReturnToPool();
                         return false;
                     }
                     _current = finalLine;
+                    _returnedCurrent = false;
                     return true;
                 }
 
@@ -400,9 +411,11 @@ namespace Net.Code.Csv.Impl.V2
             if (_behaviour.EmptyLineAction != EmptyLineAction.Skip || !line.IsEmpty)
             {
                 _current = line;
+                _returnedCurrent = false;
                 _reader.Advance(consumed);
                 return true;
             }
+            line.ReturnToPool();
             return false;
         }
 
@@ -410,6 +423,11 @@ namespace Net.Code.Csv.Impl.V2
 
         public void Dispose()
         {
+            if (!_returnedCurrent)
+            {
+                _current.ReturnToPool();
+                _returnedCurrent = true;
+            }
         }
     }
     }
