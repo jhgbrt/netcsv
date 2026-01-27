@@ -19,12 +19,10 @@ public record CsvBehaviour(
             /// <summary>
             /// What should happen when a quote is found inside a quoted field? (e.g. "123","x y "z" u","345")
             /// </summary>
-            QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore)
+            QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
+            
+            CsvParserKind Parser = CsvParserKind.Default)
 {
-    /// <summary>
-    /// Selects the parser implementation. Default uses environment/config selection.
-    /// </summary>
-    public CsvParserKind ParserKind { get; init; } = CsvParserKind.Default;
 
     /// <summary>
     /// The default behaviour of the Csv parser: trim unquoted fields,

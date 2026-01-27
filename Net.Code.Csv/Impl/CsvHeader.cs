@@ -6,7 +6,7 @@ namespace Net.Code.Csv.Impl;
 struct CsvHeader(string[] fields)
 {
     public readonly string[] Fields => fields;
-    public static CsvHeader None = new(Array.Empty<string>());
+    public static CsvHeader None = new([]);
     public static CsvHeader Default(int length) => new(Enumerable.Range(0, length).Select(i => $"Column{i}").ToArray());
     public static CsvHeader Create(string[] names) => new(names.Select((f, i) => string.IsNullOrWhiteSpace(f) ? $"Column{i}" : f).ToArray());
     public static CsvHeader Create(CsvLineSlice line)

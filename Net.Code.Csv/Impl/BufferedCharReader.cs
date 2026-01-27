@@ -46,6 +46,9 @@ internal sealed class BufferedCharReader
         return true;
     }
 
+    // Exposes the active read buffer so callers can create zero-copy slices.
+    // The array is reused on subsequent reads; callers must materialize slices
+    // before advancing past the current span.
     public ReadOnlyMemory<char> CurrentBuffer => _buffer.AsMemory(0, _length);
 
     public int CurrentIndex => _index;

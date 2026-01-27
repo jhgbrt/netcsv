@@ -12,7 +12,7 @@ internal readonly struct CsvLineSlice
     private readonly bool _isEmpty;
     private readonly bool _pooled;
 
-    public static readonly CsvLineSlice Empty = new(Array.Empty<CsvField>(), 0, true, false);
+    public static readonly CsvLineSlice Empty = new([], 0, true, false);
 
     internal CsvLineSlice(CsvField[] fields, bool isEmpty)
         : this(fields, fields?.Length ?? 0, isEmpty, false)
@@ -21,7 +21,7 @@ internal readonly struct CsvLineSlice
 
     internal CsvLineSlice(CsvField[] fields, int count, bool isEmpty, bool pooled)
     {
-        _fields = fields ?? Array.Empty<CsvField>();
+        _fields = fields ?? [];
         _count = count < 0 ? 0 : count;
         _isEmpty = isEmpty;
         _pooled = pooled;
@@ -74,7 +74,7 @@ internal readonly struct CsvLineSlice
     {
         if (_count == 0)
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         var result = new string[_count];

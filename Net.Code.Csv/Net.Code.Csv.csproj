@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <SignAssembly>False</SignAssembly>
     <Title>Net.Code.Csv</Title>
-    <Version>5.0.3</Version>
+    <Version>6.0.0</Version>
     <Copyright>Copyright 2010 Sébastien Loron, 2021 Jeroen Haegebaert</Copyright>
     <Description>.net library used for csv reading and writing.</Description>
     <Authors>Jeroen Haegebaert</Authors>
@@ -14,12 +14,12 @@
     <RepositoryUrl>https://github.com/jhgbrt/netcsv</RepositoryUrl>
     <PackageTags>csv</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <AssemblyVersion>5.0.3</AssemblyVersion>
-    <FileVersion>5.0.3</FileVersion>
+    <AssemblyVersion>6.0.0</AssemblyVersion>
+    <FileVersion>6.0.0</FileVersion>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0-rc.2.24473.5" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.2" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
   </ItemGroup>

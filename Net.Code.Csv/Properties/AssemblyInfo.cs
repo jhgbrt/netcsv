@@ -11,3 +11,4 @@ global using System.Linq;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Net.Code.Csv.Tests.Unit")]
+[assembly: InternalsVisibleTo("CsvTest")]

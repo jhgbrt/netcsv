@@ -6,7 +6,7 @@ internal static class CsvParserSelector
 
     internal static CsvParserKind GetKind(CsvBehaviour behaviour)
     {
-        var kind = behaviour?.ParserKind ?? CsvParserKind.Default;
+        var kind = behaviour?.Parser ?? CsvParserKind.Default;
         if (kind != CsvParserKind.Default)
         {
             return kind;

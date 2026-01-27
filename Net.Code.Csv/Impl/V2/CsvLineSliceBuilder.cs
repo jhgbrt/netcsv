@@ -23,6 +23,8 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
     private int _rawBufferCount;
     private int _rawBufferIndex;
 
+    // Holds a reference to the reader's current buffer for zero-copy fields.
+    // Must be materialized before the reader advances and reuses the array.
     private ReadOnlyMemory<char> _directBuffer;
     private int _directStart;
     private int _directLength;
@@ -241,7 +243,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         var totalCount = fields.Count;
         if (totalCount == 0)
         {
-            var emptyLine = new CsvLineSlice(Array.Empty<CsvField>(), 0, lineIsEmpty, false);
+            var emptyLine = new CsvLineSlice([], 0, lineIsEmpty, false);
             PrepareNextLine();
             return emptyLine;
         }
@@ -293,6 +295,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return false;
         }
 
+        // Track the buffer identity so we can later materialize if it is reused.
         _directBuffer = buffer;
         _directStart = start;
         _directLength = length;

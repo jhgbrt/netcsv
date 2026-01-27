@@ -84,7 +84,9 @@ public class ReadCsvTests
     [Fact]
     public void QuotedStringField_IsReadAsString()
     {
-        var data = "\"x\"";
+        var data = """
+            "x"
+            """;
         var result = Read(data);
         Assert.Equal(new string[] { "x" }, result);
     }
@@ -92,38 +94,52 @@ public class ReadCsvTests
     [Fact]
     public void QuotedStringCanContainNewline()
     {
-        var data = "\"x\r\n\"";
+        var data = """
+            "x
+            "
+            """;
         var result = Read(data);
-        Assert.Equal(new string[] { "x\r\n" }, result);
+        Assert.Equal(new string[] { """
+            x
+
+            """ }, result);
     }
 
     [Fact]
     public void QuotedStringCanContainEscapedQuote()
     {
-        var data = "\"a\"\"b\"";
+        var data = """
+            "a""b"
+            """;
         var result = Read(data);
-        Assert.Equal(new string[] { "a\"b" }, result);
+        Assert.Equal(["a\"b"], result);
     }
 
     [Fact]
     public void QuotedString_WhenUnescapedQuoteEncounterd_AndShouldIgnore_ThenFieldContainsQuote()
     {
-        var data = "\"a\"b\"";
+        var data = """
+            "a"b"
+            """;
         var result = Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore);
-        Assert.Equal(new string[] { "a\"b" }, result);
+        Assert.Equal(["a\"b"], result);
     }
     [Fact]
     public void QuotedString_WhenUnescapedQuoteEncounterd_AndShouldThrow_ThenThrows()
     {
-        var data = "\"a\"b\"";
+        var data = """
+            "a"b"
+            """;
         Assert.Throws<MalformedCsvException>(() => Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException));
     }
     [Fact]
     public void QuotedString_WhenUnescapedQuoteEncounterd_AndAdvanceToNextLine_ThenIgnoresRestOfField()
     {
-        var data = "\"a\"b\"";
+        var data = """
+            "a"b"
+            """;
         var result = Read(data, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine);
-        Assert.Equal(new string[] { "a" }, result);
+        Assert.Equal(["a"], result);
     }
 
     [Fact]
@@ -131,7 +147,7 @@ public class ReadCsvTests
     {
         var data = "#whatever";
         var result = Read(data);
-        Assert.Equal(new string[] { "" }, result);
+        Assert.Equal([string.Empty], result);
     }
 
     [Fact]
@@ -139,27 +155,42 @@ public class ReadCsvTests
     {
         var data = "a,b";
         var result = Read(data);
-        Assert.Equal(new string[] { "a", "b" }, result);
+        Assert.Equal(["a", "b"], result);
     }
     [Fact]
     public void TwoFields_FirstFieldWithNewLine()
     {
-        var data = "\"a\r\n\",b";
+        var data = """
+            "a
+            ",b
+            """;
         var result = Read(data);
-        Assert.Equal(new string[] { "a\r\n", "b" }, result);
+        Assert.Equal(["""
+            a
+
+            """, "b"], result);
     }
     [Fact]
     public void TwoFields_SecondFieldWithQuotes()
     {
-        var data = "\"a\r\n\",\"b\"";
+        var data = """
+            "a
+            ","b"
+            """;
         var result = Read(data);
-        Assert.Equal(new string[] { "a\r\n", "b" }, result);
+        Assert.Equal(["""
+            a
+
+            """, "b"], result);
     }
     [Fact]
-    public void TwoLines()
+    public void TwoEmptyLines_ResultInEmptyResult()
     {
-        var data = "\r\n";
+        var data = """
+
+
+            """;
         var result = Read(data);
-        Assert.Equal(Array.Empty<string>(), result);
+        Assert.Empty(result);
     }
 }
