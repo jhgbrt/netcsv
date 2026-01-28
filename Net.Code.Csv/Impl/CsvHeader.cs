@@ -34,9 +34,9 @@ struct CsvHeader(string[] fields)
     {
         if (name is null) throw new ArgumentNullException(nameof(name));
         index = -1;
-        foreach (var (f, i) in fields.WithIndex())
+        for (int i = 0; i < fields.Length; i++)
         {
-            if (f == name)
+            if (fields[i] == name)
             {
                 index = i;
                 return true;
