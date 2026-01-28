@@ -179,7 +179,10 @@ namespace Net.Code.Csv.Impl.V2
                                     var idx = slice.IndexOfAny(_layout.Delimiter, '\n', '\r');
                                     if (idx < 0)
                                     {
-                                        _builder.AddToField(slice);
+                                        if (!_builder.TrySetDirectSlice(buffer, baseIndex + i, slice.Length))
+                                        {
+                                            _builder.AddToField(slice);
+                                        }
                                         _builder.AdvanceSpan(slice);
                                         i = span.Length;
                                         break;

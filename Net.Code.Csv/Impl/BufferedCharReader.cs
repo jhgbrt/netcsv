@@ -14,7 +14,7 @@ internal sealed class BufferedCharReader
     private int _index;
     private int _length;
 
-    private const int DefaultBufferSize = 4096;
+    private const int DefaultBufferSize = 16384;
 
     public BufferedCharReader(TextReader reader, int bufferSize = DefaultBufferSize)
     {

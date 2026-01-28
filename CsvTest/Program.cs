@@ -15,7 +15,36 @@ using Net.Code.Csv;
 using Net.Code.Csv.Impl;
 using nietras.SeparatedValues;
 
+
+if (args.Contains("--profile-v2", StringComparer.OrdinalIgnoreCase))
+{
+    Console.WriteLine("Running profiler modus");
+    RunProfilerWorkload(CsvBenchmarkParser.NetCodeCsvV2);
+    return;
+}
+
 BenchmarkSwitcher.FromAssembly(typeof(CsvReaderBenchmark).Assembly).Run(args);
+
+static void RunProfilerWorkload(CsvBenchmarkParser parser)
+{
+    var bench = new CsvReaderBenchmark
+    {
+        ParserKind = parser,
+        Rows = 100000
+    };
+
+    bench.Setup();
+    try
+    {
+        _ = bench.ReadDataReader();
+        //_ = bench.ReadTypedRecords();
+        //_ = bench.ReadWithoutHeaders();
+    }
+    finally
+    {
+        bench.Cleanup();
+    }
+}
 
 public enum CsvBenchmarkParser
 {
@@ -33,9 +62,10 @@ public class CsvReaderBenchmark
     private static readonly CsvHelperCustomConverter CsvHelperCustomConverterInstance = new();
 
     [Params(CsvBenchmarkParser.NetCodeCsvV1, CsvBenchmarkParser.NetCodeCsvV2, CsvBenchmarkParser.CsvHelper, CsvBenchmarkParser.Sep)]
+    //[Params(CsvBenchmarkParser.NetCodeCsvV2)]
     public CsvBenchmarkParser ParserKind { get; set; }
 
-    [Params(1_000, 100_000)]
+    [Params(10000)]
     public int Rows { get; set; }
 
     private string _tempFile = string.Empty;

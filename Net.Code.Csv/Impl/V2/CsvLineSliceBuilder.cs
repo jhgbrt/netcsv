@@ -312,7 +312,14 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         }
 
         _location = _location with { Column = _location.Column + span.Length };
-        AppendRaw(span);
+        if (span.Length <= RawWindowSize)
+        {
+            AppendRaw(span);
+        }
+        else if (RawWindowSize > 0)
+        {
+            AppendRaw(span[^RawWindowSize..]);
+        }
         return this;
     }
 

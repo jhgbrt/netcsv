@@ -18,6 +18,17 @@ internal class CsvDataReader : IDataReader
     private readonly CsvLayout _layout;
     private readonly CsvBehaviour _behaviour;
     private readonly BufferedCharReader _charReader;
+    private readonly CsvSpanConverter<bool> _booleanConverter;
+    private readonly CsvSpanConverter<byte> _byteConverter;
+    private readonly CsvSpanConverter<char> _charConverter;
+    private readonly CsvSpanConverter<Guid> _guidConverter;
+    private readonly CsvSpanConverter<short> _int16Converter;
+    private readonly CsvSpanConverter<int> _int32Converter;
+    private readonly CsvSpanConverter<long> _int64Converter;
+    private readonly CsvSpanConverter<float> _singleConverter;
+    private readonly CsvSpanConverter<double> _doubleConverter;
+    private readonly CsvSpanConverter<decimal> _decimalConverter;
+    private readonly CsvSpanConverter<DateTime> _dateTimeConverter;
     private CsvHeader _header => _parser.Header;
     private CsvLineSlice _line;
     private ICsvParser _parser;
@@ -34,6 +45,17 @@ internal class CsvDataReader : IDataReader
         _behaviour = csvBehaviour;
         _charReader = new BufferedCharReader(reader);
         _converter = new Converter(cultureInfo ?? CultureInfo.InvariantCulture);
+        _booleanConverter = _converter.ToBoolean;
+        _byteConverter = _converter.ToByte;
+        _charConverter = _converter.ToChar;
+        _guidConverter = _converter.ToGuid;
+        _int16Converter = _converter.ToInt16;
+        _int32Converter = _converter.ToInt32;
+        _int64Converter = _converter.ToInt64;
+        _singleConverter = _converter.ToSingle;
+        _doubleConverter = _converter.ToDouble;
+        _decimalConverter = _converter.ToDecimal;
+        _dateTimeConverter = _converter.ToDateTime;
         _schemas = _layout.Schemas.GetEnumerator();
         InitializeResultSet();
     }
@@ -74,8 +96,9 @@ internal class CsvDataReader : IDataReader
 
     internal T GetSchemaRaw<T>(int i)
     {
-        var span = GetRawValueSpan(i, out var isNull);
-        if (isNull || span.Length == 0)
+        var field = GetField(i);
+        var span = field.Span;
+        if (field.IsNull || span.Length == 0)
         {
             return default;
         }
@@ -91,218 +114,6 @@ internal class CsvDataReader : IDataReader
         }
 
         return (T)_schema[i].FromSpan(span);
-    }
-
-    internal bool GetBooleanRaw(int i, string format)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return format is null ? _converter.ToBoolean(span) : _converter.ToBoolean(span, format);
-    }
-
-    internal bool? GetBooleanNullableRaw(int i, string format)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return format is null ? _converter.ToBoolean(span) : _converter.ToBoolean(span, format);
-    }
-
-    internal DateTime GetDateTimeRaw(int i, string format)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToDateTime(span, format);
-    }
-
-    internal DateTime? GetDateTimeNullableRaw(int i, string format)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToDateTime(span, format);
-    }
-
-    internal DateTimeOffset GetDateTimeOffsetRaw(int i, string format)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToDateTimeOffset(span, format);
-    }
-
-    internal DateTimeOffset? GetDateTimeOffsetNullableRaw(int i, string format)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToDateTimeOffset(span, format);
-    }
-
-    internal Guid GetGuidRaw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToGuid(span);
-    }
-
-    internal Guid? GetGuidNullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToGuid(span);
-    }
-
-    internal char GetCharRaw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToChar(span);
-    }
-
-    internal char? GetCharNullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToChar(span);
-    }
-
-    internal byte GetByteRaw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToByte(span);
-    }
-
-    internal byte? GetByteNullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToByte(span);
-    }
-
-    internal sbyte GetSByteRaw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToSByte(span);
-    }
-
-    internal sbyte? GetSByteNullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToSByte(span);
-    }
-
-    internal short GetInt16Raw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToInt16(span);
-    }
-
-    internal short? GetInt16NullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToInt16(span);
-    }
-
-    internal int GetInt32Raw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToInt32(span);
-    }
-
-    internal int? GetInt32NullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToInt32(span);
-    }
-
-    internal long GetInt64Raw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToInt64(span);
-    }
-
-    internal long? GetInt64NullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToInt64(span);
-    }
-
-    internal ushort GetUInt16Raw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToUInt16(span);
-    }
-
-    internal ushort? GetUInt16NullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToUInt16(span);
-    }
-
-    internal uint GetUInt32Raw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToUInt32(span);
-    }
-
-    internal uint? GetUInt32NullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToUInt32(span);
-    }
-
-    internal ulong GetUInt64Raw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToUInt64(span);
-    }
-
-    internal ulong? GetUInt64NullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToUInt64(span);
-    }
-
-    internal float GetSingleRaw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToSingle(span);
-    }
-
-    internal float? GetSingleNullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToSingle(span);
-    }
-
-    internal double GetDoubleRaw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToDouble(span);
-    }
-
-    internal double? GetDoubleNullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToDouble(span);
-    }
-
-    internal decimal GetDecimalRaw(int i)
-    {
-        var span = GetRawValueSpan(i, out _);
-        return _converter.ToDecimal(span);
-    }
-
-    internal decimal? GetDecimalNullableRaw(int i)
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return _converter.ToDecimal(span);
-    }
-
-    internal T GetCustomRaw<T>(int i)
-    {
-        var span = GetRawValueSpan(i, out var isNull);
-        if (isNull || span.Length == 0)
-        {
-            if (typeof(T).IsValueType)
-            {
-                return (T)_converter.FromSpan(typeof(T), span);
-            }
-            return default;
-        }
-        return (T)_converter.FromSpan(typeof(T), span);
-    }
-
-    internal T? GetCustomNullableRaw<T>(int i) where T : struct
-    {
-        if (!TryGetSpan(i, out var span)) return null;
-        return (T)_converter.FromSpan(typeof(T), span);
     }
 
     public string GetName(int i) => _schema?.GetName(i) ?? _header[i];
@@ -367,8 +178,8 @@ internal class CsvDataReader : IDataReader
         return index;
     }
 
-    public bool GetBoolean(int i) => GetValue(i, _converter.ToBoolean);
-    public byte GetByte(int i) => GetValue(i, _converter.ToByte);
+    public bool GetBoolean(int i) => GetValue(i, _booleanConverter);
+    public byte GetByte(int i) => GetValue(i, _byteConverter);
 
     public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferOffset, int length)
     {
@@ -386,7 +197,7 @@ internal class CsvDataReader : IDataReader
         return copied;
     }
 
-    public char GetChar(int i) => GetValue(i, _converter.ToChar);
+    public char GetChar(int i) => GetValue(i, _charConverter);
 
     public long GetChars(int i, long fieldOffset, char[] buffer, int bufferOffset, int length)
     {
@@ -403,23 +214,23 @@ internal class CsvDataReader : IDataReader
         return copied;
     }
 
-    public Guid GetGuid(int i) => GetValue(i, _converter.ToGuid);
+    public Guid GetGuid(int i) => GetValue(i, _guidConverter);
 
-    public short GetInt16(int i) => GetValue(i, _converter.ToInt16);
+    public short GetInt16(int i) => GetValue(i, _int16Converter);
 
-    public int GetInt32(int i) => GetValue(i, _converter.ToInt32);
+    public int GetInt32(int i) => GetValue(i, _int32Converter);
 
-    public long GetInt64(int i) => GetValue(i, _converter.ToInt64);
+    public long GetInt64(int i) => GetValue(i, _int64Converter);
 
-    public float GetFloat(int i) => GetValue(i, _converter.ToSingle);
+    public float GetFloat(int i) => GetValue(i, _singleConverter);
 
-    public double GetDouble(int i) => GetValue(i, _converter.ToDouble);
+    public double GetDouble(int i) => GetValue(i, _doubleConverter);
 
     public string GetString(int i) => GetValue(i, s => s.ToString());
 
-    public decimal GetDecimal(int i) => GetValue(i, _converter.ToDecimal);
+    public decimal GetDecimal(int i) => GetValue(i, _decimalConverter);
 
-    public DateTime GetDateTime(int i) => GetValue(i, _converter.ToDateTime);
+    public DateTime GetDateTime(int i) => GetValue(i, _dateTimeConverter);
 
     IDataReader IDataRecord.GetData(int i) => i == 0 ? this : null;
 
@@ -433,9 +244,33 @@ internal class CsvDataReader : IDataReader
 
     private T GetValue<T>(int i, CsvSpanConverter<T> convert)
     {
-        var value = GetValue(i);
-        if (value is T t) return t;
-        return convert(((string)value).AsSpan());
+        var span = GetRawValueSpan(i, out var isnull);
+
+        if (_schema is not null)
+        {
+            if (isnull || span.Length == 0)
+            {
+                return default;
+            }
+
+            var column = _schema[i];
+            if (column.Type == typeof(string) && typeof(T) != typeof(string))
+            {
+                return convert(span);
+            }
+
+            var schemaValue = column.FromSpan(span);
+            if (schemaValue is T schemaValueTyped2) return schemaValueTyped2;
+            return convert(((string)schemaValue).AsSpan());
+        }
+        else if (isnull)
+        {
+            var value = GetValue(i);
+            if (value is T rawValueTyped) return rawValueTyped;
+            return convert(((string)value).AsSpan());
+        }
+
+        return convert(span);
     }
 
     public void Dispose()
