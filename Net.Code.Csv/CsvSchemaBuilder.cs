@@ -4,6 +4,8 @@ namespace Net.Code.Csv;
 
 public record CsvSchema(IList<CsvColumn> Columns)
 {
+    private string _signature;
+
     public CsvColumn this[int i] => Columns[i];
     public string GetName(int i) => Columns[i].Name;
     public int GetOrdinal(string name)
@@ -13,6 +15,38 @@ public record CsvSchema(IList<CsvColumn> Columns)
             if (Columns[i].Name == name) return i;
         }
         return -1;
+    }
+
+    // Cached structural signature used for activator caching; avoids rebuilding schema metadata per call.
+    internal string Signature
+    {
+        get
+        {
+            if (_signature != null)
+            {
+                return _signature;
+            }
+
+            var columns = Columns;
+            var builder = new StringBuilder(columns.Count * 32);
+            for (var i = 0; i < columns.Count; i++)
+            {
+                var column = columns[i];
+                builder.Append(column.Name)
+                    .Append('|')
+                    .Append(column.PropertyName)
+                    .Append('|')
+                    .Append(column.Type.FullName)
+                    .Append('|')
+                    .Append(column.AllowNull)
+                    .Append('|')
+                    .Append(column.Format)
+                    .Append(';');
+            }
+
+            _signature = builder.ToString();
+            return _signature;
+        }
     }
 }
 

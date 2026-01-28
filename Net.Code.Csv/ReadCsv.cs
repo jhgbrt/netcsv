@@ -243,21 +243,31 @@ public static class ReadCsv
         CultureInfo cultureInfo = null)
     {
         var schema = new CsvSchemaBuilder(cultureInfo).From<T>().Schema;
-        return FromFile(
-                path,
-                encoding,
-                quote,
-                delimiter,
-                escape,
-                comment,
-                hasHeaders,
-                trimmingOptions,
-                missingFieldAction,
-                emptyLineAction,
-                quotesInsideQuotedFieldAction,
-                schema,
-                cultureInfo)
-            .AsEnumerable<T>();
+        var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
+        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
+        var stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            FileOptions.SequentialScan);
+
+        var effectiveEncoding = encoding;
+        var detectBom = false;
+
+        if (effectiveEncoding == null)
+        {
+            effectiveEncoding = DetectEncoding(stream);
+            detectBom = true;
+        }
+        else if (effectiveEncoding == Encoding.UTF8)
+        {
+            detectBom = true;
+        }
+
+        var reader = new StreamReader(stream, effectiveEncoding, detectBom, bufferSize: 32 * 1024);
+        return FromReader<T>(reader, layout, behaviour, schema, cultureInfo);
     }
 
     /// <summary>
@@ -292,21 +302,26 @@ public static class ReadCsv
         CultureInfo cultureInfo = null)
     {
         var schema = new CsvSchemaBuilder(cultureInfo).From<T>().Schema;
-        return FromStream(
-                stream,
-                encoding,
-                quote,
-                delimiter,
-                escape,
-                comment,
-                hasHeaders,
-                trimmingOptions,
-                missingFieldAction,
-                emptyLineAction,
-                quotesInsideQuotedFieldAction,
-                schema,
-                cultureInfo)
-            .AsEnumerable<T>();
+        if (stream == null)
+            throw new ArgumentNullException(nameof(stream));
+
+        var effectiveEncoding = encoding;
+        var detectBom = false;
+
+        if (effectiveEncoding == null)
+        {
+            effectiveEncoding = DetectEncoding(stream);
+            detectBom = true;
+        }
+        else if (effectiveEncoding == Encoding.UTF8)
+        {
+            detectBom = true;
+        }
+
+        var reader = new StreamReader(stream, effectiveEncoding, detectBom, 1024, true);
+        var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
+        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
+        return FromReader<T>(reader, layout, behaviour, schema, cultureInfo);
     }
 
    
@@ -340,21 +355,14 @@ public static class ReadCsv
         CultureInfo cultureInfo = null)
     {
         var schema = new CsvSchemaBuilder(cultureInfo).From<T>().Schema;
-        return FromString(
-                input,
-                quote,
-                delimiter,
-                escape,
-                comment,
-                hasHeaders,
-                trimmingOptions,
-                missingFieldAction,
-                emptyLineAction,
-                quotesInsideQuotedFieldAction,
-                schema,
-                cultureInfo)
-            .AsEnumerable<T>();
+        var reader = new StringReader(input);
+        var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
+        var behaviour = new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
+        return FromReader<T>(reader, layout, behaviour, schema, cultureInfo);
     }
+
+    internal static IEnumerable<T> FromReader<T>(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, CsvSchema schema, CultureInfo cultureInfo = null)
+        => TypedRowEnumerable.FromReader<T>(reader, csvLayout, csvBehaviour, schema, cultureInfo);
 
     internal static IDataReader FromReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, CultureInfo cultureInfo = null)
         => new CsvDataReader(reader, csvLayout, csvBehaviour, cultureInfo);

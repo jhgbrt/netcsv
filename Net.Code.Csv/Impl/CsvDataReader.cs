@@ -38,6 +38,8 @@ internal class CsvDataReader : IDataReader
     private CsvSchema _schema;
     private bool _eof;
     internal CsvSchema Schema => _schema;
+    internal CsvHeader Header => _header;
+    internal CsvLineSlice CurrentLine => _line;
     public CsvDataReader(TextReader reader, CsvLayout csvLayout, CsvBehaviour csvBehaviour, CultureInfo cultureInfo)
     {
         _reader = reader;

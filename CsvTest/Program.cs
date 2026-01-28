@@ -37,8 +37,8 @@ static void RunProfilerWorkload(CsvBenchmarkParser parser)
     try
     {
         _ = bench.ReadDataReader();
-        //_ = bench.ReadTypedRecords();
-        //_ = bench.ReadWithoutHeaders();
+        _ = bench.ReadTypedRecords();
+        _ = bench.ReadWithoutHeaders();
     }
     finally
     {
@@ -142,17 +142,28 @@ public class CsvReaderBenchmark
         {
             return ReadTypedRecordsSep();
         }
-
-        var layout = new CsvLayout(Delimiter: Separator, HasHeaders: true, Schema: _schema);
-        var behaviour = new CsvBehaviour(Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2);
-        using var reader = GetReader(layout, behaviour);
-
-        decimal total = 0;
-        foreach (var item in reader.AsEnumerable<MyItem>())
+        if (ParserKind == CsvBenchmarkParser.NetCodeCsvV2)
         {
-            total += item.Price;
+            decimal total = 0;
+            foreach (var item in ReadCsv.FromFile<MyItem>(_tempFile, delimiter: Separator, hasHeaders: true))
+            {
+                total += item.Price;
+            }
+            return total;
         }
-        return total;
+        else
+        {
+            var layout = new CsvLayout(Delimiter: Separator, HasHeaders: true, Schema: _schema);
+            var behaviour = new CsvBehaviour(Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2);
+            using var reader = GetReader(layout, behaviour);
+
+            decimal total = 0;
+            foreach (var item in reader.AsEnumerable<MyItem>())
+            {
+                total += item.Price;
+            }
+            return total;
+        }
     }
 
     [Benchmark(Description = "No headers / layout detection")]

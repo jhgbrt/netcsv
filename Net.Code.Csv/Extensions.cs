@@ -7,13 +7,6 @@ public static class Extensions
 {
     private static readonly Dictionary<ActivatorCacheKey, Func<CsvDataReader, object>> FastActivatorCache = new();
 
-    private readonly record struct PropertyMapping(
-        PropertyInfo Property,
-        string ColumnName,
-        int SchemaOrdinal,
-        string Format,
-        bool AllowNull);
-
     static Func<IDataRecord, T> GetActivator<T>(CsvSchema schema)
     {
         var type = typeof(T);
@@ -38,7 +31,7 @@ public static class Extensions
         return record => record is CsvDataReader reader ? fastActivator(reader) : slowActivator(record);
     }
 
-    private static Func<IDataRecord, object> BuildSlowActivator(Type type, PropertyMapping[] mappings, PropertyInfo[] properties)
+    private static Func<IDataRecord, object> BuildSlowActivator(Type type, ActivatorPropertyMapping[] mappings, PropertyInfo[] properties)
     {
         int[] ordinals = null;
         int[] EnsureOrdinals(IDataRecord record)
@@ -97,7 +90,7 @@ public static class Extensions
         };
     }
 
-    private static Func<CsvDataReader, object> GetOrBuildFastActivator(Type type, CsvSchema schema, PropertyMapping[] mappings, PropertyInfo[] properties)
+    private static Func<CsvDataReader, object> GetOrBuildFastActivator(Type type, CsvSchema schema, ActivatorPropertyMapping[] mappings, PropertyInfo[] properties)
     {
         if (mappings.Length == 0)
         {
@@ -127,7 +120,7 @@ public static class Extensions
         return built;
     }
 
-    private static Func<CsvDataReader, object> TryBuildFastActivator(Type type, PropertyMapping[] mappings, PropertyInfo[] properties)
+    private static Func<CsvDataReader, object> TryBuildFastActivator(Type type, ActivatorPropertyMapping[] mappings, PropertyInfo[] properties)
     {
         if (mappings.Length == 0)
         {
@@ -176,7 +169,7 @@ public static class Extensions
         return Expression.Lambda<Func<CsvDataReader, object>>(block, readerParameter).Compile();
     }
 
-    private static Expression BuildValueExpression(ParameterExpression reader, PropertyMapping mapping)
+    private static Expression BuildValueExpression(ParameterExpression reader, ActivatorPropertyMapping mapping)
     {
         var propertyType = mapping.Property.PropertyType;
         var underlyingType = propertyType.GetUnderlyingType();
@@ -198,62 +191,16 @@ public static class Extensions
         return Expression.Call(reader, schemaMethod, ordinalExpression);
     }
 
-    private static PropertyMapping[] GetPropertyMappings(Type type, CsvSchema schema)
-    {
-        var columns = schema.Columns;
-        var byPropertyName = new Dictionary<string, (string columnName, int ordinal, string format, bool allowNull)>(columns.Count, StringComparer.Ordinal);
-        for (var i = 0; i < columns.Count; i++)
-        {
-            var column = columns[i];
-            byPropertyName[column.PropertyName] = (column.Name, i, column.Format, column.AllowNull);
-        }
-
-        var formatByPropertyName = type.GetPropertiesWithCsvFormat().ToDictionary(x => x.property.Name, x => x.format, StringComparer.Ordinal);
-        var properties = type.GetProperties();
-        var mappings = new List<PropertyMapping>(properties.Length);
-        foreach (var property in properties)
-        {
-            if (byPropertyName.TryGetValue(property.Name, out var match))
-            {
-                formatByPropertyName.TryGetValue(property.Name, out var format);
-                mappings.Add(new PropertyMapping(property, match.columnName, match.ordinal, match.format ?? format, match.allowNull));
-            }
-        }
-
-        return [.. mappings];
-    }
+    private static ActivatorPropertyMapping[] GetPropertyMappings(Type type, CsvSchema schema)
+        => ActivatorMapping.GetMappings(type, schema);
 
     private readonly record struct ActivatorCacheKey(Type Type, string Signature)
     {
-        public static ActivatorCacheKey Create(Type type, CsvSchema schema, PropertyMapping[] mappings)
+        public static ActivatorCacheKey Create(Type type, CsvSchema schema, ActivatorPropertyMapping[] mappings)
         {
-            var columns = schema.Columns;
-            var builder = new StringBuilder(columns.Count * 32);
-            for (var i = 0; i < columns.Count; i++)
-            {
-                var column = columns[i];
-                builder.Append(column.Name)
-                    .Append('|')
-                    .Append(column.PropertyName)
-                    .Append('|')
-                    .Append(column.Type.FullName)
-                    .Append('|')
-                    .Append(column.AllowNull)
-                    .Append('|')
-                    .Append(column.Format)
-                    .Append(';');
-            }
-
-            builder.Append('#');
-            for (var i = 0; i < mappings.Length; i++)
-            {
-                builder.Append(mappings[i].Property.Name)
-                    .Append('|')
-                    .Append(mappings[i].Format)
-                    .Append(';');
-            }
-
-            return new ActivatorCacheKey(type, builder.ToString());
+            // Signature captures schema + property/format mapping, so the cached activator is only reused when safe.
+            var signature = ActivatorMapping.BuildSignature(schema, mappings);
+            return new ActivatorCacheKey(type, signature);
         }
     }
 
@@ -278,7 +225,16 @@ public static class Extensions
 
     public static IEnumerable<T> AsEnumerable<T>(this IDataReader reader)
     {
-        CsvSchema schema = reader is CsvDataReader r ? r.Schema : Schema.From<T>();
+        if (reader is CsvDataReader csvReader)
+        {
+            foreach (var item in TypedRowEnumerable.FromDataReader<T>(csvReader))
+            {
+                yield return item;
+            }
+            yield break;
+        }
+
+        CsvSchema schema = Schema.From<T>();
         var activator = GetActivator<T>(schema);
         while (reader.Read())
         {
