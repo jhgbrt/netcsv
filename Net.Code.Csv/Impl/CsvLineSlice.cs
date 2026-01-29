@@ -106,6 +106,12 @@ internal readonly struct CsvLineSlice
             return;
         }
 
-        ArrayPool<CsvField>.Shared.Return(_fields, clearArray: true);
+        if (_count > 0)
+        {
+            // Clear only the populated portion; the remainder may already contain stale data
+            // from previous rentals and does not need to be zeroed for correctness.
+            Array.Clear(_fields, 0, _count);
+        }
+        ArrayPool<CsvField>.Shared.Return(_fields, clearArray: false);
     }
 }

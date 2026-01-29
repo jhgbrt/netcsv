@@ -111,16 +111,15 @@ namespace Net.Code.Csv.Impl.V2
                                     // - delimiter => empty field
                                     // - other => start unquoted field
                                     var c = span[i];
-                                    var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                                     if (c == '\r')
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         i++;
                                         break;
                                     }
                                     if (c == '\n')
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         var line = _builder.ToLine();
                                         owner.FieldCount = _builder.FieldCount;
                                         if (ShouldReturn(line, i + 1))
@@ -132,14 +131,14 @@ namespace Net.Code.Csv.Impl.V2
                                     }
                                     if (c == _layout.Comment)
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         _state = ScanState.InComment;
                                         i++;
                                         break;
                                     }
                                     if (c == _layout.Quote)
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         _builder.MarkQuoted();
                                         _state = ScanState.InsideQuotedField;
                                         i++;
@@ -147,7 +146,7 @@ namespace Net.Code.Csv.Impl.V2
                                     }
                                     if (c == _layout.Delimiter)
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         _builder.NextField();
                                         _state = ScanState.OutsideField;
                                         i++;
@@ -163,7 +162,6 @@ namespace Net.Code.Csv.Impl.V2
                                     // Comment line: ignore everything until newline ends the comment.
                                     // Carriage returns are ignored to support CRLF.
                                     var c = span[i];
-                                    var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                                     if (c == '\r')
                                     {
                                         i++;
@@ -208,7 +206,7 @@ namespace Net.Code.Csv.Impl.V2
                                     }
 
                                     var c = span[i];
-                                    _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
+                                    _builder.SetCurrent(c);
                                     if (c == '\r')
                                     {
                                         i++;
@@ -244,16 +242,15 @@ namespace Net.Code.Csv.Impl.V2
                                     // After a delimiter: decide if the next field is quoted, empty, or unquoted.
                                     // Whitespace is tentative and only committed for unquoted fields.
                                     var c = span[i];
-                                    var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                                     if (c == '\r')
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         i++;
                                         break;
                                     }
                                     if (c == '\n')
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         _builder.AcceptTentative().NextField();
                                         var line = _builder.ToLine();
                                         owner.FieldCount = _builder.FieldCount;
@@ -267,7 +264,7 @@ namespace Net.Code.Csv.Impl.V2
                                     }
                                     if (c == _layout.Quote)
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         _builder.MarkQuoted().DiscardTentative();
                                         _state = ScanState.InsideQuotedField;
                                         i++;
@@ -275,7 +272,7 @@ namespace Net.Code.Csv.Impl.V2
                                     }
                                     if (c == _layout.Delimiter)
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         _builder.AcceptTentative().NextField();
                                         _state = ScanState.OutsideField;
                                         i++;
@@ -283,7 +280,7 @@ namespace Net.Code.Csv.Impl.V2
                                     }
                                     if (char.IsWhiteSpace(c))
                                     {
-                                        _builder.SetCurrent(c, next);
+                                        _builder.SetCurrent(c);
                                         _builder.AddToTentative();
                                         i++;
                                         break;
@@ -299,7 +296,7 @@ namespace Net.Code.Csv.Impl.V2
                                     // Escape sequence inside a quoted field: take the next char verbatim
                                     // and return to InsideQuotedField.
                                     var c = span[i];
-                                    _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
+                                    _builder.SetCurrent(c);
                                     _builder.AddToField();
                                     _state = ScanState.InsideQuotedField;
                                     i++;
@@ -357,7 +354,7 @@ namespace Net.Code.Csv.Impl.V2
                                     // Delimiter/newline => end field/line; quote => literal quote;
                                     // whitespace stays tentative; other => quote-in-field or error.
                                     var c = span[i];
-                                    _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
+                                    _builder.SetCurrent(c);
                                     if (c == _layout.Delimiter)
                                     {
                                         _builder.DiscardTentative().NextField();
@@ -411,7 +408,7 @@ namespace Net.Code.Csv.Impl.V2
                                 {
                                     // Parse error: ignore until newline, then recover at beginning of line.
                                     var c = span[i];
-                                    _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
+                                    _builder.SetCurrent(c);
                                     if (c == '\n')
                                     {
                                         _builder.PrepareNextLine();

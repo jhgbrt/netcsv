@@ -32,7 +32,11 @@ public class CsvWriterBenchmark
                 new Custom($"Last{i}"),
                 startDate.AddDays(i % 3650),
                 i % 100,
-                i * 1.23m));
+                i * 1.23m,
+                $"Lorem ipsum {i}",
+                i,
+                i * 0.5,
+                TimeSpan.FromSeconds(i % 3600)));
         }
     }
 

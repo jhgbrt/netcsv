@@ -22,6 +22,10 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
     private readonly char[] _rawBuffer = new char[RawWindowSize];
     private int _rawBufferCount;
     private int _rawBufferIndex;
+    private int _directFieldCount;
+    private readonly bool _trimAll = behaviour.TrimmingOptions == ValueTrimmingOptions.All;
+    private readonly bool _trimQuoted = behaviour.TrimmingOptions == ValueTrimmingOptions.QuotedOnly;
+    private readonly bool _trimUnquoted = behaviour.TrimmingOptions == ValueTrimmingOptions.UnquotedOnly;
 
     // Holds a reference to the reader's current buffer for zero-copy fields.
     // Must be materialized before the reader advances and reuses the array.
@@ -72,6 +76,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         _quoted = false;
         _fieldStarted = false;
         _fieldStart = 0;
+        _directFieldCount = 0;
         _location = _location.NextLine();
         return this;
     }
@@ -145,13 +150,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         if (_usingDirectSlice)
         {
             var directRange = _directRange;
-            var shouldTrimDirect = behaviour.TrimmingOptions switch
-            {
-                ValueTrimmingOptions.All => true,
-                ValueTrimmingOptions.QuotedOnly when _quoted => true,
-                ValueTrimmingOptions.UnquotedOnly when !_quoted => true,
-                _ => false
-            };
+            var shouldTrimDirect = _trimAll || (_trimQuoted && _quoted) || (_trimUnquoted && !_quoted);
 
             if (shouldTrimDirect)
             {
@@ -159,6 +158,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             }
 
             _fields.Add(new FieldSliceInfo(_directBuffer, directRange, false, false));
+            _directFieldCount++;
             _quoted = false;
             _fieldStarted = false;
             _usingDirectSlice = false;
@@ -170,13 +170,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
         var range = _fieldStarted ? _fieldStart.._lineLength : _lineLength.._lineLength;
 
-        var shouldTrim = behaviour.TrimmingOptions switch
-        {
-            ValueTrimmingOptions.All => true,
-            ValueTrimmingOptions.QuotedOnly when _quoted => true,
-            ValueTrimmingOptions.UnquotedOnly when !_quoted => true,
-            _ => false
-        };
+        var shouldTrim = _trimAll || (_trimQuoted && _quoted) || (_trimUnquoted && !_quoted);
 
         if (shouldTrim)
         {
@@ -282,6 +276,15 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         return this;
     }
 
+    internal CsvLineSliceBuilder SetCurrent(char currentChar)
+    {
+        _next = null;
+        _location = _location.NextColumn();
+        _currentChar = currentChar;
+        AppendRaw(currentChar);
+        return this;
+    }
+
     internal CsvLineSliceBuilder Ignore() => this;
 
     internal bool TrySetDirectSlice(ReadOnlyMemory<char> buffer, int start, int length)
@@ -316,6 +319,11 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         if (_usingDirectSlice && _directBuffer.Equals(buffer))
         {
             EnsureLineBufferForField();
+        }
+
+        if (_directFieldCount == 0)
+        {
+            return this;
         }
 
         if (_fields.Count == 0)
@@ -354,6 +362,8 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
                 fieldSpan.CopyTo(copy);
                 _fields[i] = new FieldSliceInfo(copy, 0..length, field.IsNull, false);
             }
+
+            _directFieldCount--;
         }
 
         return this;
@@ -480,10 +490,19 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return;
         }
 
-        for (var i = 0; i < span.Length; i++)
+        if (_rawBufferIndex + span.Length <= RawWindowSize)
         {
-            AppendRaw(span[i]);
+            span.CopyTo(_rawBuffer.AsSpan(_rawBufferIndex));
+            _rawBufferIndex = (_rawBufferIndex + span.Length) % RawWindowSize;
+            _rawBufferCount = Math.Min(RawWindowSize, _rawBufferCount + span.Length);
+            return;
         }
+
+        var firstPart = RawWindowSize - _rawBufferIndex;
+        span[..firstPart].CopyTo(_rawBuffer.AsSpan(_rawBufferIndex));
+        span[firstPart..].CopyTo(_rawBuffer);
+        _rawBufferIndex = span.Length - firstPart;
+        _rawBufferCount = Math.Min(RawWindowSize, _rawBufferCount + span.Length);
     }
 
     private readonly record struct FieldSliceInfo(ReadOnlyMemory<char> Buffer, Range Range, bool IsNull, bool UseLineBuffer)
