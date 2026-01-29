@@ -58,6 +58,12 @@ class Converter(CultureInfo cultureInfo)
         not null => DateTimeOffset.ParseExact(value, format, _cultureInfo),
         _ => DateTimeOffset.Parse(value, _cultureInfo)
     };
+    public TimeSpan ToTimeSpan(ReadOnlySpan<char> value) => TimeSpan.Parse(value, _cultureInfo);
+    public TimeSpan ToTimeSpan(ReadOnlySpan<char> value, string format) => format switch
+    {
+        not null => TimeSpan.ParseExact(value, format, _cultureInfo),
+        _ => TimeSpan.Parse(value, _cultureInfo)
+    };
     public decimal ToDecimal(ReadOnlySpan<char> value) => decimal.Parse(value, NumberStyles.Number, _cultureInfo);
     public Guid ToGuid(ReadOnlySpan<char> value) => Guid.Parse(value);
     public short ToInt16(ReadOnlySpan<char> value) => short.Parse(value, NumberStyles.Integer, _cultureInfo);
@@ -78,6 +84,7 @@ class Converter(CultureInfo cultureInfo)
     {
         DateTime d => d.ToString(format ?? "O", _cultureInfo),
         DateTimeOffset d => d.ToString(format ?? "O", _cultureInfo),
+        TimeSpan t => t.ToString(format ?? "c", _cultureInfo),
         bool b => format switch
         {
             null or "" => b.ToString(),

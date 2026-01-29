@@ -134,6 +134,7 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
     public CsvSchemaBuilder AddGuid((string columnName, string propertyName) name, bool allowNull = false) => Add(name, _converter.ToGuid, allowNull);
     public CsvSchemaBuilder AddDateTime((string columnName, string propertyName) name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTime, allowNull);
     public CsvSchemaBuilder AddDateTimeOffset((string columnName, string propertyName) name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToDateTimeOffset, allowNull);
+    public CsvSchemaBuilder AddTimeSpan((string columnName, string propertyName) name, string format = null, bool allowNull = false) => Add(name, format, _converter.ToTimeSpan, allowNull);
     public CsvSchemaBuilder AddString(string name, bool allowNull = false) => Add((name, name), s => s.ToString(), allowNull);
     public CsvSchemaBuilder AddBoolean(string name, bool allowNull = false) => Add((name, name), _converter.ToBoolean, allowNull);
     public CsvSchemaBuilder AddBoolean(string name, string @true, string @false, bool allowNull = false) => Add((name, name), $"{@true}|{@false}", _converter.ToBoolean, allowNull);
@@ -153,6 +154,7 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
     public CsvSchemaBuilder AddGuid(string name, bool allowNull = false) => Add((name, name), _converter.ToGuid, allowNull);
     public CsvSchemaBuilder AddDateTime(string name, string format = null, bool allowNull = false) => Add((name, name), format, _converter.ToDateTime, allowNull);
     public CsvSchemaBuilder AddDateTimeOffset(string name, string format = null, bool allowNull = false) => Add((name, name), format, _converter.ToDateTimeOffset, allowNull);
+    public CsvSchemaBuilder AddTimeSpan(string name, string format = null, bool allowNull = false) => Add((name, name), format, _converter.ToTimeSpan, allowNull);
 
     public CsvSchemaBuilder From<T>()
     {
@@ -182,6 +184,10 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
             else if (underlyingType == typeof(DateTimeOffset))
             {
                 AddDateTimeOffset((columnName, propertyName), format, allowNull);
+            }
+            else if (underlyingType == typeof(TimeSpan))
+            {
+                AddTimeSpan((columnName, propertyName), format, allowNull);
             }
             else if (underlyingType == typeof(decimal))
             {
@@ -257,7 +263,7 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
 
 /// <summary>
 /// Use this attribute to specify the format for boolean values (form: "True|False", e.g. "yes|no")
-/// or DateTime or DateTimeOffset values (form: .Net format string)
+/// or DateTime, DateTimeOffset, or TimeSpan values (form: .Net format string)
 /// </summary>
 [AttributeUsage(AttributeTargets.All, AllowMultiple = false)]
 public class CsvFormatAttribute(string format) : Attribute

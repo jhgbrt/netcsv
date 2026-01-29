@@ -227,6 +227,11 @@ internal static class TypedLineActivator<T>
             var method = isNullable ? Methods.GetNullableDateTimeOffset : Methods.GetDateTimeOffset;
             return Expression.Call(method, line, ordinalExpression, converterExpression, formatExpression);
         }
+        else if (underlyingType == typeof(TimeSpan))
+        {
+            var method = isNullable ? Methods.GetNullableTimeSpan : Methods.GetTimeSpan;
+            return Expression.Call(method, line, ordinalExpression, converterExpression, formatExpression);
+        }
         else if (underlyingType == typeof(byte))
         {
             var method = isNullable ? Methods.GetNullableByte : Methods.GetByte;
@@ -335,6 +340,8 @@ internal static class TypedLineActivator<T>
         public static readonly MethodInfo GetNullableDateTime = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableDateTime), 4);
         public static readonly MethodInfo GetDateTimeOffset = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetDateTimeOffset), 4);
         public static readonly MethodInfo GetNullableDateTimeOffset = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableDateTimeOffset), 4);
+        public static readonly MethodInfo GetTimeSpan = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetTimeSpan), 4);
+        public static readonly MethodInfo GetNullableTimeSpan = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableTimeSpan), 4);
         public static readonly MethodInfo GetByte = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetByte), 3);
         public static readonly MethodInfo GetNullableByte = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableByte), 3);
         public static readonly MethodInfo GetChar = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetChar), 3);
@@ -532,6 +539,26 @@ internal static class TypedLineValueAccessor
         return converter.ToDateTimeOffset(span, format);
     }
 
+    internal static TimeSpan GetTimeSpan(CsvLineSlice line, int ordinal, Converter converter, string format)
+    {
+        if (!TryGetSpan(line, ordinal, out var span))
+        {
+            return default;
+        }
+
+        return format is null ? converter.ToTimeSpan(span) : converter.ToTimeSpan(span, format);
+    }
+
+    internal static TimeSpan? GetNullableTimeSpan(CsvLineSlice line, int ordinal, Converter converter, string format)
+    {
+        if (!TryGetSpan(line, ordinal, out var span))
+        {
+            return null;
+        }
+
+        return format is null ? converter.ToTimeSpan(span) : converter.ToTimeSpan(span, format);
+    }
+
     internal static T GetObject<T>(CsvLineSlice line, int ordinal, Converter converter)
     {
         if (!TryGetSpan(line, ordinal, out var span))
@@ -585,6 +612,10 @@ internal static class TypedLineValueAccessor
         if (targetType == typeof(DateTimeOffset))
         {
             return converter.ToDateTimeOffset(span, format);
+        }
+        if (targetType == typeof(TimeSpan))
+        {
+            return format is null ? converter.ToTimeSpan(span) : converter.ToTimeSpan(span, format);
         }
         if (targetType == typeof(byte))
         {
