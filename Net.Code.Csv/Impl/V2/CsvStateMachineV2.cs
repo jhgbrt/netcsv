@@ -1,62 +1,60 @@
 namespace Net.Code.Csv.Impl.V2
 {
-    internal sealed class CsvStateMachineV2
+    /// <summary>
+    /// CsvStateMachineV2 is the streaming CSV parser that turns raw text into CsvLine records.
+    /// It uses a state machine to handle quoted fields, escapes, comments, delimiters, whitespace,
+    /// and line endings while keeping allocations low.
+    ///
+    /// Key Responsibilities:
+    /// - Iteratively processes buffered spans and transitions between parsing states.
+    /// - Builds field slices via CsvLineSliceBuilder, keeping zero-copy slices when possible.
+    /// - Applies CsvLayout and CsvBehaviour rules for delimiters, quotes, and error handling.
+    ///
+    /// Usage:
+    /// This is an internal component. Consumers should use ReadCsv APIs rather than interacting
+    /// with this class directly.
+    ///
+    /// Implementation Details:
+    /// - Uses span scanning (IndexOf/IndexOfAny) to skip runs of ordinary characters.
+    /// - Mirrors V1 parsing semantics but executes in a tight span-based loop.
+    /// - Pooled buffers are returned once the next line is emitted.
+    ///
+    /// Note:
+    /// Changes here can subtly alter CSV semantics; keep behavior aligned with V1.
+    /// </summary>
+    internal sealed class CsvStateMachineV2(BufferedCharReader reader, CsvLayout csvLayout, CsvBehaviour behaviour)
     {
-        private readonly BufferedCharReader _reader;
-        private readonly CsvLayout _layout;
-        private readonly CsvBehaviour _behaviour;
+        private readonly BufferedCharReader _reader = reader;
+        private readonly CsvLayout _layout = csvLayout;
+        private readonly CsvBehaviour _behaviour = behaviour;
 
         public CsvStateMachineV2(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
             : this(new BufferedCharReader(textReader ?? throw new ArgumentNullException(nameof(textReader))), csvLayout, behaviour)
         {
         }
 
-        public CsvStateMachineV2(BufferedCharReader reader, CsvLayout csvLayout, CsvBehaviour behaviour)
-        {
-            _reader = reader ?? throw new ArgumentNullException(nameof(reader));
-            _layout = csvLayout ?? throw new ArgumentNullException(nameof(csvLayout));
-            _behaviour = behaviour ?? throw new ArgumentNullException(nameof(behaviour));
-        }
-
         public int? FieldCount { get; set; }
 
         public IEnumerable<CsvLineSlice> Lines() => new LineEnumerable(this);
 
-        private sealed class LineEnumerable : IEnumerable<CsvLineSlice>
+        private sealed class LineEnumerable(CsvStateMachineV2 owner) : IEnumerable<CsvLineSlice>
         {
-            private readonly CsvStateMachineV2 _owner;
-
-            public LineEnumerable(CsvStateMachineV2 owner)
-            {
-                _owner = owner;
-            }
-
-            public IEnumerator<CsvLineSlice> GetEnumerator() => new LineEnumerator(_owner);
+            public IEnumerator<CsvLineSlice> GetEnumerator() => new LineEnumerator(owner);
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
-        private sealed class LineEnumerator : IEnumerator<CsvLineSlice>
+        private sealed class LineEnumerator(CsvStateMachineV2 owner) : IEnumerator<CsvLineSlice>
         {
-            private readonly BufferedCharReader _reader;
-            private readonly CsvLayout _layout;
-            private readonly CsvBehaviour _behaviour;
-            private readonly CsvStateMachineV2 _owner;
-            private CsvLineSliceBuilder _builder;
-            private ScanState _state;
+            private readonly BufferedCharReader _reader = owner._reader;
+            private readonly CsvLayout _layout = owner._layout;
+            private readonly CsvBehaviour _behaviour = owner._behaviour;
+            private readonly CsvLineSliceBuilder _builder = new(owner._layout, owner._behaviour);
+
+            private ScanState _state = ScanState.BeginningOfLine;
             private CsvLineSlice _current;
             private bool _finished;
             private bool _returnedCurrent;
-
-            public LineEnumerator(CsvStateMachineV2 owner)
-            {
-                _owner = owner;
-                _reader = owner._reader;
-                _layout = owner._layout;
-                _behaviour = owner._behaviour;
-                _builder = new CsvLineSliceBuilder(_layout, _behaviour);
-                _state = ScanState.BeginningOfLine;
-            }
 
             public CsvLineSlice Current => _current;
 
@@ -80,8 +78,9 @@ namespace Net.Code.Csv.Impl.V2
                 {
                     if (!_reader.TryGetSpan(out var span))
                     {
+                        // End of input: finalize the current line.
                         var finalLine = _builder.NextField().ToLine();
-                        _owner.FieldCount = _builder.FieldCount;
+                        owner.FieldCount = _builder.FieldCount;
                         _finished = true;
                         if (_behaviour.EmptyLineAction == EmptyLineAction.Skip && finalLine.IsEmpty)
                         {
@@ -105,6 +104,12 @@ namespace Net.Code.Csv.Impl.V2
                         {
                             case ScanState.BeginningOfLine:
                                 {
+                                    // Beginning of line: decide what kind of line/field we are entering.
+                                    // - newline => empty line (emit)
+                                    // - comment => ignore until newline
+                                    // - quote => start quoted field
+                                    // - delimiter => empty field
+                                    // - other => start unquoted field
                                     var c = span[i];
                                     var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                                     if (c == '\r')
@@ -117,7 +122,7 @@ namespace Net.Code.Csv.Impl.V2
                                     {
                                         _builder.SetCurrent(c, next);
                                         var line = _builder.ToLine();
-                                        _owner.FieldCount = _builder.FieldCount;
+                                        owner.FieldCount = _builder.FieldCount;
                                         if (ShouldReturn(line, i + 1))
                                         {
                                             return true;
@@ -155,6 +160,8 @@ namespace Net.Code.Csv.Impl.V2
 
                             case ScanState.InComment:
                                 {
+                                    // Comment line: ignore everything until newline ends the comment.
+                                    // Carriage returns are ignored to support CRLF.
                                     var c = span[i];
                                     var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                                     if (c == '\r')
@@ -175,6 +182,8 @@ namespace Net.Code.Csv.Impl.V2
 
                             case ScanState.InsideField:
                                 {
+                                    // Inside an unquoted field: scan ahead to delimiter or newline.
+                                    // Use direct buffer slices when possible to avoid copying.
                                     var slice = span[i..];
                                     var idx = slice.IndexOfAny(_layout.Delimiter, '\n', '\r');
                                     if (idx < 0)
@@ -216,7 +225,7 @@ namespace Net.Code.Csv.Impl.V2
                                     {
                                         _builder.NextField();
                                         var line = _builder.ToLine();
-                                        _owner.FieldCount = _builder.FieldCount;
+                                        owner.FieldCount = _builder.FieldCount;
                                         _state = ScanState.BeginningOfLine;
                                         if (ShouldReturn(line, i + 1))
                                         {
@@ -232,6 +241,8 @@ namespace Net.Code.Csv.Impl.V2
 
                             case ScanState.OutsideField:
                                 {
+                                    // After a delimiter: decide if the next field is quoted, empty, or unquoted.
+                                    // Whitespace is tentative and only committed for unquoted fields.
                                     var c = span[i];
                                     var next = i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1);
                                     if (c == '\r')
@@ -245,7 +256,7 @@ namespace Net.Code.Csv.Impl.V2
                                         _builder.SetCurrent(c, next);
                                         _builder.AcceptTentative().NextField();
                                         var line = _builder.ToLine();
-                                        _owner.FieldCount = _builder.FieldCount;
+                                        owner.FieldCount = _builder.FieldCount;
                                         _state = ScanState.BeginningOfLine;
                                         if (ShouldReturn(line, i + 1))
                                         {
@@ -285,6 +296,8 @@ namespace Net.Code.Csv.Impl.V2
 
                             case ScanState.Escaped:
                                 {
+                                    // Escape sequence inside a quoted field: take the next char verbatim
+                                    // and return to InsideQuotedField.
                                     var c = span[i];
                                     _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
                                     _builder.AddToField();
@@ -295,6 +308,8 @@ namespace Net.Code.Csv.Impl.V2
 
                             case ScanState.InsideQuotedField:
                                 {
+                                    // Inside quoted field: scan to next quote or escape marker.
+                                    // Everything else is literal data.
                                     var slice = span[i..];
                                     var idx = _layout.Escape == _layout.Quote
                                         ? slice.IndexOf(_layout.Quote)
@@ -338,6 +353,9 @@ namespace Net.Code.Csv.Impl.V2
 
                             case ScanState.AfterSecondQuote:
                                 {
+                                    // After a quote in a quoted field: decide whether it ends the field.
+                                    // Delimiter/newline => end field/line; quote => literal quote;
+                                    // whitespace stays tentative; other => quote-in-field or error.
                                     var c = span[i];
                                     _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
                                     if (c == _layout.Delimiter)
@@ -351,7 +369,7 @@ namespace Net.Code.Csv.Impl.V2
                                     {
                                         _builder.DiscardTentative().NextField();
                                         var line = _builder.ToLine();
-                                        _owner.FieldCount = _builder.FieldCount;
+                                        owner.FieldCount = _builder.FieldCount;
                                         _state = ScanState.BeginningOfLine;
                                         if (ShouldReturn(line, i + 1))
                                         {
@@ -391,6 +409,7 @@ namespace Net.Code.Csv.Impl.V2
 
                             case ScanState.ParseError:
                                 {
+                                    // Parse error: ignore until newline, then recover at beginning of line.
                                     var c = span[i];
                                     _builder.SetCurrent(c, i + 1 < span.Length ? span[i + 1] : _reader.PeekAt(baseIndex + i + 1));
                                     if (c == '\n')
@@ -451,3 +470,51 @@ internal enum ScanState
     AfterSecondQuote,
     ParseError
 }
+
+/*
+State transitions (simplified, mirrors V1 behavior)
+
+BeginningOfLine
+  '\n'         -> BeginningOfLine (emit line)
+  comment      -> InComment
+  quote        -> InsideQuotedField
+  delimiter    -> OutsideField (empty field)
+  other        -> InsideField
+
+InComment
+  '\n'         -> BeginningOfLine
+  other        -> InComment
+
+InsideField (unquoted)
+  delimiter    -> OutsideField
+  '\n'         -> BeginningOfLine (emit line)
+  other        -> InsideField
+
+OutsideField (after delimiter)
+  '\n'         -> BeginningOfLine (emit line)
+  quote        -> InsideQuotedField
+  delimiter    -> OutsideField (empty field)
+  whitespace   -> OutsideField (tentative)
+  other        -> InsideField
+
+InsideQuotedField
+  escape       -> Escaped
+  quote        -> AfterSecondQuote
+  other        -> InsideQuotedField
+
+Escaped
+  any          -> InsideQuotedField (take next char verbatim)
+
+AfterSecondQuote
+  delimiter    -> OutsideField
+  '\n'         -> BeginningOfLine (emit line)
+  quote        -> AfterSecondQuote (double-quote inside quoted field)
+  whitespace   -> AfterSecondQuote (tentative)
+  other        -> InsideQuotedField or ParseError (behavior dependent)
+
+ParseError
+  '\n'         -> BeginningOfLine
+  other        -> ParseError
+
+EOF: finalize current field and emit final line.
+*/
