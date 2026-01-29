@@ -43,7 +43,7 @@ internal readonly struct CsvLineSlice
 
             if (_isEmpty)
             {
-                return ReadOnlySpan<char>.Empty;
+                return [];
             }
 
             throw new ArgumentOutOfRangeException(nameof(field));

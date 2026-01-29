@@ -146,14 +146,24 @@ internal static class TypedLineActivator<T>
             return Expression.Lambda<Func<CsvLineSlice, T>>(newExpression, lineParameter).Compile();
         }
 
+
+        // Build an expression that creates instance and sets properties:
+        //
+        // var item = new T();
+        // item.Prop1 = GetValue(...);
+        // item.Prop2 = GetValue(...);
+        // ...
+
         var itemVariable = Expression.Variable(type, "item");
         var expressions = new List<Expression>
         {
+            // var item = new T();
             Expression.Assign(itemVariable, Expression.New(type))
         };
 
         foreach (var mapping in mappings)
         {
+            // item.Prop = GetValue(...);
             var valueExpression = BuildValueExpression(lineParameter, mapping, converter, useSchemaConverters);
             var assignExpression = Expression.Assign(Expression.Property(itemVariable, mapping.Property), valueExpression);
             expressions.Add(assignExpression);
@@ -201,104 +211,92 @@ internal static class TypedLineActivator<T>
         var converterExpression = Expression.Constant(converter);
         var formatExpression = Expression.Constant(mapping.Format, typeof(string));
 
+
         if (underlyingType == typeof(bool))
         {
             var method = isNullable ? Methods.GetNullableBoolean : Methods.GetBoolean;
             return Expression.Call(method, line, ordinalExpression, converterExpression, formatExpression);
         }
-
-        if (underlyingType == typeof(DateTime))
+        else if (underlyingType == typeof(DateTime))
         {
             var method = isNullable ? Methods.GetNullableDateTime : Methods.GetDateTime;
             return Expression.Call(method, line, ordinalExpression, converterExpression, formatExpression);
         }
-
-        if (underlyingType == typeof(DateTimeOffset))
+        else if (underlyingType == typeof(DateTimeOffset))
         {
             var method = isNullable ? Methods.GetNullableDateTimeOffset : Methods.GetDateTimeOffset;
             return Expression.Call(method, line, ordinalExpression, converterExpression, formatExpression);
         }
-
-        if (underlyingType == typeof(byte))
+        else if (underlyingType == typeof(byte))
         {
             var method = isNullable ? Methods.GetNullableByte : Methods.GetByte;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(char))
+        else if (underlyingType == typeof(char))
         {
             var method = isNullable ? Methods.GetNullableChar : Methods.GetChar;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(Guid))
+        else if (underlyingType == typeof(Guid))
         {
             var method = isNullable ? Methods.GetNullableGuid : Methods.GetGuid;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(short))
+        else if (underlyingType == typeof(short))
         {
             var method = isNullable ? Methods.GetNullableInt16 : Methods.GetInt16;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(int))
+        else if (underlyingType == typeof(int))
         {
             var method = isNullable ? Methods.GetNullableInt32 : Methods.GetInt32;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(long))
+        else if (underlyingType == typeof(long))
         {
             var method = isNullable ? Methods.GetNullableInt64 : Methods.GetInt64;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(float))
+        else if (underlyingType == typeof(float))
         {
             var method = isNullable ? Methods.GetNullableSingle : Methods.GetSingle;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(double))
+        else if (underlyingType == typeof(double))
         {
             var method = isNullable ? Methods.GetNullableDouble : Methods.GetDouble;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(decimal))
+        else if (underlyingType == typeof(decimal))
         {
             var method = isNullable ? Methods.GetNullableDecimal : Methods.GetDecimal;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(ushort))
+        else if (underlyingType == typeof(ushort))
         {
             var method = isNullable ? Methods.GetNullableUInt16 : Methods.GetUInt16;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(uint))
+        else if (underlyingType == typeof(uint))
         {
             var method = isNullable ? Methods.GetNullableUInt32 : Methods.GetUInt32;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(ulong))
+        else if (underlyingType == typeof(ulong))
         {
             var method = isNullable ? Methods.GetNullableUInt64 : Methods.GetUInt64;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        if (underlyingType == typeof(sbyte))
+        else if (underlyingType == typeof(sbyte))
         {
             var method = isNullable ? Methods.GetNullableSByte : Methods.GetSByte;
             return Expression.Call(method, line, ordinalExpression, converterExpression);
         }
-
-        var objectMethod = isNullable ? Methods.GetNullableObject.MakeGenericMethod(underlyingType) : Methods.GetObject.MakeGenericMethod(underlyingType);
-        return Expression.Call(objectMethod, line, ordinalExpression, converterExpression);
+        else
+        {
+            var method = isNullable ? Methods.GetNullableObject.MakeGenericMethod(underlyingType) : Methods.GetObject.MakeGenericMethod(underlyingType);
+            return Expression.Call(method, line, ordinalExpression, converterExpression);
+        }
     }
 
     private readonly record struct PropertyMapping(
@@ -331,16 +329,12 @@ internal static class TypedLineActivator<T>
     private static class Methods
     {
         public static readonly MethodInfo GetString = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetString), 2);
-
         public static readonly MethodInfo GetBoolean = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetBoolean), 4);
         public static readonly MethodInfo GetNullableBoolean = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableBoolean), 4);
-
         public static readonly MethodInfo GetDateTime = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetDateTime), 4);
         public static readonly MethodInfo GetNullableDateTime = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableDateTime), 4);
-
         public static readonly MethodInfo GetDateTimeOffset = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetDateTimeOffset), 4);
         public static readonly MethodInfo GetNullableDateTimeOffset = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableDateTimeOffset), 4);
-
         public static readonly MethodInfo GetByte = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetByte), 3);
         public static readonly MethodInfo GetNullableByte = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableByte), 3);
         public static readonly MethodInfo GetChar = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetChar), 3);
@@ -367,10 +361,8 @@ internal static class TypedLineActivator<T>
         public static readonly MethodInfo GetNullableUInt64 = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableUInt64), 3);
         public static readonly MethodInfo GetSByte = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetSByte), 3);
         public static readonly MethodInfo GetNullableSByte = Get(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableSByte), 3);
-
         public static readonly MethodInfo GetObject = GetGeneric(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetObject), 3);
         public static readonly MethodInfo GetNullableObject = GetGeneric(typeof(TypedLineValueAccessor), nameof(TypedLineValueAccessor.GetNullableObject), 3);
-
         public static readonly MethodInfo GetSchemaValue = GetGeneric(typeof(TypedLineSchemaAccessor), nameof(TypedLineSchemaAccessor.GetSchemaValue), 3);
         public static readonly MethodInfo GetSchemaNullable = GetGeneric(typeof(TypedLineSchemaAccessor), nameof(TypedLineSchemaAccessor.GetSchemaNullableValue), 3);
 
