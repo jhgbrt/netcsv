@@ -141,7 +141,7 @@ namespace Net.Code.Csv.Impl.V2
                                         i++;
                                         break;
                                     }
-                                    if (c == _layout.Comment)
+                                    if (_layout.Comment.HasValue && c == _layout.Comment.Value)
                                     {
                                         _builder.SetCurrent(c);
                                         _state = ScanState.InComment;

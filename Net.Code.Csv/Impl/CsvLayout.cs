@@ -17,9 +17,9 @@ internal record CsvLayout(
             /// </summary>
             char Escape = '"',
             /// <summary>
-            /// The character that marks a line as a comment
+            /// The character that marks a line as a comment. Set to null to disable comments.
             /// </summary>
-            char Comment = '#',
+            char? Comment = '#',
             /// <summary>
             /// Indicates whether or not the input file has a header
             /// </summary>

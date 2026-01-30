@@ -10,7 +10,7 @@ readonly ref struct CsvChar(char value, CsvLayout layout, char? Next)
 {
     public readonly bool IsCarriageReturn => value == '\r';
     public readonly bool IsNewLine => value == '\n';
-    public readonly bool IsComment => value == layout.Comment;
+    public readonly bool IsComment => layout.Comment.HasValue && value == layout.Comment.Value;
     public readonly bool IsQuote => layout.Quote.HasValue && value == layout.Quote.Value;
     public readonly bool IsDelimiter => value == layout.Delimiter;
     public readonly bool IsWhiteSpace => char.IsWhiteSpace(value);

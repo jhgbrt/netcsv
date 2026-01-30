@@ -5,7 +5,7 @@ Add two user-facing presets to make CSV parsing behavior predictable and easy to
 scoped to the V2 parser only:
 
 - `CsvBehaviour.Strict()` for standards-style, fail-fast parsing.
-- `CsvBehaviour.Literal()` for "raw field extraction" that can preserve every character between delimiters.
+- `CsvBehaviour.Forgiving()` for "raw field extraction" that can preserve every character between delimiters.
 
 This spec also introduces a way to **disable quoting** so users can parse literally when required.
 
@@ -26,7 +26,8 @@ This spec also introduces a way to **disable quoting** so users can parse litera
 ### Presets
 ```csharp
 public static CsvBehaviour Strict();
-public static CsvBehaviour Literal();
+public static CsvBehaviour Forgiving();
+public static CsvBehaviour Fast();
 ```
 
 These return a `CsvBehaviour` instance with pre-selected flags. Users can still override
@@ -64,9 +65,9 @@ Strict parsing rules (when quoting enabled):
 
 Notes:
 - If a user wants whitespace after a closing quote to be preserved, they should use
-  `Literal()` with quoting disabled, or a future "liberal" mode.
+  `Forgiving()` with quoting disabled.
 
-### Literal Preset
+### Forgiving Preset
 Intent: "Extract exactly what is between delimiters; allow full fidelity."
 
 Preset values:
@@ -74,7 +75,7 @@ Preset values:
 - `QuotesInsideQuotedFieldAction = Ignore` (irrelevant if quoting disabled)
 - Quoting **disabled** by default when `Quote` is set to `null` on the layout
 
-Literal parsing rules:
+Forgiving parsing rules:
 - Quote characters are **never** treated as special; they are part of field content.
 - Escape sequences are **not** interpreted (escape char treated as normal content).
 - Result field text is exactly the characters between delimiters (unless trimming is enabled).
@@ -90,20 +91,20 @@ Given input (delimiter `,`):
 
 1) `a,"b",c`
 - Strict (default trimming): fields = `["a", "b", "c"]`
-- Literal (quoting disabled): fields = `["a", "\"b\"", "c"]`
+- Forgiving (quoting disabled): fields = `["a", "\"b\"", "c"]`
 
 2) ` "a" `
 - Strict + `ValueTrimmingOptions.All`: parse error (whitespace before quote)
-- Literal: fields = `[" \"a\" "]`
-- Literal + `ValueTrimmingOptions.All`: fields = `["\"a\""]`
+- Forgiving: fields = `[" \"a\" "]`
+- Forgiving + `ValueTrimmingOptions.All`: fields = `["\"a\""]`
 
 3) `"a"  ,b`
 - Strict + `ValueTrimmingOptions.All`: parse error (whitespace after closing quote)
-- Literal: fields = `["\"a\"  ", "b"]`
+- Forgiving: fields = `["\"a\"  ", "b"]`
 
 4) `"a"b"`
 - Strict: parse error (unescaped quote inside quoted field)
-- Literal: fields = `["\"a\"b\""]`
+- Forgiving: fields = `["\"a\"b\""]`
 
 ## Migration / Compatibility
 - Default behavior remains unchanged.
@@ -112,3 +113,14 @@ Given input (delimiter `,`):
 
 ## Open Questions
 - Should strict allow leading whitespace before quotes when trimming is not `All`?
+### Fast Preset
+Intent: "Maximize throughput with minimal validation."
+
+Preset values:
+- `ValueTrimmingOptions = None`
+- `QuotesInsideQuotedFieldAction = Ignore`
+- `Parser = V2`
+
+Notes:
+- Fewer input validations; exceptions may be less precise.
+- No special parsing path is enabled; this is a preset over the standard V2 parser.

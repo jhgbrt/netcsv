@@ -36,8 +36,8 @@ static void RunProfilerWorkload(CsvBenchmarkParser parser)
     bench.Setup();
     try
     {
-        //_ = bench.ReadDataReader();
-        //_ = bench.ReadTypedRecords();
+        _ = bench.ReadDataReader();
+        _ = bench.ReadTypedRecords();
         _ = bench.ReadWithoutHeaders();
     }
     finally

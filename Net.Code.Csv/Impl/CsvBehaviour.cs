@@ -51,9 +51,9 @@ public record CsvBehaviour(
         };
 
     /// <summary>
-    /// Literal parsing using the V2 parser. Quotes are treated as normal characters when disabled via CsvLayout.
+    /// Forgiving parsing using the V2 parser. Quotes are treated as normal characters when disabled via CsvLayout.
     /// </summary>
-    public static CsvBehaviour Literal()
+    public static CsvBehaviour Forgiving()
         => new CsvBehaviour(
             TrimmingOptions: ValueTrimmingOptions.None,
             MissingFieldAction: MissingFieldAction.ParseError,

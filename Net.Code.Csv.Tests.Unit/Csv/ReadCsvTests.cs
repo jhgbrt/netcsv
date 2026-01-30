@@ -14,7 +14,7 @@ public class ReadCsvTests
         char? quote = '"',
         char delimiter = ',',
         char escape = '"',
-        char comment = '#',
+        char? comment = '#',
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.None,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
@@ -272,17 +272,17 @@ public class ReadCsvTests
     }
 
     [Fact]
-    public void LiteralMode_DisablesQuoting_ReturnsRawFields()
+    public void ForgivingMode_DisablesQuoting_ReturnsRawFields()
     {
-        var behaviour = CsvBehaviour.Literal();
+        var behaviour = CsvBehaviour.Forgiving();
         var result = Read("\"a\",\"b\"", quote: null, behaviour: behaviour);
         Assert.Equal(["\"a\"", "\"b\""], result);
     }
 
     [Fact]
-    public void LiteralMode_PreservesWhitespaceWhenTrimmingNone()
+    public void ForgivingMode_PreservesWhitespaceWhenTrimmingNone()
     {
-        var behaviour = CsvBehaviour.Literal();
+        var behaviour = CsvBehaviour.Forgiving();
         var result = Read(" \"a\" ", quote: null, behaviour: behaviour);
         Assert.Equal([" \"a\" "], result);
     }

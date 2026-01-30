@@ -69,7 +69,7 @@ public static class ReadCsv
     /// <param name="quote">The quote character. Set to null to disable quoting. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
-    /// <param name="comment">Comment marker. Default '#'</param>
+    /// <param name="comment">Comment marker. Set to null to disable comments. Default '#'</param>
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
@@ -85,7 +85,7 @@ public static class ReadCsv
         char? quote = '"',
         char delimiter = ',',
         char escape = '"',
-        char comment = '#',
+        char? comment = '#',
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
@@ -131,7 +131,7 @@ public static class ReadCsv
     /// <param name="quote">The quote character. Set to null to disable quoting. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
-    /// <param name="comment">Comment marker. Default '#'</param>
+    /// <param name="comment">Comment marker. Set to null to disable comments. Default '#'</param>
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
@@ -147,7 +147,7 @@ public static class ReadCsv
             char? quote = '"',
             char delimiter = ',',
             char escape = '"',
-            char comment = '#',
+            char? comment = '#',
             bool hasHeaders = false,
             ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.None,
             MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
@@ -186,7 +186,7 @@ public static class ReadCsv
     /// <param name="quote">The quote character. Set to null to disable quoting. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
-    /// <param name="comment">Comment marker. Default '#'</param>
+    /// <param name="comment">Comment marker. Set to null to disable comments. Default '#'</param>
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
@@ -201,7 +201,7 @@ public static class ReadCsv
         char? quote = '"',
         char delimiter = ',',
         char escape = '"',
-        char comment = '#',
+        char? comment = '#',
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.None,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
@@ -226,7 +226,7 @@ public static class ReadCsv
     /// <param name="quote">The quote character. Set to null to disable quoting. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
-    /// <param name="comment">Comment marker. Default '#'</param>
+    /// <param name="comment">Comment marker. Set to null to disable comments. Default '#'</param>
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
@@ -241,7 +241,7 @@ public static class ReadCsv
         char? quote = '"',
         char delimiter = ',',
         char escape = '"',
-        char comment = '#',
+        char? comment = '#',
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
@@ -287,7 +287,7 @@ public static class ReadCsv
     /// <param name="quote">The quote character. Set to null to disable quoting. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
-    /// <param name="comment">Comment marker. Default '#'</param>
+    /// <param name="comment">Comment marker. Set to null to disable comments. Default '#'</param>
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
@@ -302,7 +302,7 @@ public static class ReadCsv
         char? quote = '"',
         char delimiter = ',',
         char escape = '"',
-        char comment = '#',
+        char? comment = '#',
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
@@ -343,7 +343,7 @@ public static class ReadCsv
     /// <param name="quote">The quote character. Set to null to disable quoting. Default '"'</param>
     /// <param name="delimiter">Field delimiter. Default ','</param>
     /// <param name="escape">Quote escape character (for quotes inside fields). Default '\'</param>
-    /// <param name="comment">Comment marker. Default '#'</param>
+    /// <param name="comment">Comment marker. Set to null to disable comments. Default '#'</param>
     /// <param name="hasHeaders">Is the first line a header line (default false)?</param>
     /// <param name="trimmingOptions">How should fields be trimmed?</param>
     /// <param name="missingFieldAction">What should happen when a field is missing from a line?</param>
@@ -357,7 +357,7 @@ public static class ReadCsv
         char? quote = '"',
         char delimiter = ',',
         char escape = '"',
-        char comment = '#',
+        char? comment = '#',
         bool hasHeaders = false,
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.UnquotedOnly,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
