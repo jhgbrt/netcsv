@@ -1,5 +1,7 @@
 ﻿using Xunit;
 
+using Net.Code.Csv.Impl;
+
 namespace Net.Code.Csv.Tests.Unit.Csv;
 
 public class ReadCsvTests
@@ -9,7 +11,7 @@ public class ReadCsvTests
     private static string DotToSpace(string value) => value.Replace(VisibleSpace, ' ');
 
     private static string[] Read(string data,
-        char quote = '"',
+        char? quote = '"',
         char delimiter = ',',
         char escape = '"',
         char comment = '#',
@@ -17,7 +19,8 @@ public class ReadCsvTests
         ValueTrimmingOptions trimmingOptions = ValueTrimmingOptions.None,
         MissingFieldAction missingFieldAction = MissingFieldAction.ParseError,
         QuotesInsideQuotedFieldAction quoteInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-        bool skipEmptyLines = false)
+        bool skipEmptyLines = false,
+        CsvBehaviour behaviour = null)
     {
         var reader = ReadCsv.FromString(data,
             quote,
@@ -28,7 +31,8 @@ public class ReadCsvTests
             trimmingOptions,
             missingFieldAction,
             skipEmptyLines ? EmptyLineAction.Skip : EmptyLineAction.None,
-            quoteInsideQuotedFieldAction);
+            quoteInsideQuotedFieldAction,
+            behaviour: behaviour);
         reader.Read();
         string[] results = new string[reader.FieldCount];
         reader.GetValues(results);
@@ -213,14 +217,14 @@ public class ReadCsvTests
     [InlineData("\u00B7\"\"", "\u00B7\"\"")]
     [InlineData("\u00B7\"a\"", "\u00B7\"a\"")]
     [InlineData("a\"\"\"a", "a\"\"\"a")]
-    [InlineData("\"a\"a\"a\"", "aa\"a")]
-    [InlineData("\"\"\u00B7", "\u00B7")]
-    [InlineData("\"a\"\u00B7", "a\u00B7")]
-    [InlineData("\"a\"\"\"a", "a\"a")]
-    [InlineData("\"a\"\"\"a\"", "a\"a\"")]
-    [InlineData("\"\"a\"", "a\"")]
-    [InlineData("\"a\"a\"", "aa\"")]
-    [InlineData("\"\"a\"a\"\"", "a\"a\"")]
+    [InlineData("\"a\"a\"a\"", "a\"a\"a")]
+    [InlineData("\"\"\u00B7", "")]
+    [InlineData("\"a\"\u00B7", "a")]
+    [InlineData("\"a\"\"\"a", "a\"\"a")]
+    [InlineData("\"a\"\"\"a\"", "a\"\"a")]
+    [InlineData("\"\"a\"", "\"a")]
+    [InlineData("\"a\"a\"", "a\"a")]
+    [InlineData("\"\"a\"a\"\"", "\"a\"a\"")]
     [InlineData("\"\"\"", "\"")]
     [InlineData("\"\"\"\"\"", "\"\"")]
     public void UnescapeEdgeCases_AreParsedAsExpected(string data, string expected)
@@ -241,15 +245,45 @@ public class ReadCsvTests
     [InlineData("\"a\u00B7\"", "a")]
     [InlineData("\"\u00B7a\u00B7\"", "a")]
     [InlineData("\"\u00B7a\u00B7a\u00B7\"", "a\u00B7a")]
-    [InlineData("\u00B7\"a\"\u00B7", "a")]
-    [InlineData("\u00B7\"\u00B7a\"\u00B7", "a")]
-    [InlineData("\u00B7\"a\u00B7\"\u00B7", "a")]
-    [InlineData("\u00B7\"\u00B7a\u00B7\"\u00B7", "a")]
-    [InlineData("\u00B7\"\u00B7a\u00B7a\u00B7\"\u00B7", "a\u00B7a")]
+    [InlineData("\u00B7\"a\"\u00B7", "\"a\"")]
+    [InlineData("\u00B7\"\u00B7a\"\u00B7", "\"\u00B7a\"")]
+    [InlineData("\u00B7\"a\u00B7\"\u00B7", "\"a\u00B7\"")]
+    [InlineData("\u00B7\"\u00B7a\u00B7\"\u00B7", "\"\u00B7a\u00B7\"")]
+    [InlineData("\u00B7\"\u00B7a\u00B7a\u00B7\"\u00B7", "\"\u00B7a\u00B7a\u00B7\"")]
     public void TrimmingEdgeCases_AreParsedAsExpected(string data, string expected)
     {
         var result = Read(DotToSpace(data), trimmingOptions: ValueTrimmingOptions.All);
         expected = DotToSpace(expected);
         Assert.Equal([expected], result);
+    }
+
+    [Fact]
+    public void StrictMode_WithTrimAll_WhitespaceBeforeOpeningQuote_Throws()
+    {
+        var behaviour = CsvBehaviour.Strict() with { TrimmingOptions = ValueTrimmingOptions.All };
+        Assert.Throws<MalformedCsvException>(() => Read(" \"a\"", behaviour: behaviour));
+    }
+
+    [Fact]
+    public void StrictMode_WithTrimAll_WhitespaceAfterClosingQuote_Throws()
+    {
+        var behaviour = CsvBehaviour.Strict() with { TrimmingOptions = ValueTrimmingOptions.All };
+        Assert.Throws<MalformedCsvException>(() => Read("\"a\" ", behaviour: behaviour));
+    }
+
+    [Fact]
+    public void LiteralMode_DisablesQuoting_ReturnsRawFields()
+    {
+        var behaviour = CsvBehaviour.Literal();
+        var result = Read("\"a\",\"b\"", quote: null, behaviour: behaviour);
+        Assert.Equal(["\"a\"", "\"b\""], result);
+    }
+
+    [Fact]
+    public void LiteralMode_PreservesWhitespaceWhenTrimmingNone()
+    {
+        var behaviour = CsvBehaviour.Literal();
+        var result = Read(" \"a\" ", quote: null, behaviour: behaviour);
+        Assert.Equal([" \"a\" "], result);
     }
 }

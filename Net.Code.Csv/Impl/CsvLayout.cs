@@ -5,9 +5,9 @@ namespace Net.Code.Csv.Impl;
 /// </summary>
 internal record CsvLayout(
             /// <summary>
-            /// The character used as a field quote
+            /// The character used as a field quote. Set to null to disable quoting.
             /// </summary>
-            char Quote = '"',
+            char? Quote = '"',
             /// <summary>
             /// The character that delimits the fields
             /// </summary>
@@ -40,5 +40,13 @@ internal record CsvLayout(
     public IEnumerable<CsvSchema> Schemas => Schema == null ? [] : Schema.Match(s => [s], s => s);
 
     internal bool IsEscape(char currentChar, char? nextChar)
-        => currentChar == Escape && (nextChar == Quote || nextChar == Escape);
+    {
+        if (!Quote.HasValue)
+        {
+            return false;
+        }
+
+        var quote = Quote.Value;
+        return currentChar == Escape && (nextChar == quote || nextChar == Escape);
+    }
 }

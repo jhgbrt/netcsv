@@ -68,6 +68,8 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
     public int FieldsCount => _fields.Count;
 
+    internal bool HasTentative => _tentativeLength > 0;
+
     internal CsvLineSliceBuilder PrepareNextLine()
     {
         _fields.Clear();

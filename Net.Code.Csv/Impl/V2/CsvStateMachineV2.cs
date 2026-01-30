@@ -50,6 +50,10 @@ namespace Net.Code.Csv.Impl.V2
             private readonly CsvLayout _layout = owner._layout;
             private readonly CsvBehaviour _behaviour = owner._behaviour;
             private readonly CsvLineSliceBuilder _builder = new(owner._layout, owner._behaviour);
+            private readonly bool _strictQuotedWhitespace =
+                owner._behaviour.StrictMode
+                && owner._behaviour.TrimmingOptions == ValueTrimmingOptions.All
+                && owner._layout.Quote.HasValue;
 
             private ScanState _state = ScanState.BeginningOfLine;
             private CsvLineSlice _current;
@@ -111,6 +115,14 @@ namespace Net.Code.Csv.Impl.V2
                                     // - delimiter => empty field
                                     // - other => start unquoted field
                                     var c = span[i];
+                                    if (_strictQuotedWhitespace && char.IsWhiteSpace(c) && c != '\r' && c != '\n')
+                                    {
+                                        _builder.SetCurrent(c);
+                                        _builder.AddToTentative();
+                                        _state = ScanState.OutsideField;
+                                        i++;
+                                        break;
+                                    }
                                     if (c == '\r')
                                     {
                                         _builder.SetCurrent(c);
@@ -136,7 +148,7 @@ namespace Net.Code.Csv.Impl.V2
                                         i++;
                                         break;
                                     }
-                                    if (c == _layout.Quote)
+                                    if (_layout.Quote.HasValue && c == _layout.Quote.Value)
                                     {
                                         _builder.SetCurrent(c);
                                         _builder.MarkQuoted();
@@ -262,8 +274,12 @@ namespace Net.Code.Csv.Impl.V2
                                         i++;
                                         break;
                                     }
-                                    if (c == _layout.Quote)
+                                    if (_layout.Quote.HasValue && c == _layout.Quote.Value)
                                     {
+                                        if (_strictQuotedWhitespace && _builder.HasTentative)
+                                        {
+                                            throw new MalformedCsvException(_builder.RawData, _builder.Location, _builder.FieldsCount);
+                                        }
                                         _builder.SetCurrent(c);
                                         _builder.MarkQuoted().DiscardTentative();
                                         _state = ScanState.InsideQuotedField;
@@ -307,10 +323,19 @@ namespace Net.Code.Csv.Impl.V2
                                 {
                                     // Inside quoted field: scan to next quote or escape marker.
                                     // Everything else is literal data.
+                                    if (!_layout.Quote.HasValue)
+                                    {
+                                        var remaining = span[i..];
+                                        _builder.AddToField(remaining);
+                                        _builder.AdvanceSpan(remaining);
+                                        i = span.Length;
+                                        break;
+                                    }
                                     var slice = span[i..];
-                                    var idx = _layout.Escape == _layout.Quote
-                                        ? slice.IndexOf(_layout.Quote)
-                                        : slice.IndexOfAny(_layout.Quote, _layout.Escape);
+                                    var quote = _layout.Quote.Value;
+                                    var idx = _layout.Escape == quote
+                                        ? slice.IndexOf(quote)
+                                        : slice.IndexOfAny(quote, _layout.Escape);
                                     if (idx < 0)
                                     {
                                         _builder.AddToField(slice);
@@ -335,7 +360,7 @@ namespace Net.Code.Csv.Impl.V2
                                         i++;
                                         break;
                                     }
-                                    if (c == _layout.Quote)
+                                    if (_layout.Quote.HasValue && c == _layout.Quote.Value)
                                     {
                                         _builder.DiscardTentative().AddToTentative();
                                         _state = ScanState.AfterSecondQuote;
@@ -375,14 +400,24 @@ namespace Net.Code.Csv.Impl.V2
                                         i++;
                                         break;
                                     }
-                                    if (c == _layout.Quote)
+                                    if (_layout.Quote.HasValue && c == _layout.Quote.Value)
                                     {
                                         _builder.AcceptTentative().AddToTentative();
                                         i++;
                                         break;
                                     }
-                                    if (char.IsWhiteSpace(c) || c == '\r')
+                                    if (c == '\r')
                                     {
+                                        _builder.AddToTentative();
+                                        i++;
+                                        break;
+                                    }
+                                    if (char.IsWhiteSpace(c))
+                                    {
+                                        if (_strictQuotedWhitespace)
+                                        {
+                                            throw new MalformedCsvException(_builder.RawData, _builder.Location, _builder.FieldsCount);
+                                        }
                                         _builder.AddToTentative();
                                         i++;
                                         break;
