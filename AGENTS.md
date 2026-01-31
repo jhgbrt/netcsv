@@ -12,8 +12,7 @@
 - Build: `dotnet build Net.Code.Csv.sln -c Release`.
 - Test:
   Always run all tests with both parser versions by setting the environment variable.
-  In PowerShell: 
-  `$env:NETCSV_PARSER='V1'; dotnet test -c Release; $env:NETCSV_PARSER='V2'; dotnet test -c Release;` 
+  In PowerShell: `dotnet test -c Release;` 
 - Sample run: `dotnet run --project CsvTest -c Release` (uses `CsvTest/test.csv`).
 - Pack (NuGet): `dotnet pack Net.Code.Csv -c Release -o ./artifacts`.
 

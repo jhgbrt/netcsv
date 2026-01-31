@@ -6,10 +6,6 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 
 public class ReadCsvTests
 {
-    private const char VisibleSpace = '\u00B7';
-
-    private static string DotToSpace(string value) => value.Replace(VisibleSpace, ' ');
-
     private static string[] Read(string data,
         char? quote = '"',
         char delimiter = ',',
@@ -212,14 +208,14 @@ public class ReadCsvTests
     [InlineData("\"a\"\"a\"\"a\"", "a\"a\"a")]
     [InlineData("a\"\"a", "a\"\"a")]
     [InlineData("a\"a\"a", "a\"a\"a")]
-    [InlineData("\u00B7\"\"\u00B7", "\u00B7\"\"\u00B7")]
-    [InlineData("\u00B7\"a\"\u00B7", "\u00B7\"a\"\u00B7")]
-    [InlineData("\u00B7\"\"", "\u00B7\"\"")]
-    [InlineData("\u00B7\"a\"", "\u00B7\"a\"")]
+    [InlineData(" \"\" ", " \"\" ")]
+    [InlineData(" \"a\" ", " \"a\" ")]
+    [InlineData(" \"\"", " \"\"")]
+    [InlineData(" \"a\"", " \"a\"")]
     [InlineData("a\"\"\"a", "a\"\"\"a")]
     [InlineData("\"a\"a\"a\"", "a\"a\"a")]
-    [InlineData("\"\"\u00B7", "")]
-    [InlineData("\"a\"\u00B7", "a")]
+    [InlineData("\"\" ", "")]
+    [InlineData("\"a\" ", "a")]
     [InlineData("\"a\"\"\"a", "a\"\"a")]
     [InlineData("\"a\"\"\"a\"", "a\"\"a")]
     [InlineData("\"\"a\"", "\"a")]
@@ -229,31 +225,29 @@ public class ReadCsvTests
     [InlineData("\"\"\"\"\"", "\"\"")]
     public void UnescapeEdgeCases_AreParsedAsExpected(string data, string expected)
     {
-        var result = Read(DotToSpace(data), trimmingOptions: ValueTrimmingOptions.None, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore);
-        expected = DotToSpace(expected);
+        var result = Read(data, trimmingOptions: ValueTrimmingOptions.None, quoteInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore);
         Assert.Equal([expected], result);
     }
 
     [Theory]
     [InlineData("a", "a")]
-    [InlineData("\u00B7a", "a")]
-    [InlineData("a\u00B7", "a")]
-    [InlineData("\u00B7a\u00B7", "a")]
-    [InlineData("\u00B7a\u00B7a\u00B7", "a\u00B7a")]
+    [InlineData(" a", "a")]
+    [InlineData("a ", "a")]
+    [InlineData(" a ", "a")]
+    [InlineData(" a a ", "a a")]
     [InlineData("\"a\"", "a")]
-    [InlineData("\"\u00B7a\"", "a")]
-    [InlineData("\"a\u00B7\"", "a")]
-    [InlineData("\"\u00B7a\u00B7\"", "a")]
-    [InlineData("\"\u00B7a\u00B7a\u00B7\"", "a\u00B7a")]
-    [InlineData("\u00B7\"a\"\u00B7", "\"a\"")]
-    [InlineData("\u00B7\"\u00B7a\"\u00B7", "\"\u00B7a\"")]
-    [InlineData("\u00B7\"a\u00B7\"\u00B7", "\"a\u00B7\"")]
-    [InlineData("\u00B7\"\u00B7a\u00B7\"\u00B7", "\"\u00B7a\u00B7\"")]
-    [InlineData("\u00B7\"\u00B7a\u00B7a\u00B7\"\u00B7", "\"\u00B7a\u00B7a\u00B7\"")]
+    [InlineData("\" a\"", "a")]
+    [InlineData("\"a \"", "a")]
+    [InlineData("\" a \"", "a")]
+    [InlineData("\" a a \"", "a a")]
+    [InlineData(" \"a\" ", "\"a\"")]
+    [InlineData(" \" a\" ", "\" a\"")]
+    [InlineData(" \"a \" ", "\"a \"")]
+    [InlineData(" \" a \" ", "\" a \"")]
+    [InlineData(" \" a a \" ", "\" a a \"")]
     public void TrimmingEdgeCases_AreParsedAsExpected(string data, string expected)
     {
-        var result = Read(DotToSpace(data), trimmingOptions: ValueTrimmingOptions.All);
-        expected = DotToSpace(expected);
+        var result = Read(data, trimmingOptions: ValueTrimmingOptions.All);
         Assert.Equal([expected], result);
     }
 

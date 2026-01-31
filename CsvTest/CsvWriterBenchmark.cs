@@ -29,7 +29,7 @@ public class CsvWriterBenchmark
         {
             _items.Add(new MyItem(
                 $"First{i}",
-                new Custom($"Last{i}"),
+                $"Last{i}",
                 startDate.AddDays(i % 3650),
                 i % 100,
                 i * 1.23m,
