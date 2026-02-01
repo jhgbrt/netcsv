@@ -1,16 +1,16 @@
-namespace Net.Code.Csv.Impl.V2;
+namespace Net.Code.Csv.Impl;
 
-internal sealed class CsvParserV2 : ICsvParser, IEnumerable<CsvLineSlice>, IDisposable
+internal sealed class CsvParser : ICsvParser, IEnumerable<CsvLineSlice>, IDisposable
 {
-    private readonly CsvStateMachineV2 _csvStateMachine;
+    private readonly CsvStateMachine _csvStateMachine;
     private readonly IDisposable _textReader;
     private bool _disposed;
     private CsvLineSlice? _cachedLine;
     private readonly IEnumerator<CsvLineSlice> _enumerator;
 
-    public CsvParserV2(TextReader textReader, BufferedCharReader bufferedReader, CsvLayout layOut, CsvBehaviour behaviour)
+    public CsvParser(TextReader textReader, BufferedCharReader bufferedReader, CsvLayout layOut, CsvBehaviour behaviour)
     {
-        _csvStateMachine = new CsvStateMachineV2(bufferedReader, layOut, behaviour);
+        _csvStateMachine = new CsvStateMachine(bufferedReader, layOut, behaviour);
         _enumerator = _csvStateMachine.Lines().GetEnumerator();
         _textReader = textReader;
 

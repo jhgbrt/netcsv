@@ -1,4 +1,4 @@
-namespace Net.Code.Csv.Impl.V2
+namespace Net.Code.Csv.Impl
 {
     /// <summary>
     /// CsvStateMachineV2 is the streaming CSV parser that turns raw text into CsvLine records.
@@ -22,13 +22,13 @@ namespace Net.Code.Csv.Impl.V2
     /// Note:
     /// Changes here can subtly alter CSV semantics; keep behavior aligned with V1.
     /// </summary>
-    internal sealed class CsvStateMachineV2(BufferedCharReader reader, CsvLayout csvLayout, CsvBehaviour behaviour)
+    internal sealed class CsvStateMachine(BufferedCharReader reader, CsvLayout csvLayout, CsvBehaviour behaviour)
     {
         private readonly BufferedCharReader _reader = reader;
         private readonly CsvLayout _layout = csvLayout;
         private readonly CsvBehaviour _behaviour = behaviour;
 
-        public CsvStateMachineV2(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
+        public CsvStateMachine(TextReader textReader, CsvLayout csvLayout, CsvBehaviour behaviour)
             : this(new BufferedCharReader(textReader ?? throw new ArgumentNullException(nameof(textReader))), csvLayout, behaviour)
         {
         }
@@ -37,14 +37,14 @@ namespace Net.Code.Csv.Impl.V2
 
         public IEnumerable<CsvLineSlice> Lines() => new LineEnumerable(this);
 
-        private sealed class LineEnumerable(CsvStateMachineV2 owner) : IEnumerable<CsvLineSlice>
+        private sealed class LineEnumerable(CsvStateMachine owner) : IEnumerable<CsvLineSlice>
         {
             public IEnumerator<CsvLineSlice> GetEnumerator() => new LineEnumerator(owner);
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
-        private sealed class LineEnumerator(CsvStateMachineV2 owner) : IEnumerator<CsvLineSlice>
+        private sealed class LineEnumerator(CsvStateMachine owner) : IEnumerator<CsvLineSlice>
         {
             private readonly BufferedCharReader _reader = owner._reader;
             private readonly CsvLayout _layout = owner._layout;

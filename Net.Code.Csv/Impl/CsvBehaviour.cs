@@ -26,7 +26,7 @@ public record CsvBehaviour(
     /// <summary>
     /// Enables strict parsing rules for the V2 parser.
     /// </summary>
-    public bool StrictMode { get; init; }
+    internal bool StrictMode { get; init; }
 
     /// <summary>
     /// The default behaviour of the Csv parser: trim unquoted fields,

@@ -98,11 +98,7 @@ public class CsvReaderBenchmark
         var layout = new CsvLayout(Delimiter: Separator, HasHeaders: true);
         var behaviour = new CsvBehaviour(
             TrimmingOptions: ValueTrimmingOptions.All,
-            Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2)
-        {
-            DisableComments = ParserKind == CsvBenchmarkParser.NetCodeCsvV2,
-            CaptureRawData = ParserKind != CsvBenchmarkParser.NetCodeCsvV2
-        };
+            Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2);
         using var reader = GetReader(layout, behaviour);
        
         var priceOrdinal = reader.GetOrdinal("Price");
@@ -127,11 +123,7 @@ public class CsvReaderBenchmark
         }
         if (ParserKind == CsvBenchmarkParser.NetCodeCsvV2)
         {
-            var behaviour = new CsvBehaviour(TrimmingOptions: ValueTrimmingOptions.All)
-            {
-                DisableComments = true,
-                CaptureRawData = false
-            };
+            var behaviour = new CsvBehaviour(TrimmingOptions: ValueTrimmingOptions.All);
             decimal total = 0;
             foreach (var item in ReadCsv.FromFile<MyItem>(_tempFile, delimiter: Separator, hasHeaders: true, trimmingOptions: ValueTrimmingOptions.All, behaviour: behaviour))
             {
@@ -171,11 +163,7 @@ public class CsvReaderBenchmark
         var layout = new CsvLayout(Delimiter: Separator, HasHeaders: false);
         var behaviour = new CsvBehaviour(
             TrimmingOptions: ValueTrimmingOptions.All,
-            Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2)
-        {
-            DisableComments = ParserKind == CsvBenchmarkParser.NetCodeCsvV2,
-            CaptureRawData = ParserKind != CsvBenchmarkParser.NetCodeCsvV2
-        };
+            Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2);
         using var reader = GetReader(layout, behaviour);
 
         int rows = 0;

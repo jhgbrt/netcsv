@@ -1,6 +1,6 @@
 using System.Buffers;
 
-namespace Net.Code.Csv.Impl.V2;
+namespace Net.Code.Csv.Impl;
 
 internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behaviour)
 {

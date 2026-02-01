@@ -15,7 +15,7 @@ internal static class CsvParserSelector
         var env = Environment.GetEnvironmentVariable(ParserEnvVar);
         if (string.IsNullOrWhiteSpace(env))
         {
-            return CsvParserKind.V1;
+            return CsvParserKind.V2;
         }
 
         return ParseKind(env);

@@ -1,5 +1,3 @@
-using Net.Code.Csv.Impl.V2;
-
 namespace Net.Code.Csv.Impl;
 
 internal static class TypedRowEnumerable
@@ -41,7 +39,7 @@ internal static class TypedRowEnumerable
         CsvSchema schema,
         Converter converter)
     {
-        using var parser = new CsvParserV2(reader, new BufferedCharReader(reader), layout, behaviour);
+        using var parser = new CsvParser(reader, new BufferedCharReader(reader), layout, behaviour);
         var activator = TypedLineActivator<T>.Get(schema, parser.Header, converter, useSchemaConverters: false);
 
         foreach (var line in parser)

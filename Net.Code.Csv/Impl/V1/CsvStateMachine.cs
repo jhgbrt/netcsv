@@ -1,4 +1,4 @@
-namespace Net.Code.Csv.Impl.V1;
+namespace Net.Code.Csv.Impl.Legacy;
 
 using System;
 using System.Diagnostics;
