@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="CsvTest/CsvTest.csproj">
+  </Project>
+  <Project Path="Net.Code.Csv.Tests.Unit/Net.Code.Csv.Tests.Unit.csproj">
+  </Project>
+  <Project Path="Net.Code.Csv/Net.Code.Csv.csproj">
+  </Project>
+</Solution>
