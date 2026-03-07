@@ -10,24 +10,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET Core
+    - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 10.0.102
+        dotnet-version: 10.0.x
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal
+    - name: Package
+      run: dotnet pack --no-build
     - name: Publish NuGet
-      # You may pin to the exact commit or the version.
-      # uses: brandedoutcast/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        # Filepath of the project to be packaged, relative to root of repository
-        PROJECT_FILE_PATH: Net.Code.Csv/Net.Code.Csv.csproj
-        # NuGet package id, used for version detection & defaults to project name
-        PACKAGE_NAME: Net.Code.Csv
-        # API key to authenticate with NuGet server
-        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+      run: dotnet nuget push --api-key ${{secrets.NUGET_API_KEY}}
