@@ -698,7 +698,9 @@ internal static class TypedLineSchemaAccessor
             return default;
         }
 
-        return (T)column.FromSpan(span);
+        var fromSpan = column.FromSpan;
+        var typed = TypedSpanConverter<T>.TryGet(fromSpan);
+        return typed is not null ? typed(span) : (T)fromSpan(span);
     }
 
     internal static T? GetSchemaNullableValue<T>(CsvLineSlice line, int ordinal, CsvColumn column) where T : struct
@@ -710,7 +712,9 @@ internal static class TypedLineSchemaAccessor
             return null;
         }
 
-        return (T)column.FromSpan(span);
+        var fromSpan = column.FromSpan;
+        var typed = TypedSpanConverter<T>.TryGet(fromSpan);
+        return typed is not null ? typed(span) : (T)fromSpan(span);
     }
 
     internal static object GetSchemaValue(CsvLineSlice line, int ordinal, CsvColumn column, Type targetType)

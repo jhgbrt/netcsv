@@ -141,7 +141,9 @@ internal class CsvDataReader : IDataReader
             return default;
         }
 
-        return (T)_schema[i].FromSpan(span);
+        var fromSpan = _schema[i].FromSpan;
+        var typed = TypedSpanConverter<T>.TryGet(fromSpan);
+        return typed is not null ? typed(span) : (T)fromSpan(span);
     }
 
     internal T? GetSchemaNullableRaw<T>(int i) where T : struct
@@ -151,7 +153,9 @@ internal class CsvDataReader : IDataReader
             return null;
         }
 
-        return (T)_schema[i].FromSpan(span);
+        var fromSpan = _schema[i].FromSpan;
+        var typed = TypedSpanConverter<T>.TryGet(fromSpan);
+        return typed is not null ? typed(span) : (T)fromSpan(span);
     }
 
     public string GetName(int i) => _schema?.GetName(i) ?? _header[i];
@@ -295,6 +299,14 @@ internal class CsvDataReader : IDataReader
             if (column.Type == typeof(string) && typeof(T) != typeof(string))
             {
                 return convert(span);
+            }
+
+            var typed = TypedSpanConverter<T>.TryGet(column.FromSpan);
+            if (typed is not null)
+            {
+                // Mirrors the object path below: a null result falls through to convert(empty span).
+                var typedValue = typed(span);
+                return typedValue is not null ? typedValue : convert(default);
             }
 
             var schemaValue = column.FromSpan(span);
