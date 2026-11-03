@@ -36,6 +36,7 @@ internal class CsvDataReader : IDataReader
     private IEnumerator<CsvLineSlice> _enumerator;
     private IEnumerator<CsvSchema> _schemas;
     private CsvSchema _schema;
+    private int[] _sourceOrdinals;
     private bool _eof;
     internal CsvSchema Schema => _schema;
     internal CsvHeader Header => _header;
@@ -69,13 +70,48 @@ internal class CsvDataReader : IDataReader
         _enumerator = _parser.GetEnumerator();
         if (_schemas?.MoveNext() ?? false)
             _schema = _schemas.Current;
+        _sourceOrdinals = BuildSourceOrdinals(_schema, _header);
     }
 
-    private int GetIndex(int i) => _schema switch
+    // Maps schema column ordinal -> ordinal in the current header (or the column ordinal itself
+    // when the name is not in the header). Rebuilt per result set, since header and schema may change.
+    // Entries of -1 mark columns that must be resolved through the slow path.
+    private static int[] BuildSourceOrdinals(CsvSchema schema, CsvHeader header)
     {
-        null => i,
-        not null => _header.TryGetIndex(GetName(i), out var j) ? j : i
-    };
+        if (schema is null)
+        {
+            return null;
+        }
+
+        var columns = schema.Columns;
+        var map = new int[columns.Count];
+        for (var i = 0; i < map.Length; i++)
+        {
+            var name = columns[i].Name;
+            map[i] = name is null ? -1 : header.TryGetIndex(name, out var j) ? j : i;
+        }
+        return map;
+    }
+
+    private int GetIndex(int i)
+    {
+        if (_schema is null)
+        {
+            return i;
+        }
+
+        var map = _sourceOrdinals;
+        if ((uint)i < (uint)map.Length)
+        {
+            var j = map[i];
+            if (j >= 0)
+            {
+                return j;
+            }
+        }
+
+        return _header.TryGetIndex(GetName(i), out var k) ? k : i;
+    }
     private CsvField GetField(int i) => _line.GetField(GetIndex(i));
     private string GetRawValue(int i) => GetField(i).GetString();
     private ReadOnlySpan<char> GetRawValueSpan(int i, out bool isNull)
@@ -105,7 +141,9 @@ internal class CsvDataReader : IDataReader
             return default;
         }
 
-        return (T)_schema[i].FromSpan(span);
+        var fromSpan = _schema[i].FromSpan;
+        var typed = TypedSpanConverter<T>.TryGet(fromSpan);
+        return typed is not null ? typed(span) : (T)fromSpan(span);
     }
 
     internal T? GetSchemaNullableRaw<T>(int i) where T : struct
@@ -115,7 +153,9 @@ internal class CsvDataReader : IDataReader
             return null;
         }
 
-        return (T)_schema[i].FromSpan(span);
+        var fromSpan = _schema[i].FromSpan;
+        var typed = TypedSpanConverter<T>.TryGet(fromSpan);
+        return typed is not null ? typed(span) : (T)fromSpan(span);
     }
 
     public string GetName(int i) => _schema?.GetName(i) ?? _header[i];
@@ -259,6 +299,14 @@ internal class CsvDataReader : IDataReader
             if (column.Type == typeof(string) && typeof(T) != typeof(string))
             {
                 return convert(span);
+            }
+
+            var typed = TypedSpanConverter<T>.TryGet(column.FromSpan);
+            if (typed is not null)
+            {
+                // Mirrors the object path below: a null result falls through to convert(empty span).
+                var typedValue = typed(span);
+                return typedValue is not null ? typedValue : convert(default);
             }
 
             var schemaValue = column.FromSpan(span);

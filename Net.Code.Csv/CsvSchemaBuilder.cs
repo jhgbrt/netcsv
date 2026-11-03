@@ -90,18 +90,18 @@ public class CsvSchemaBuilder(CultureInfo cultureInfo)
     }
     public CsvSchemaBuilder Add<T>(string name, CsvSpanConverter<T> convert, bool allowNull)
     {
-        _columns.Add(new(name, name, typeof(T), s => convert(s), allowNull));
+        _columns.Add(new(name, name, typeof(T), TypedSpanConverter<T>.Create(convert), allowNull));
         return this;
     }
     public CsvSchemaBuilder Add<T>((string columnName, string propertyName) name, CsvSpanConverter<T> convert, bool allowNull)
     {
-        _columns.Add(new (name.columnName, name.propertyName, typeof(T), s => convert(s), allowNull));
+        _columns.Add(new (name.columnName, name.propertyName, typeof(T), TypedSpanConverter<T>.Create(convert), allowNull));
         return this;
     }
 
     private CsvSchemaBuilder Add<T>((string columnName, string propertyName)  name, string format, CsvSpanConverterWithFormat<T> convert, bool allowNull)
     {
-        _columns.Add(new (name.columnName, name.propertyName, typeof(T), s => convert(s, format), allowNull)
+        _columns.Add(new (name.columnName, name.propertyName, typeof(T), TypedSpanConverter<T>.Create(s => convert(s, format)), allowNull)
         {
             Format = format
         });
