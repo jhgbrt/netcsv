@@ -2,38 +2,43 @@ namespace Net.Code.Csv.Impl;
 
 internal readonly struct CsvField
 {
+    // A field is either a whole string or a slice of a char array (reader buffer,
+    // line buffer or a materialized copy). A negative length marks a null field.
     private readonly string _string;
-    private readonly ReadOnlyMemory<char> _buffer;
-    private readonly Range _range;
-    private readonly bool _hasString;
+    private readonly char[] _array;
+    private readonly int _start;
+    private readonly int _length;
 
-    public bool IsNull { get; }
-
-    private CsvField(string value, bool isNull)
+    private CsvField(string value)
     {
         _string = value;
-        _buffer = default;
-        _range = 0..0;
-        _hasString = true;
-        IsNull = isNull;
+        _array = null;
+        _start = 0;
+        _length = value is null ? -1 : value.Length;
     }
 
-    private CsvField(ReadOnlyMemory<char> buffer, Range range)
+    private CsvField(char[] array, int start, int length)
     {
         _string = null;
-        _buffer = buffer;
-        _range = range;
-        _hasString = false;
-        IsNull = false;
+        _array = array;
+        _start = start;
+        _length = length;
     }
 
-    public static CsvField FromString(string value) => new(value, value is null);
+    public bool IsNull => _length < 0;
 
-    public static CsvField FromBuffer(ReadOnlyMemory<char> buffer, Range range)
-        => new(buffer, range);
+    public static CsvField FromString(string value) => new(value);
+
+    public static CsvField FromArray(char[] array, int start, int length)
+        => new(array, start, length);
 
     public ReadOnlySpan<char> Span
-        => IsNull ? ReadOnlySpan<char>.Empty : _hasString ? _string.AsSpan() : _buffer.Span[_range];
+        => _array is not null
+            ? new ReadOnlySpan<char>(_array, _start, _length)
+            : _string.AsSpan();
 
-    public string GetString() => IsNull ? null : _hasString ? _string : new string(Span);
+    public string GetString()
+        => _array is not null
+            ? (_length == 0 ? string.Empty : new string(_array, _start, _length))
+            : _string ?? (IsNull ? null : string.Empty);
 }

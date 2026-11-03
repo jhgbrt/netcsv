@@ -39,7 +39,12 @@ namespace Net.Code.Csv.Impl
 
         private sealed class LineEnumerable(CsvStateMachine owner) : IEnumerable<CsvLineSlice>
         {
-            public IEnumerator<CsvLineSlice> GetEnumerator() => new LineEnumerator(owner);
+            public IEnumerator<CsvLineSlice> GetEnumerator()
+            {
+                // Each enumerator starts a fresh raw-data window for error messages.
+                owner._reader.ResetRaw();
+                return new LineEnumerator(owner);
+            }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
@@ -49,7 +54,7 @@ namespace Net.Code.Csv.Impl
             private readonly BufferedCharReader _reader = owner._reader;
             private readonly CsvLayout _layout = owner._layout;
             private readonly CsvBehaviour _behaviour = owner._behaviour;
-            private readonly CsvLineSliceBuilder _builder = new(owner._layout, owner._behaviour);
+            private readonly CsvLineSliceBuilder _builder = new(owner._layout, owner._behaviour, owner._reader);
             private readonly bool _strictQuotedWhitespace =
                 owner._behaviour.StrictMode
                 && owner._behaviour.TrimmingOptions == ValueTrimmingOptions.All
@@ -83,7 +88,7 @@ namespace Net.Code.Csv.Impl
                     if (!_reader.TryGetSpan(out var span))
                     {
                         // End of input: finalize the current line.
-                        var finalLine = _builder.NextField().ToLine();
+                        var finalLine = _builder.NextField().ToLine(0);
                         owner.FieldCount = _builder.FieldCount;
                         _finished = true;
                         if (_behaviour.EmptyLineAction == EmptyLineAction.Skip && finalLine.IsEmpty)
@@ -132,7 +137,7 @@ namespace Net.Code.Csv.Impl
                                     if (c == '\n')
                                     {
                                         _builder.SetCurrent(c);
-                                        var line = _builder.ToLine();
+                                        var line = _builder.ToLine(baseIndex + i + 1);
                                         owner.FieldCount = _builder.FieldCount;
                                         if (ShouldReturn(line, i + 1))
                                         {
@@ -144,6 +149,7 @@ namespace Net.Code.Csv.Impl
                                     if (_layout.Comment.HasValue && c == _layout.Comment.Value)
                                     {
                                         _builder.SetCurrent(c);
+                                        _reader.SuspendRaw(baseIndex + i + 1);
                                         _state = ScanState.InComment;
                                         i++;
                                         break;
@@ -181,6 +187,7 @@ namespace Net.Code.Csv.Impl
                                     }
                                     if (c == '\n')
                                     {
+                                        _reader.ResumeRaw(baseIndex + i + 1);
                                         _builder.PrepareNextLine();
                                         _state = ScanState.BeginningOfLine;
                                         i++;
@@ -234,7 +241,7 @@ namespace Net.Code.Csv.Impl
                                     if (c == '\n')
                                     {
                                         _builder.NextField();
-                                        var line = _builder.ToLine();
+                                        var line = _builder.ToLine(baseIndex + i + 1);
                                         owner.FieldCount = _builder.FieldCount;
                                         _state = ScanState.BeginningOfLine;
                                         if (ShouldReturn(line, i + 1))
@@ -264,7 +271,7 @@ namespace Net.Code.Csv.Impl
                                     {
                                         _builder.SetCurrent(c);
                                         _builder.AcceptTentative().NextField();
-                                        var line = _builder.ToLine();
+                                        var line = _builder.ToLine(baseIndex + i + 1);
                                         owner.FieldCount = _builder.FieldCount;
                                         _state = ScanState.BeginningOfLine;
                                         if (ShouldReturn(line, i + 1))
@@ -278,7 +285,7 @@ namespace Net.Code.Csv.Impl
                                     {
                                         if (_strictQuotedWhitespace && _builder.HasTentative)
                                         {
-                                            throw new MalformedCsvException(_builder.RawData, _builder.Location, _builder.FieldsCount);
+                                            throw new MalformedCsvException(_reader.GetRawData(baseIndex + i), _builder.Location, _builder.FieldsCount);
                                         }
                                         _builder.SetCurrent(c);
                                         _builder.MarkQuoted().DiscardTentative();
@@ -336,9 +343,14 @@ namespace Net.Code.Csv.Impl
                                     var idx = _layout.Escape == quote
                                         ? slice.IndexOf(quote)
                                         : slice.IndexOfAny(quote, _layout.Escape);
+                                    // A quoted run without escapes can reference the reader buffer directly;
+                                    // the builder materializes it once an escape, quote or refill follows.
                                     if (idx < 0)
                                     {
-                                        _builder.AddToField(slice);
+                                        if (!_builder.TrySetDirectSlice(buffer, baseIndex + i, slice.Length))
+                                        {
+                                            _builder.AddToField(slice);
+                                        }
                                         _builder.AdvanceSpan(slice);
                                         i = span.Length;
                                         break;
@@ -346,7 +358,10 @@ namespace Net.Code.Csv.Impl
                                     if (idx > 0)
                                     {
                                         var run = slice[..idx];
-                                        _builder.AddToField(run);
+                                        if (!_builder.TrySetDirectSlice(buffer, baseIndex + i, idx))
+                                        {
+                                            _builder.AddToField(run);
+                                        }
                                         _builder.AdvanceSpan(run);
                                         i += idx;
                                     }
@@ -390,7 +405,7 @@ namespace Net.Code.Csv.Impl
                                     if (c == '\n')
                                     {
                                         _builder.DiscardTentative().NextField();
-                                        var line = _builder.ToLine();
+                                        var line = _builder.ToLine(baseIndex + i + 1);
                                         owner.FieldCount = _builder.FieldCount;
                                         _state = ScanState.BeginningOfLine;
                                         if (ShouldReturn(line, i + 1))
@@ -416,7 +431,7 @@ namespace Net.Code.Csv.Impl
                                     {
                                         if (_strictQuotedWhitespace)
                                         {
-                                            throw new MalformedCsvException(_builder.RawData, _builder.Location, _builder.FieldsCount);
+                                            throw new MalformedCsvException(_reader.GetRawData(baseIndex + i + 1), _builder.Location, _builder.FieldsCount);
                                         }
                                         _builder.AddToTentative();
                                         i++;
@@ -436,7 +451,7 @@ namespace Net.Code.Csv.Impl
                                         i++;
                                         break;
                                     }
-                                    throw new MalformedCsvException(_builder.RawData, _builder.Location, _builder.FieldsCount);
+                                    throw new MalformedCsvException(_reader.GetRawData(baseIndex + i + 1), _builder.Location, _builder.FieldsCount);
                                 }
 
                             case ScanState.ParseError:

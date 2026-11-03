@@ -29,9 +29,93 @@ internal sealed class BufferedCharReader
             return true;
         }
 
+        if (!_rawSuspended)
+        {
+            CaptureRaw(_length);
+        }
+        _rawStart = 0;
+
         _length = _reader.Read(_buffer.AsSpan());
         _index = 0;
         return _length > 0;
+    }
+
+    // Raw data tracking for error messages (MalformedCsvException.RawData).
+    // RawData is the last RawWindowSize characters consumed by the parser, excluding
+    // comment bodies. Instead of recording every character, the consumed characters are
+    // reconstructed from the buffer when an exception is thrown; only the tail of the
+    // previous buffer (or the data preceding a comment) is carried over.
+    private const int RawWindowSize = 32;
+    private readonly char[] _rawCarry = new char[RawWindowSize];
+    private int _rawCarryCount;
+    private int _rawStart;
+    private bool _rawSuspended;
+
+    // Starts a new raw window at the current position (a new line enumerator/result set).
+    public void ResetRaw()
+    {
+        _rawCarryCount = 0;
+        _rawStart = _index;
+        _rawSuspended = false;
+    }
+
+    // Stops recording raw data after the character at absoluteEnd - 1 (e.g. inside a comment).
+    public void SuspendRaw(int absoluteEnd)
+    {
+        CaptureRaw(absoluteEnd);
+        _rawSuspended = true;
+    }
+
+    // Resumes recording raw data starting at absoluteStart in the current buffer.
+    public void ResumeRaw(int absoluteStart)
+    {
+        _rawStart = absoluteStart;
+        _rawSuspended = false;
+    }
+
+    // Returns the raw window ending just before absoluteEnd in the current buffer.
+    public string GetRawData(int absoluteEnd)
+    {
+        var count = _rawSuspended ? 0 : Math.Max(0, absoluteEnd - _rawStart);
+        if (count >= RawWindowSize)
+        {
+            return new string(_buffer, absoluteEnd - RawWindowSize, RawWindowSize);
+        }
+
+        var keep = Math.Min(_rawCarryCount, RawWindowSize - count);
+        if (keep + count == 0)
+        {
+            return string.Empty;
+        }
+
+        var result = new char[keep + count];
+        Array.Copy(_rawCarry, _rawCarryCount - keep, result, 0, keep);
+        Array.Copy(_buffer, absoluteEnd - count, result, keep, count);
+        return new string(result);
+    }
+
+    private void CaptureRaw(int absoluteEnd)
+    {
+        var count = absoluteEnd - _rawStart;
+        if (count <= 0)
+        {
+            return;
+        }
+
+        if (count >= RawWindowSize)
+        {
+            Array.Copy(_buffer, absoluteEnd - RawWindowSize, _rawCarry, 0, RawWindowSize);
+            _rawCarryCount = RawWindowSize;
+        }
+        else
+        {
+            var keep = Math.Min(_rawCarryCount, RawWindowSize - count);
+            Array.Copy(_rawCarry, _rawCarryCount - keep, _rawCarry, 0, keep);
+            Array.Copy(_buffer, _rawStart, _rawCarry, keep, count);
+            _rawCarryCount = keep + count;
+        }
+
+        _rawStart = absoluteEnd;
     }
 
     public bool TryGetSpan(out ReadOnlySpan<char> span)
@@ -49,7 +133,7 @@ internal sealed class BufferedCharReader
     // Exposes the active read buffer so callers can create zero-copy slices.
     // The array is reused on subsequent reads; callers must materialize slices
     // before advancing past the current span.
-    public ReadOnlyMemory<char> CurrentBuffer => _buffer.AsMemory(0, _length);
+    public char[] CurrentBuffer => _buffer;
 
     public int CurrentIndex => _index;
 
