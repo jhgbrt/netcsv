@@ -343,9 +343,14 @@ namespace Net.Code.Csv.Impl
                                     var idx = _layout.Escape == quote
                                         ? slice.IndexOf(quote)
                                         : slice.IndexOfAny(quote, _layout.Escape);
+                                    // A quoted run without escapes can reference the reader buffer directly;
+                                    // the builder materializes it once an escape, quote or refill follows.
                                     if (idx < 0)
                                     {
-                                        _builder.AddToField(slice);
+                                        if (!_builder.TrySetDirectSlice(buffer, baseIndex + i, slice.Length))
+                                        {
+                                            _builder.AddToField(slice);
+                                        }
                                         _builder.AdvanceSpan(slice);
                                         i = span.Length;
                                         break;
@@ -353,7 +358,10 @@ namespace Net.Code.Csv.Impl
                                     if (idx > 0)
                                     {
                                         var run = slice[..idx];
-                                        _builder.AddToField(run);
+                                        if (!_builder.TrySetDirectSlice(buffer, baseIndex + i, idx))
+                                        {
+                                            _builder.AddToField(run);
+                                        }
                                         _builder.AdvanceSpan(run);
                                         i += idx;
                                     }

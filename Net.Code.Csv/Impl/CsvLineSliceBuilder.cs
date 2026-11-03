@@ -47,6 +47,9 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         _fieldStarted = false;
         _fieldStart = 0;
         _directFieldCount = 0;
+        // A line abandoned mid-field (parse error recovery) may leave a pending direct slice.
+        _usingDirectSlice = false;
+        _directBuffer = default;
         _location = _location.NextLine();
         return this;
     }
@@ -81,6 +84,8 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return this;
         }
 
+        // A pending direct slice (e.g. quoted content before `"  x`) must precede the tentative chars.
+        EnsureLineBufferForField();
         EnsureFieldStart();
         EnsureLineCapacity(_lineLength + _tentativeLength);
         Array.Copy(_tentativeBuffer, 0, _lineBuffer, _lineLength, _tentativeLength);
@@ -341,11 +346,10 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return;
         }
 
-        if (!_fieldStarted)
-        {
-            _fieldStart = _lineLength;
-            _fieldStarted = true;
-        }
+        // A direct slice always holds the whole field so far; earlier fields may have been
+        // copied into the line buffer since it was set, so the field starts here.
+        _fieldStart = _lineLength;
+        _fieldStarted = true;
 
         var directSpan = _directBuffer.Span[_directRange];
         AppendLineSpan(directSpan);

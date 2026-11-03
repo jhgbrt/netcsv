@@ -390,4 +390,115 @@ public class ParserV2RegressionTests
             Assert.Equal(expected.Lines[i], actual.Lines[i]);
         }
     }
+
+    public static TheoryData<int, string, ValueTrimmingOptions> QuotedFieldsAtBoundary()
+    {
+        var data = new TheoryData<int, string, ValueTrimmingOptions>();
+        string[] fields =
+        [
+            "\"  quoted value  \"",
+            "\"ab\"\"cd\"",
+            "\"\"\"\"",
+            "\"\"",
+            "\"multi\nline;\r\nvalue\"",
+            "  \"padded\"  ",
+            "\"x\" trailing\"",
+            "\"" + new string('q', 100) + "\"\"" + new string('r', 100) + "\"",
+        ];
+        int[] offsets = [-120, -12, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3];
+        foreach (var field in fields)
+        {
+            foreach (var offset in offsets)
+            {
+                foreach (ValueTrimmingOptions trimming in Enum.GetValues(typeof(ValueTrimmingOptions)))
+                {
+                    data.Add(offset, field, trimming);
+                }
+            }
+        }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(QuotedFieldsAtBoundary))]
+    public void QuotedFieldNearBufferBoundary_MatchesLegacyParser(int offset, string field, ValueTrimmingOptions trimming)
+    {
+        // Place the field so that it starts `offset` chars from the first buffer refill.
+        var prefixLength = ReaderBufferSize + offset - 2;
+        var input = Filler(prefixLength, 2).Replace(',', ';') + "a;" + field + "\nb;\"next\"\n";
+        var layout = new Net.Code.Csv.Impl.CsvLayout(Quote: '"', Delimiter: ';', Escape: '"', Comment: '#', HasHeaders: false);
+        var behaviour = new Net.Code.Csv.Impl.CsvBehaviour(trimming, MissingFieldAction.ReplaceByEmpty, EmptyLineAction.Skip, QuotesInsideQuotedFieldAction.Ignore);
+
+        var expected = ParseWith(true, input, layout, behaviour);
+        var actual = ParseWith(false, input, layout, behaviour);
+
+        Assert.Null(expected.Error);
+        Assert.Null(actual.Error);
+        Assert.Equal(expected.Lines.Count, actual.Lines.Count);
+        for (var i = 0; i < expected.Lines.Count; i++)
+        {
+            Assert.Equal(expected.Lines[i], actual.Lines[i]);
+        }
+    }
+
+    [Theory]
+    [InlineData(ValueTrimmingOptions.None, "  a  ")]
+    [InlineData(ValueTrimmingOptions.UnquotedOnly, "  a  ")]
+    [InlineData(ValueTrimmingOptions.QuotedOnly, "a")]
+    [InlineData(ValueTrimmingOptions.All, "a")]
+    public void QuotedField_IsTrimmedAccordingToOptions(ValueTrimmingOptions trimming, string expected)
+    {
+        using var reader = ReadCsv.FromString("x,\"  a  \",y\n", trimmingOptions: trimming);
+        Assert.True(reader.Read());
+        Assert.Equal(expected, reader.GetString(1));
+        Assert.Equal("y", reader.GetString(2));
+    }
+
+    [Fact]
+    public void QuotedField_WithWhitespaceAndTextAfterClosingQuote_KeepsContentOrder()
+    {
+        using var reader = ReadCsv.FromString("\"abc\"  x\",d\n", quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore);
+        Assert.True(reader.Read());
+        Assert.Equal("abc\"  x", reader.GetString(0));
+        Assert.Equal("d", reader.GetString(1));
+    }
+
+    [Fact]
+    public void QuotedField_AdvanceToNextLine_DoesNotLeakIntoNextLine()
+    {
+        const string Data = "\"abc\"x,1\n\"def\",2\n";
+        using var reader = ReadCsv.FromString(Data, quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.AdvanceToNextLine);
+        Assert.True(reader.Read());
+        Assert.Equal("def", reader.GetString(0));
+        Assert.Equal("2", reader.GetString(1));
+        Assert.False(reader.Read());
+    }
+
+    [Fact]
+    public void QuotedFirstLine_WithoutHeaders_IsValidWhenYielded()
+    {
+        var input = "\"first\";\"line\"\n" + string.Concat(Enumerable.Repeat("\"" + new string('z', 50) + "\";\"v\"\n", 2000));
+        using var reader = ReadCsv.FromString(input, delimiter: ';', hasHeaders: false);
+        Assert.True(reader.Read());
+        Assert.Equal("first", reader.GetString(0));
+        Assert.Equal("line", reader.GetString(1));
+        var count = 1;
+        while (reader.Read())
+        {
+            Assert.Equal(new string('z', 50), reader.GetString(0));
+            count++;
+        }
+        Assert.Equal(2001, count);
+    }
+
+    [Fact]
+    public void QuotedHeader_IsReadCorrectly_AndFirstRowIsValid()
+    {
+        var input = "\"h1\";\"h 2\"\n\"v1\";\"v2\"\n";
+        using var reader = ReadCsv.FromString(input, delimiter: ';', hasHeaders: true);
+        Assert.Equal("h 2", reader.GetName(1));
+        Assert.True(reader.Read());
+        Assert.Equal("v1", reader.GetString(0));
+        Assert.Equal("v2", reader["h 2"]);
+    }
 }
