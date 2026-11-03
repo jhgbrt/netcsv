@@ -293,6 +293,55 @@ public class WriteCsvCharacterizationTests
         Assert.ThrowsAny<Exception>(() => WriteSync(new SmallRecord[] { null }, ',', '"', '"', false, CultureInfo.InvariantCulture));
     }
 
+    public class ThrowingGetter
+    {
+        public int Value => throw new InvalidOperationException("boom");
+    }
+
+    [Fact]
+    public void ThrowingGetter_ThrowsTargetInvocationException()
+    {
+        var ex = Assert.Throws<System.Reflection.TargetInvocationException>(() => WriteSync([new ThrowingGetter()], ',', '"', '"', false, CultureInfo.InvariantCulture));
+        Assert.IsType<InvalidOperationException>(ex.InnerException);
+    }
+
+    public class SetOnly
+    {
+        private int _value;
+        public int Value { set => _value = value; }
+        public int Other => _value;
+    }
+
+    [Fact]
+    public void SetOnlyProperty_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => WriteSync([new SetOnly()], ',', '"', '"', false, CultureInfo.InvariantCulture));
+    }
+
+    public struct StructItem
+    {
+        public int A { get; set; }
+        public string B { get; set; }
+        public double? C { get; set; }
+    }
+
+    [Fact]
+    public async Task StructItems_AreWritten()
+    {
+        StructItem[] items = [new StructItem { A = -1, B = "x;y", C = 2.5 }, default];
+        var expected = $"A;B;C{Environment.NewLine}-1;'x;y';2,5{Environment.NewLine}0;;{Environment.NewLine}";
+        Assert.Equal(expected, WriteSync(items, ';', '\'', '\'', true, CultureInfo.GetCultureInfo("nl-BE")));
+        Assert.Equal(expected, await WriteAsync(items, ';', '\'', '\'', true, CultureInfo.GetCultureInfo("nl-BE")));
+    }
+
+    [Fact]
+    public void ManyRowsAndWideValues_MatchConcatenation()
+    {
+        var items = Enumerable.Range(0, 2000).Select(i => new SmallRecord(new string('q', i % 700) + (i % 3 == 0 ? "\"" : ""), i % 2 == 0, new DateTime(2000, 1, 1).AddDays(i), i * -0.25)).ToArray();
+        var expected = string.Concat(items.Select(r => WriteSync([r], ',', '"', '"', false, CultureInfo.InvariantCulture)));
+        Assert.Equal(expected, WriteSync(items, ',', '"', '"', false, CultureInfo.InvariantCulture));
+    }
+
     static readonly Dictionary<string, string> ExpectedOutput = new()
     {
         ["S||,|\"|\"|True"] = "S,NullS,B,BF,NB,NBF,U8,I8,I16,U16,I32,U32,I64,U64,F32,F64,Dec,DecIgnoredFormat,IntIgnoredFormat,C,NulChar,G,Dt,DtF,DtLong,Dto,DtoF,Ts,TsF,TsG,E,Fl,NU8,NI8,NI16,NU16,NI32,NU32,NI64,NU64,NF32,NF64,NDec,NC,NG,NDt,NDtF,NDto,NTs,NTsF,NE,Cust,Amt,NAmt,Obj,Renamed Column,StaticProp{NL}plain,,True,N,False,ja,255,-128,-32768,65535,-123456789,4294967295,-9223372036854775808,18446744073709551615,-0.1,-1234567.891,-1234567.8900,1234.5,255,x,,0f8fad5b-d9cb-469f-a165-70867728950e,2021-03-04T05:06:07.8900000,2021-03-04 05:06:07.890,\"Thursday, 04 March 2021\",2020-11-13T10:20:30.0000000-05:00,13/11/2020 10:20 +02:00,-1.02:03:04.0050000,1:2:03:04.5,1:02:03:04.5000000,Green,\"Read, Write\",1,-1,-2,2,-3,3,-4,4,1.5,0.30000000000000004,0.000001,;,00000000-0000-0000-0000-000000000000,1999-12-31T23:59:59.0000000Z,19991231,2000-01-01T00:00:00.0000000+00:00,00:00:00.0010000,13:14,Red,\"cu\"\"st,om;\",EUR 12.5,USD -0.25,1234.5,7,42{NL},,False,N,,,0,0,0,0,0,0,0,0,0,0,0,0,0,,,00000000-0000-0000-0000-000000000000,0001-01-01T00:00:00.0000000,0001-01-01 00:00:00.000,\"Monday, 01 January 0001\",0001-01-01T00:00:00.0000000+00:00,01/01/0001 00:00 +00:00,00:00:00,0:00:00,0:00:00:00.0000000,Red,None,,,,,,,,,,,,,,,,,,,,, 0,,,0,42{NL}\"a\"\"b,c;d\ne\rf\"\"\"\"\",\"\"\"\",False,N,,,0,0,0,0,-2147483648,0,0,0,NaN,Infinity,79228162514264337593543950335,0,0,\"\"\"\",,00000000-0000-0000-0000-000000000000,0001-01-01T00:00:00.0000000,0001-01-01 00:00:00.000,\"Monday, 01 January 0001\",0001-01-01T00:00:00.0000000+00:00,01/01/0001 00:00 +00:00,00:00:00,0:00:00,0:00:00:00.0000000,Red,8,,,,,,,,,-Infinity,-0,-79228162514264337593543950335,\"\n\",,,,,,,Green,, 0,,\"text,with;delims\",0,42{NL}",
