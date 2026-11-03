@@ -39,10 +39,10 @@ public class CsvReaderBenchmark
     ];
 
     //[Params(CsvBenchmarkParser.NetCodeCsvV1, CsvBenchmarkParser.NetCodeCsvV2, CsvBenchmarkParser.CsvHelper, CsvBenchmarkParser.Sep)]
-    [Params(CsvBenchmarkParser.NetCodeCsvV2)]
+    [Params(CsvBenchmarkParser.NetCodeCsvV2, CsvBenchmarkParser.CsvHelper, CsvBenchmarkParser.Sep)]
     public CsvBenchmarkParser ParserKind { get; set; }
 
-    [Params(100000)]
+    [Params(10000)]
     public int Rows { get; set; }
 
     private string _tempFile = string.Empty;
