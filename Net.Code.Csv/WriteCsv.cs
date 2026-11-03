@@ -124,19 +124,26 @@ public static class WriteCsv
         CultureInfo cultureInfo = null
         )
     {
-        var schema = Schema.From<T>();
-        var properties = GetPropertiesForSchema<T>(schema);
+        var rowWriter = CsvRowWriter<T>.ForSchema();
         if (hasHeaders)
         {
-            writer.WriteLine(string.Join(delimiter.ToString(), schema.Columns.Select(c => c.Name)));
+            writer.WriteLine(string.Join(delimiter.ToString(), rowWriter.Headers));
         }
 
         cultureInfo ??= CultureInfo.InvariantCulture;
-        var converter = new Converter(cultureInfo);
-        var sb = new StringBuilder();
+        using var buffer = new CsvRowBuffer(cultureInfo, delimiter, quote, escape);
         foreach (var item in items)
         {
-            WriteValues(item, properties, writer, delimiter, quote, escape, converter, sb);
+            if (item is null)
+            {
+                WriteValues(item, rowWriter.Properties, writer, delimiter, quote, escape, new Converter(cultureInfo), new StringBuilder());
+            }
+            else
+            {
+                buffer.Clear();
+                rowWriter.Write(item, buffer);
+                writer.Write(buffer.Buffer, 0, buffer.Length);
+            }
             writer.WriteLine();
         }
     }
@@ -151,50 +158,31 @@ public static class WriteCsv
         CultureInfo cultureInfo = null
         )
     {
-        var properties = typeof(T).GetPropertiesWithCsvFormat().ToArray();
+        var rowWriter = CsvRowWriter<T>.ForProperties();
         if (hasHeaders)
         {
-            writer.WriteLine(string.Join(delimiter.ToString(), properties.Select(p => p.property.Name)));
+            writer.WriteLine(string.Join(delimiter.ToString(), rowWriter.Headers));
         }
 
         cultureInfo ??= CultureInfo.InvariantCulture;
-        var converter = new Converter(cultureInfo);
-        var sb = new StringBuilder();
+        using var buffer = new CsvRowBuffer(cultureInfo, delimiter, quote, escape);
         await foreach (var item in items)
         {
-            await WriteValuesAsync(item, properties, writer, delimiter, quote, escape, converter, sb);
+            if (item is null)
+            {
+                await WriteValuesAsync(item, rowWriter.Properties, writer, delimiter, quote, escape, new Converter(cultureInfo), new StringBuilder());
+            }
+            else
+            {
+                buffer.Clear();
+                rowWriter.Write(item, buffer);
+                await writer.WriteAsync(buffer.Buffer, 0, buffer.Length);
+            }
             await writer.WriteLineAsync();
         }
     }
 
-    private static (PropertyInfo property, string format)[] GetPropertiesForSchema<T>(CsvSchema schema)
-    {
-        var properties = typeof(T).GetPropertiesWithCsvFormat().ToArray();
-        var lookup = new Dictionary<string, (PropertyInfo property, string format)>(properties.Length, StringComparer.Ordinal);
-        foreach (var property in properties)
-        {
-            lookup[property.property.Name] = property;
-        }
-
-        var result = new (PropertyInfo property, string format)[schema.Columns.Count];
-        var count = 0;
-        foreach (var column in schema.Columns)
-        {
-            if (lookup.TryGetValue(column.PropertyName, out var property))
-            {
-                result[count++] = property;
-            }
-        }
-
-        if (count == result.Length)
-        {
-            return result;
-        }
-
-        Array.Resize(ref result, count);
-        return result;
-    }
-
+    // Reflection based fallback, only used for null items (preserves the exceptions PropertyInfo.GetValue throws).
     private static void WriteValues(
         object item,
         (PropertyInfo property, string format)[] properties,
