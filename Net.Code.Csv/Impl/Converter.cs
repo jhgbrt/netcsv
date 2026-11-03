@@ -15,6 +15,12 @@ class Converter(CultureInfo cultureInfo)
         => bool.Parse(value);
     public bool ToBoolean(ReadOnlySpan<char> value, string format)
     {
+        // No format means the standard "true"/"false" parsing, consistent with ToDateTime/ToTimeSpan.
+        if (string.IsNullOrEmpty(format))
+        {
+            return bool.Parse(value);
+        }
+
         var formatSpan = format.AsSpan();
         var (@true, @false) = GetBooleanFormats(formatSpan);
         if (value.SequenceEqual(formatSpan[@true]))
