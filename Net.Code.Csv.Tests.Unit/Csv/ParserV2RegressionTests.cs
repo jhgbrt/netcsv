@@ -167,4 +167,147 @@ public class ParserV2RegressionTests
             }
         }
     }
+
+    // BufferedCharReader reads the input in chunks of this size; tests below place
+    // interesting characters around this boundary.
+    private const int ReaderBufferSize = 16384;
+    private const int RawWindow = 32;
+
+    private static string Last32(string s) => s.Length <= RawWindow ? s : s.Substring(s.Length - RawWindow);
+
+    // Builds lines of `fields` unquoted fields (1 or 2) with a total length of exactly `length` chars.
+    private static string Filler(int length, int fields)
+    {
+        if (length == 0)
+        {
+            return string.Empty;
+        }
+        var sb = new StringBuilder(length);
+        var remaining = length;
+        while (remaining > 20)
+        {
+            sb.Append(fields == 1 ? "0123456789abcde\n" : "0123456,89abcde\n");
+            remaining -= 16;
+        }
+        var n = remaining - 1;
+        sb.Append(fields == 1 ? new string('b', n) : "a," + new string('b', n - 2));
+        sb.Append('\n');
+        Assert.Equal(length, sb.Length);
+        return sb.ToString();
+    }
+
+    private static MalformedCsvException ReadAllExpectingError(Func<System.Data.IDataReader> open)
+    {
+        return Assert.ThrowsAny<MalformedCsvException>(() =>
+        {
+            using var reader = open();
+            do
+            {
+                while (reader.Read())
+                {
+                    for (var i = 0; i < reader.FieldCount; i++)
+                    {
+                        _ = reader.GetValue(i);
+                    }
+                }
+            } while (reader.NextResult());
+        });
+    }
+
+    public static TheoryData<int> BoundaryOffsets => new()
+    {
+        0, 10, 100,
+        ReaderBufferSize - 40, ReaderBufferSize - 20, ReaderBufferSize - 3, ReaderBufferSize - 1,
+        ReaderBufferSize, ReaderBufferSize + 1, ReaderBufferSize + 2, ReaderBufferSize + 40,
+        2 * ReaderBufferSize - 10
+    };
+
+    [Theory]
+    [MemberData(nameof(BoundaryOffsets))]
+    public void MalformedQuote_RawData_IsLastCharsUpToAndIncludingOffendingChar(int prefixLength)
+    {
+        var input = Filler(prefixLength, 1) + "\"abc\"x\n";
+        var ex = ReadAllExpectingError(() => ReadCsv.FromString(
+            input, escape: '\\', quotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException));
+
+        var end = input.LastIndexOf('x') + 1;
+        Assert.Equal(Last32(input.Substring(0, end)), ex.RawData);
+    }
+
+    [Theory]
+    [MemberData(nameof(BoundaryOffsets))]
+    public void StrictWhitespaceBeforeQuote_RawData_ExcludesOffendingQuote(int prefixLength)
+    {
+        var input = Filler(prefixLength, 2) + "a, \"b\"\n";
+        var behaviour = Net.Code.Csv.Impl.CsvBehaviour.Strict() with { TrimmingOptions = ValueTrimmingOptions.All };
+        var ex = ReadAllExpectingError(() => ReadCsv.FromString(input, behaviour: behaviour));
+
+        var end = input.LastIndexOf(", \"") + 2;
+        Assert.Equal(Last32(input.Substring(0, end)), ex.RawData);
+    }
+
+    [Theory]
+    [MemberData(nameof(BoundaryOffsets))]
+    public void MissingFieldAtNewLine_RawData_IncludesNewLine(int prefixLength)
+    {
+        if (prefixLength == 0) prefixLength = 4;
+        var input = Filler(prefixLength, 2) + "1\n2,2\n";
+        var ex = ReadAllExpectingError(() => ReadCsv.FromString(input));
+
+        Assert.IsType<MissingFieldCsvException>(ex);
+        var end = prefixLength + 2;
+        Assert.Equal(Last32(input.Substring(0, end)), ex.RawData);
+    }
+
+    [Theory]
+    [MemberData(nameof(BoundaryOffsets))]
+    public void MissingFieldAtEndOfInput_RawData_IsTailOfInput(int prefixLength)
+    {
+        if (prefixLength == 0) prefixLength = 4;
+        var input = Filler(prefixLength, 2) + "1";
+        var ex = ReadAllExpectingError(() => ReadCsv.FromString(input));
+
+        Assert.IsType<MissingFieldCsvException>(ex);
+        Assert.Equal(Last32(input), ex.RawData);
+    }
+
+    [Theory]
+    [InlineData(4)]
+    [InlineData(100)]
+    [InlineData(ReaderBufferSize - 60)]
+    [InlineData(ReaderBufferSize - 20)]
+    [InlineData(ReaderBufferSize - 5)]
+    [InlineData(ReaderBufferSize - 1)]
+    [InlineData(ReaderBufferSize)]
+    [InlineData(ReaderBufferSize + 3)]
+    public void MissingFieldAfterComment_RawData_ExcludesCommentBody(int prefixLength)
+    {
+        var filler = Filler(prefixLength, 2);
+        const string Comment = "#this comment body is longer than the raw window\n";
+        var input = filler + Comment + "1\n";
+        var ex = ReadAllExpectingError(() => ReadCsv.FromString(input));
+
+        Assert.IsType<MissingFieldCsvException>(ex);
+        Assert.Equal(Last32(filler + "#" + "1\n"), ex.RawData);
+    }
+
+    [Fact]
+    public void MissingFieldAfterCrLfComment_RawData_ExcludesCommentBody()
+    {
+        var input = "a,b\r\n#c\r\n1\r\n";
+        var ex = ReadAllExpectingError(() => ReadCsv.FromString(input));
+
+        Assert.IsType<MissingFieldCsvException>(ex);
+        Assert.Equal("a,b\r\n#1\r\n", ex.RawData);
+    }
+
+    [Fact]
+    public void MissingFieldInSecondResultSet_RawData_StartsAtResultSet()
+    {
+        var input = "a,b\n1,2\n\nc,d\n3\n";
+        var ex = ReadAllExpectingError(() => ReadCsv.FromString(input, hasHeaders: true, emptyLineAction: EmptyLineAction.NextResult));
+
+        Assert.IsType<MissingFieldCsvException>(ex);
+        Assert.Equal("c,d\n3\n", ex.RawData);
+    }
 }
