@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -309,5 +310,84 @@ public class ParserV2RegressionTests
 
         Assert.IsType<MissingFieldCsvException>(ex);
         Assert.Equal("c,d\n3\n", ex.RawData);
+    }
+
+    // Differential check: the V2 parser must produce the same lines as the legacy (V1) parser
+    // for random inputs that mix quotes, escapes, delimiters, whitespace, comments and line
+    // endings, and that are long enough to cross BufferedCharReader refills.
+    private static (List<string[]> Lines, string Error) ParseWith(bool legacy, string input, Net.Code.Csv.Impl.CsvLayout layout, Net.Code.Csv.Impl.CsvBehaviour behaviour)
+    {
+        var lines = new List<string[]>();
+        try
+        {
+            var text = new StringReader(input);
+            var buffered = new Net.Code.Csv.Impl.BufferedCharReader(text);
+            Net.Code.Csv.Impl.ICsvParser parser = legacy
+                ? new Net.Code.Csv.Impl.Legacy.CsvParser(text, buffered, layout, behaviour)
+                : new Net.Code.Csv.Impl.CsvParser(text, buffered, layout, behaviour);
+            lines.Add(parser.Header.Fields);
+            var enumerator = parser.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                // Materialize before advancing: a line is only valid until the next MoveNext.
+                lines.Add(enumerator.Current.GetStrings());
+            }
+            return (lines, null);
+        }
+        catch (MalformedCsvException ex)
+        {
+            return (lines, $"{ex.GetType().Name} {ex.LineNumber},{ex.FieldNumber},{ex.ColumnNumber}");
+        }
+    }
+
+    private static string RandomCsv(Random random, int length, char[] alphabet)
+    {
+        var sb = new StringBuilder(length);
+        while (sb.Length < length)
+        {
+            // Mostly runs of plain text so fields get long enough to straddle buffer boundaries.
+            if (random.Next(4) == 0)
+            {
+                sb.Append('x', random.Next(1, 200));
+            }
+            else
+            {
+                sb.Append(alphabet[random.Next(alphabet.Length)]);
+            }
+        }
+        return sb.ToString();
+    }
+
+    public static TheoryData<int> FuzzSeeds()
+    {
+        var data = new TheoryData<int>();
+        for (var i = 0; i < 60; i++) data.Add(i);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(FuzzSeeds))]
+    public void RandomInput_V2MatchesLegacyParser(int seed)
+    {
+        var random = new Random(seed);
+        var escape = random.Next(2) == 0 ? '"' : '\\';
+        var alphabet = new[] { 'a', 'b', ' ', ' ', '\t', '"', '"', '"', ',', ',', ';', '\n', '\n', '\r', '\\', '#' };
+        var length = random.Next(3) == 0 ? random.Next(1, 200) : random.Next(ReaderBufferSize - 500, 3 * ReaderBufferSize);
+        var input = RandomCsv(random, length, alphabet);
+
+        var trimming = (ValueTrimmingOptions)random.Next(4);
+        var quotesAction = (QuotesInsideQuotedFieldAction)random.Next(3);
+        var layout = new Net.Code.Csv.Impl.CsvLayout(Quote: '"', Delimiter: ',', Escape: escape, Comment: '#', HasHeaders: random.Next(2) == 0);
+        var behaviour = new Net.Code.Csv.Impl.CsvBehaviour(trimming, MissingFieldAction.ReplaceByEmpty, EmptyLineAction.Skip, quotesAction);
+
+        var expected = ParseWith(true, input, layout, behaviour);
+        var actual = ParseWith(false, input, layout, behaviour);
+
+        Assert.Equal(expected.Error, actual.Error);
+        Assert.Equal(expected.Lines.Count, actual.Lines.Count);
+        for (var i = 0; i < expected.Lines.Count; i++)
+        {
+            Assert.Equal(expected.Lines[i], actual.Lines[i]);
+        }
     }
 }
