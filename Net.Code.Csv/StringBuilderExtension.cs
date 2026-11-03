@@ -16,14 +16,28 @@ static class StringBuilderExtension
 
     public static StringBuilder EscapeQuotes(this StringBuilder sb, char quote, char escape)
     {
-        int i = 0;
-        while (i < sb.Length)
+        // Single linear pass: grow once, then shift characters from the back (no per-quote Insert).
+        var length = sb.Length;
+        var quotes = 0;
+        for (var i = 0; i < length; i++)
         {
-            if (sb[i] == quote)
+            if (sb[i] == quote) quotes++;
+        }
+        if (quotes == 0)
+        {
+            return sb;
+        }
+
+        sb.Length = length + quotes;
+        var dst = sb.Length - 1;
+        for (var src = length - 1; src >= 0 && dst > src; src--)
+        {
+            var c = sb[src];
+            sb[dst--] = c;
+            if (c == quote)
             {
-                sb.Insert(i++, escape);
+                sb[dst--] = escape;
             }
-            i++;
         }
         return sb;
     }
