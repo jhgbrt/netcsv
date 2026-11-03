@@ -1,5 +1,3 @@
-using System.Buffers;
-
 namespace Net.Code.Csv.Impl;
 
 internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behaviour, BufferedCharReader reader)
@@ -17,6 +15,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
     private int _tentativeLength;
 
     private readonly List<FieldSliceInfo> _fields = [];
+    private CsvField[] _fieldArray = new CsvField[16];
     private int _directFieldCount;
     private readonly bool _trimAll = behaviour.TrimmingOptions == ValueTrimmingOptions.All;
     private readonly bool _trimQuoted = behaviour.TrimmingOptions == ValueTrimmingOptions.QuotedOnly;
@@ -214,7 +213,13 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return emptyLine;
         }
 
-        var fieldArray = ArrayPool<CsvField>.Shared.Rent(totalCount);
+        // The field array is reused for every line: a line is only valid until the next MoveNext,
+        // and lines that must outlive it are copied via CsvLineSlice.ToOwned.
+        if (_fieldArray.Length < totalCount)
+        {
+            _fieldArray = new CsvField[Math.Max(totalCount, _fieldArray.Length * 2)];
+        }
+        var fieldArray = _fieldArray;
         for (var i = 0; i < totalCount; i++)
         {
             var field = fields[i];
@@ -223,7 +228,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
                 : CsvField.FromArray(field.UseLineBuffer ? _lineBuffer : field.Buffer, field.Start, field.Length);
         }
 
-        var line = new CsvLineSlice(fieldArray, totalCount, lineIsEmpty, true);
+        var line = new CsvLineSlice(fieldArray, totalCount, lineIsEmpty, false);
 
         PrepareNextLine();
 
