@@ -501,4 +501,25 @@ public class ParserV2RegressionTests
         Assert.Equal("v1", reader.GetString(0));
         Assert.Equal("v2", reader["h 2"]);
     }
+
+    [Fact]
+    public void WideLines_WithoutHeaders_EachLineHasItsOwnValues()
+    {
+        const int FieldCount = 40;
+        var lines = Enumerable.Range(0, 3)
+            .Select(l => string.Join(",", Enumerable.Range(0, FieldCount).Select(f => $"\"{l}-{f}\"")))
+            .ToArray();
+        using var reader = ReadCsv.FromString(string.Join("\n", lines) + "\n", hasHeaders: false);
+
+        for (var l = 0; l < lines.Length; l++)
+        {
+            Assert.True(reader.Read());
+            Assert.Equal(FieldCount, reader.FieldCount);
+            for (var f = 0; f < FieldCount; f++)
+            {
+                Assert.Equal($"{l}-{f}", reader.GetString(f));
+            }
+        }
+        Assert.False(reader.Read());
+    }
 }
