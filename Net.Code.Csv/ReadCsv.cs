@@ -43,6 +43,9 @@ public static class ReadCsv
                 detector.DataEnd();
 
                 if (string.IsNullOrWhiteSpace(detector.Charset)) return Encoding.UTF8;
+                // Only the first 16 KB is sampled. An all-ASCII sample says nothing about the
+                // rest of the file, and UTF-8 is a strict superset of ASCII, so prefer UTF-8.
+                if (string.Equals(detector.Charset, "ASCII", StringComparison.OrdinalIgnoreCase)) return Encoding.UTF8;
                 try
                 {
                     return Encoding.GetEncoding(detector.Charset);
@@ -173,7 +176,7 @@ public static class ReadCsv
             detectBom = true;
         }
         
-        var reader = new StreamReader(stream, effectiveEncoding, detectBom, 1024, true);
+        var reader = new StreamReader(stream, effectiveEncoding, detectBom, bufferSize: 32 * 1024, leaveOpen: true);
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
         var effectiveBehaviour = behaviour ?? new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         return FromReader(reader, layout, effectiveBehaviour, cultureInfo);
@@ -328,7 +331,7 @@ public static class ReadCsv
             detectBom = true;
         }
 
-        var reader = new StreamReader(stream, effectiveEncoding, detectBom, 1024, true);
+        var reader = new StreamReader(stream, effectiveEncoding, detectBom, bufferSize: 32 * 1024, leaveOpen: true);
         var layout = new CsvLayout(quote, delimiter, escape, comment, hasHeaders, schema);
         var effectiveBehaviour = behaviour ?? new CsvBehaviour(trimmingOptions, missingFieldAction, emptyLineAction, quotesInsideQuotedFieldAction);
         return FromReader<T>(reader, layout, effectiveBehaviour, schema, cultureInfo);
