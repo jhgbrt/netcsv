@@ -2,7 +2,7 @@ using System.Buffers;
 
 namespace Net.Code.Csv.Impl;
 
-internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behaviour)
+internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behaviour, BufferedCharReader reader)
 {
     private char _currentChar;
     private char? _next;
@@ -11,17 +11,12 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
     private int _fieldStart;
     private Location _location = Location.Origin().NextLine();
 
-    private const int RawWindowSize = 32;
-
     private char[] _lineBuffer = new char[256];
     private int _lineLength;
     private char[] _tentativeBuffer = new char[64];
     private int _tentativeLength;
 
     private readonly List<FieldSliceInfo> _fields = [];
-    private readonly char[] _rawBuffer = new char[RawWindowSize];
-    private int _rawBufferCount;
-    private int _rawBufferIndex;
     private int _directFieldCount;
     private readonly bool _trimAll = behaviour.TrimmingOptions == ValueTrimmingOptions.All;
     private readonly bool _trimQuoted = behaviour.TrimmingOptions == ValueTrimmingOptions.QuotedOnly;
@@ -32,33 +27,6 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
     private ReadOnlyMemory<char> _directBuffer;
     private Range _directRange;
     private bool _usingDirectSlice;
-
-    public string RawData
-    {
-        get
-        {
-            if (_rawBufferCount == 0)
-            {
-                return string.Empty;
-            }
-
-            var result = new char[_rawBufferCount];
-            var start = (_rawBufferIndex - _rawBufferCount + RawWindowSize) % RawWindowSize;
-
-            if (start + _rawBufferCount <= RawWindowSize)
-            {
-                Array.Copy(_rawBuffer, start, result, 0, _rawBufferCount);
-            }
-            else
-            {
-                var firstPart = RawWindowSize - start;
-                Array.Copy(_rawBuffer, start, result, 0, firstPart);
-                Array.Copy(_rawBuffer, 0, result, firstPart, _rawBufferCount - firstPart);
-            }
-
-            return new string(result);
-        }
-    }
 
     public CsvChar CurrentChar => new(_currentChar, layout, _next);
 
@@ -192,7 +160,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         return this;
     }
 
-    internal CsvLineSlice ToLine()
+    internal CsvLineSlice ToLine(int rawEnd)
     {
         var lineIsEmpty = _fields.Count == 0 || (_fields.Count == 1 && _fields[0].Length == 0 && !_fields[0].IsNull);
         var count = _fields.Count;
@@ -212,7 +180,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             var missingCount = FieldCount.Value - count;
             if (behaviour.MissingFieldAction == MissingFieldAction.ParseError && !lineIsEmpty)
             {
-                throw new MissingFieldCsvException(RawData, Location, count);
+                throw new MissingFieldCsvException(reader.GetRawData(rawEnd), Location, count);
             }
 
             if (behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull)
@@ -256,25 +224,11 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         return line;
     }
 
-    internal bool ReadNext(BufferedCharReader reader)
-    {
-        if (!reader.MoveNext(out var currentChar, out var next))
-        {
-            return false;
-        }
-        _next = next;
-        _location = _location.NextColumn();
-        _currentChar = currentChar;
-        AppendRaw(currentChar);
-        return true;
-    }
-
     internal CsvLineSliceBuilder SetCurrent(char currentChar, char? next)
     {
         _next = next;
         _location = _location.NextColumn();
         _currentChar = currentChar;
-        AppendRaw(currentChar);
         return this;
     }
 
@@ -283,7 +237,6 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         _next = null;
         _location = _location.NextColumn();
         _currentChar = currentChar;
-        AppendRaw(currentChar);
         return this;
     }
 
@@ -312,7 +265,6 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         }
 
         _location = _location with { Column = _location.Column + span.Length };
-        AppendRaw(span);
         return this;
     }
 
@@ -465,46 +417,6 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         while (start <= end && char.IsWhiteSpace(buffer[start])) start++;
         while (end >= start && char.IsWhiteSpace(buffer[end])) end--;
         return end < start ? start..start : start..(end + 1);
-    }
-
-    private void AppendRaw(char currentChar)
-    {
-        _rawBuffer[_rawBufferIndex] = currentChar;
-        _rawBufferIndex = (_rawBufferIndex + 1) % RawWindowSize;
-        if (_rawBufferCount < RawWindowSize)
-        {
-            _rawBufferCount++;
-        }
-    }
-
-    private void AppendRaw(ReadOnlySpan<char> span)
-    {
-        if (span.IsEmpty)
-        {
-            return;
-        }
-
-        if (span.Length >= RawWindowSize)
-        {
-            span[^RawWindowSize..].CopyTo(_rawBuffer);
-            _rawBufferIndex = 0;
-            _rawBufferCount = RawWindowSize;
-            return;
-        }
-
-        if (_rawBufferIndex + span.Length <= RawWindowSize)
-        {
-            span.CopyTo(_rawBuffer.AsSpan(_rawBufferIndex));
-            _rawBufferIndex = (_rawBufferIndex + span.Length) % RawWindowSize;
-            _rawBufferCount = Math.Min(RawWindowSize, _rawBufferCount + span.Length);
-            return;
-        }
-
-        var firstPart = RawWindowSize - _rawBufferIndex;
-        span[..firstPart].CopyTo(_rawBuffer.AsSpan(_rawBufferIndex));
-        span[firstPart..].CopyTo(_rawBuffer);
-        _rawBufferIndex = span.Length - firstPart;
-        _rawBufferCount = Math.Min(RawWindowSize, _rawBufferCount + span.Length);
     }
 
     private readonly record struct FieldSliceInfo(ReadOnlyMemory<char> Buffer, Range Range, bool IsNull, bool UseLineBuffer)
