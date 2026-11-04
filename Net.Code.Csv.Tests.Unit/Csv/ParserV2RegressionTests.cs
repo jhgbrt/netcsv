@@ -542,4 +542,32 @@ public class ParserV2RegressionTests
         }
         Assert.False(reader.Read());
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(ReaderBufferSize - 700)]
+    public void WideLines_WithEscapedQuotes_GrowLineBufferWithoutCorruptingEarlierFields(int prefixLength)
+    {
+        // Escaped quotes force every field into the line buffer; 30 fields of ~60 chars make it
+        // grow several times mid-line, and the prefix moves the line across a reader refill.
+        const int FieldCount = 30;
+        string Value(int l, int f) => $"{l}-{f} \"q\" " + new string((char)('a' + f % 26), 50);
+        string Quoted(string v) => "\"" + v.Replace("\"", "\"\"") + "\"";
+        var lines = Enumerable.Range(0, 3)
+            .Select(l => string.Join(",", Enumerable.Range(0, FieldCount).Select(f => Quoted(Value(l, f)))))
+            .ToArray();
+        var prefix = prefixLength == 0 ? "" : "#" + new string('x', prefixLength - 2) + "\n";
+        var input = prefix + string.Join("\n", lines) + "\n";
+        using var reader = ReadCsv.FromString(input, hasHeaders: false);
+
+        for (var l = 0; l < lines.Length; l++)
+        {
+            Assert.True(reader.Read());
+            for (var f = 0; f < FieldCount; f++)
+            {
+                Assert.Equal(Value(l, f), reader.GetString(f));
+            }
+        }
+        Assert.False(reader.Read());
+    }
 }

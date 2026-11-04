@@ -14,8 +14,11 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
     private char[] _tentativeBuffer = new char[64];
     private int _tentativeLength;
 
-    private readonly List<FieldSliceInfo> _fields = [];
-    private CsvField[] _fieldArray = new CsvField[16];
+    // Fields of the line being built. The array is reused for every line: a line is only valid
+    // until the next MoveNext, and lines that must outlive it are copied via CsvLineSlice.ToOwned.
+    // Fields point into the line buffer, the reader buffer (direct slices) or a private copy.
+    private CsvField[] _fields = new CsvField[16];
+    private int _fieldCount;
     private int _directFieldCount;
     private readonly bool _trimAll = behaviour.TrimmingOptions == ValueTrimmingOptions.All;
     private readonly bool _trimQuoted = behaviour.TrimmingOptions == ValueTrimmingOptions.QuotedOnly;
@@ -34,13 +37,13 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
     public int? FieldCount { get; set; }
 
-    public int FieldsCount => _fields.Count;
+    public int FieldsCount => _fieldCount;
 
     internal bool HasTentative => _tentativeLength > 0;
 
     internal CsvLineSliceBuilder PrepareNextLine()
     {
-        _fields.Clear();
+        _fieldCount = 0;
         _lineLength = 0;
         _tentativeLength = 0;
         _quoted = false;
@@ -133,7 +136,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
                 Trim(_directBuffer, ref start, ref length);
             }
 
-            _fields.Add(new FieldSliceInfo(_directBuffer, start, length, false, false));
+            AddField(CsvField.FromArray(_directBuffer, start, length));
             _directFieldCount++;
             _quoted = false;
             _fieldStarted = false;
@@ -153,7 +156,7 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             Trim(_lineBuffer, ref fieldStart, ref fieldLength);
         }
 
-        _fields.Add(new FieldSliceInfo(null, fieldStart, fieldLength, false, true));
+        AddField(CsvField.FromArray(_lineBuffer, fieldStart, fieldLength));
         _quoted = false;
         _fieldStarted = false;
         _fieldStart = _lineLength;
@@ -168,8 +171,8 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
 
     internal CsvLineSlice ToLine(int rawEnd)
     {
-        var lineIsEmpty = _fields.Count == 0 || (_fields.Count == 1 && _fields[0].Length == 0 && !_fields[0].IsNull);
-        var count = _fields.Count;
+        var count = _fieldCount;
+        var lineIsEmpty = count == 0 || (count == 1 && _fields[0].Length == 0 && !_fields[0].IsNull);
 
         if (!FieldCount.HasValue)
         {
@@ -179,7 +182,6 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             }
         }
 
-        var fields = _fields;
         bool fieldsAreMissing = count < FieldCount;
         if (fieldsAreMissing)
         {
@@ -189,23 +191,14 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
                 throw new MissingFieldCsvException(reader.GetRawData(rawEnd), Location, count);
             }
 
-            if (behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull)
+            var filler = CsvField.FromString(behaviour.MissingFieldAction == MissingFieldAction.ReplaceByNull ? null : string.Empty);
+            for (var i = 0; i < missingCount; i++)
             {
-                for (var i = 0; i < missingCount; i++)
-                {
-                    fields.Add(new FieldSliceInfo(null, 0, 0, true, true));
-                }
-            }
-            else
-            {
-                for (var i = 0; i < missingCount; i++)
-                {
-                    fields.Add(new FieldSliceInfo(null, 0, 0, false, true));
-                }
+                AddField(filler);
             }
         }
 
-        var totalCount = fields.Count;
+        var totalCount = _fieldCount;
         if (totalCount == 0)
         {
             var emptyLine = new CsvLineSlice([], 0, lineIsEmpty, false);
@@ -213,26 +206,20 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return emptyLine;
         }
 
-        // The field array is reused for every line: a line is only valid until the next MoveNext,
-        // and lines that must outlive it are copied via CsvLineSlice.ToOwned.
-        if (_fieldArray.Length < totalCount)
-        {
-            _fieldArray = new CsvField[Math.Max(totalCount, _fieldArray.Length * 2)];
-        }
-        var fieldArray = _fieldArray;
-        for (var i = 0; i < totalCount; i++)
-        {
-            var field = fields[i];
-            fieldArray[i] = field.IsNull
-                ? CsvField.FromString(null)
-                : CsvField.FromArray(field.UseLineBuffer ? _lineBuffer : field.Buffer, field.Start, field.Length);
-        }
-
-        var line = new CsvLineSlice(fieldArray, totalCount, lineIsEmpty, false);
+        var line = new CsvLineSlice(_fields, totalCount, lineIsEmpty, false);
 
         PrepareNextLine();
 
         return line;
+    }
+
+    private void AddField(CsvField field)
+    {
+        if (_fieldCount == _fields.Length)
+        {
+            Array.Resize(ref _fields, _fields.Length * 2);
+        }
+        _fields[_fieldCount++] = field;
     }
 
     internal CsvLineSliceBuilder SetCurrent(char currentChar, char? next)
@@ -292,26 +279,16 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
             return this;
         }
 
-        if (_fields.Count == 0)
-        {
-            return this;
-        }
-
-        for (var i = 0; i < _fields.Count; i++)
+        for (var i = 0; i < _fieldCount; i++)
         {
             var field = _fields[i];
-            if (field.UseLineBuffer || field.IsNull)
-            {
-                continue;
-            }
-
-            if (!ReferenceEquals(field.Buffer, buffer))
+            if (!ReferenceEquals(field.Array, buffer))
             {
                 continue;
             }
 
             var canUseLineBuffer = !_fieldStarted;
-            var fieldSpan = new ReadOnlySpan<char>(field.Buffer, field.Start, field.Length);
+            var fieldSpan = field.Span;
             var length = fieldSpan.Length;
 
             if (canUseLineBuffer)
@@ -320,13 +297,13 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
                 var copyStart = _lineLength;
                 fieldSpan.CopyTo(_lineBuffer.AsSpan(copyStart));
                 _lineLength += length;
-                _fields[i] = new FieldSliceInfo(null, copyStart, length, field.IsNull, true);
+                _fields[i] = field.WithArray(_lineBuffer, copyStart);
             }
             else
             {
                 var copy = new char[length];
                 fieldSpan.CopyTo(copy);
-                _fields[i] = new FieldSliceInfo(copy, 0, length, field.IsNull, false);
+                _fields[i] = field.WithArray(copy, 0);
             }
 
             _directFieldCount--;
@@ -393,6 +370,8 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         {
             newSize = needed;
         }
+        // Fields already recorded for this line keep pointing at the old array. That is safe:
+        // Array.Resize copies into a new array and the old one is never written again.
         Array.Resize(ref _lineBuffer, newSize);
     }
 
@@ -418,6 +397,4 @@ internal sealed class CsvLineSliceBuilder(CsvLayout layout, CsvBehaviour behavio
         while (end >= start && char.IsWhiteSpace(buffer[end])) end--;
         length = end < start ? 0 : end - start + 1;
     }
-
-    private readonly record struct FieldSliceInfo(char[] Buffer, int Start, int Length, bool IsNull, bool UseLineBuffer);
 }

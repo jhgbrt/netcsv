@@ -27,6 +27,17 @@ internal readonly struct CsvField
 
     public bool IsNull => _length < 0;
 
+    // Backing array of an array-based field (null for string-based fields).
+    internal char[] Array => _array;
+
+    internal int Start => _start;
+
+    // Length in characters; 0 for a null field.
+    internal int Length => _length < 0 ? 0 : _length;
+
+    // The same slice, backed by another array (e.g. after the original was resized or copied).
+    internal CsvField WithArray(char[] array, int start) => new(array, start, _length);
+
     public static CsvField FromString(string value) => new(value);
 
     public static CsvField FromArray(char[] array, int start, int length)
