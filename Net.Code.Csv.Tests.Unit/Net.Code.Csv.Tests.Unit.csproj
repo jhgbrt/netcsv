@@ -9,6 +9,7 @@
 		<EmbeddedResource Include="SampleFiles\utf7.txt" />
 		<EmbeddedResource Include="SampleFiles\utf8.txt" />
 		<EmbeddedResource Include="SampleFiles\1253.txt" />
+		<EmbeddedResource Include="Csv\ParserV2Golden.txt" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Net.Code.Csv\Net.Code.Csv.csproj" />

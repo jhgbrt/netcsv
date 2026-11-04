@@ -38,7 +38,6 @@ public class CsvReaderBenchmark
         "eu fugiat nulla pariatur"
     ];
 
-    //[Params(CsvBenchmarkParser.NetCodeCsvV1, CsvBenchmarkParser.NetCodeCsvV2, CsvBenchmarkParser.CsvHelper, CsvBenchmarkParser.Sep)]
     [Params(CsvBenchmarkParser.NetCodeCsvV2, CsvBenchmarkParser.CsvHelper, CsvBenchmarkParser.Sep)]
     public CsvBenchmarkParser ParserKind { get; set; }
 
@@ -97,8 +96,7 @@ public class CsvReaderBenchmark
 
         var layout = new CsvLayout(Delimiter: Separator, HasHeaders: true);
         var behaviour = new CsvBehaviour(
-            TrimmingOptions: ValueTrimmingOptions.All,
-            Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2);
+            TrimmingOptions: ValueTrimmingOptions.All);
         using var reader = GetReader(layout, behaviour);
        
         var priceOrdinal = reader.GetOrdinal("Price");
@@ -135,8 +133,7 @@ public class CsvReaderBenchmark
         {
             var layout = new CsvLayout(Delimiter: Separator, HasHeaders: true, Schema: _schema);
             var behaviour = new CsvBehaviour(
-                TrimmingOptions: ValueTrimmingOptions.All,
-                Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2);
+                TrimmingOptions: ValueTrimmingOptions.All);
             using var reader = GetReader(layout, behaviour);
 
             decimal total = 0;
@@ -162,8 +159,7 @@ public class CsvReaderBenchmark
 
         var layout = new CsvLayout(Delimiter: Separator, HasHeaders: false);
         var behaviour = new CsvBehaviour(
-            TrimmingOptions: ValueTrimmingOptions.All,
-            Parser: ParserKind == CsvBenchmarkParser.NetCodeCsvV1 ? CsvParserKind.V1 : CsvParserKind.V2);
+            TrimmingOptions: ValueTrimmingOptions.All);
         using var reader = GetReader(layout, behaviour);
 
         int rows = 0;

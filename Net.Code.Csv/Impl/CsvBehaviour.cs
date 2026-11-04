@@ -20,11 +20,16 @@ public record CsvBehaviour(
             /// What should happen when a quote is found inside a quoted field? (e.g. "123","x y "z" u","345")
             /// </summary>
             QuotesInsideQuotedFieldAction QuotesInsideQuotedFieldAction = QuotesInsideQuotedFieldAction.Ignore,
-            
+#pragma warning disable CS0618 // CsvParserKind is obsolete; kept so existing callers still compile.
+            /// <summary>
+            /// Has no effect: there is only one parser.
+            /// </summary>
+            [property: Obsolete("There is only one parser; this setting has no effect and will be removed in a future major version.")]
             CsvParserKind Parser = CsvParserKind.Default)
+#pragma warning restore CS0618
 {
     /// <summary>
-    /// Enables strict parsing rules for the V2 parser.
+    /// Enables strict parsing rules.
     /// </summary>
     internal bool StrictMode { get; init; }
 
@@ -36,7 +41,7 @@ public record CsvBehaviour(
     public static CsvBehaviour Default => new();
 
     /// <summary>
-    /// Strict, fail-fast parsing using the V2 parser. When TrimmingOptions is All,
+    /// Strict, fail-fast parsing. When TrimmingOptions is All,
     /// whitespace outside quoted fields is treated as an error.
     /// </summary>
     public static CsvBehaviour Strict()
@@ -44,20 +49,18 @@ public record CsvBehaviour(
             TrimmingOptions: ValueTrimmingOptions.None,
             MissingFieldAction: MissingFieldAction.ParseError,
             EmptyLineAction: EmptyLineAction.Skip,
-            QuotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException,
-            Parser: CsvParserKind.V2)
+            QuotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.ThrowException)
         {
             StrictMode = true
         };
 
     /// <summary>
-    /// Forgiving parsing using the V2 parser. Quotes are treated as normal characters when disabled via CsvLayout.
+    /// Forgiving parsing. Quotes are treated as normal characters when disabled via CsvLayout.
     /// </summary>
     public static CsvBehaviour Forgiving()
         => new CsvBehaviour(
             TrimmingOptions: ValueTrimmingOptions.None,
             MissingFieldAction: MissingFieldAction.ParseError,
             EmptyLineAction: EmptyLineAction.Skip,
-            QuotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore,
-            Parser: CsvParserKind.V2);
+            QuotesInsideQuotedFieldAction: QuotesInsideQuotedFieldAction.Ignore);
 }
