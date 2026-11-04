@@ -5,6 +5,7 @@
 - `Net.Code.Csv.Tests.Unit/`: xUnit tests targeting `net10.0`; sample inputs under `SampleFiles/`.
 - `CsvTest/`: Small console app/benchmarks using the library; run locally for manual checks and benchmarks.
 - `.github/workflows/`: CI for build, tests, and publishing.
+- `docs/design/`: Historical design notes (specs written during the span/parser rework); not kept in sync with the code.
 
 ## Build, Test, and Development Commands
 - Prerequisite: .NET SDK 10.0 or later (`dotnet --version`).
