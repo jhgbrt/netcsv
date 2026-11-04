@@ -26,7 +26,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal
     - name: Package
-      run: dotnet pack --no-build --configuration Release --output ./artifacts
+      run: dotnet pack Net.Code.Csv --no-build --configuration Release --output ./artifacts
     - name: NuGet login (OIDC -> temporary API key)
       uses: NuGet/login@v1
       id: login
