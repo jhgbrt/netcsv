@@ -42,4 +42,5 @@
 ## Architecture Notes
 - Entry points: `ReadCsv`/`WriteCsv` create `CsvLayout` + `CsvBehaviour` and drive a streaming state machine.
 - Internals: `Impl/` contains parser, header detection, and conversion helpers; prefer extending via behavior/layout rather than ad‑hoc parsing.
-- Parser: V2 (`Impl/`) is the only parser in use; `CsvParserFactory` always creates it. The V1 parser (`Impl/V1/`) is kept for history only and is scheduled for removal. Do not extend it, and do not rely on `NETCSV_PARSER` or `CsvBehaviour.Parser` to switch parsers (they have no effect).
+- Parser: there is a single parser (`Impl/CsvParser.cs` + `Impl/CsvStateMachine.cs`); the old V1 parser has been removed (see git history). `CsvParserKind` and `CsvBehaviour.Parser` are `[Obsolete]` no-ops kept for source compatibility until the next major version.
+- Parser regression tests: `ParserV2RegressionTests` compares fuzz and buffer-boundary cases against `Csv/ParserV2Golden.txt` (recorded from V1). If a deliberate behaviour change breaks these, regenerate the affected entries and explain why in the PR.

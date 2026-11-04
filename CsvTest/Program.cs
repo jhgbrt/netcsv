@@ -37,7 +37,6 @@ static void RunProfilerWorkload(CsvBenchmarkParser parser)
 
 public enum CsvBenchmarkParser
 {
-    NetCodeCsvV1,
     NetCodeCsvV2,
     CsvHelper,
     Sep

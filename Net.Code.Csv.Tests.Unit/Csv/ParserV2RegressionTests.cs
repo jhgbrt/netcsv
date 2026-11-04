@@ -10,8 +10,6 @@ namespace Net.Code.Csv.Tests.Unit.Csv;
 
 public class ParserV2RegressionTests
 {
-    private const string ParserEnvVar = "NETCSV_PARSER";
-
     private const string Sample = """
         First;Last;BirthDate;Quantity;Price
         Kevin;Spacey;1960-07-26;789;3.99
@@ -48,34 +46,25 @@ public class ParserV2RegressionTests
     private record BenchmarkItem(string First, string Last, DateTime BirthDate, int Quantity, decimal Price);
 
     [Fact]
-    public void ReadCsv_WithSchema_WhenParserV2_ShouldParseTypedFields()
+    public void ReadCsv_WithSchema_ShouldParseTypedFields()
     {
-        var original = Environment.GetEnvironmentVariable(ParserEnvVar);
-        Environment.SetEnvironmentVariable(ParserEnvVar, "V2");
-        try
-        {
-            var schema = new CsvSchemaBuilder(CultureInfo.InvariantCulture)
-                .AddString("First")
-                .AddString("Last")
-                .AddDateTime("BirthDate")
-                .AddInt32("Quantity")
-                .AddDecimal("Price")
-                .Schema;
+        var schema = new CsvSchemaBuilder(CultureInfo.InvariantCulture)
+            .AddString("First")
+            .AddString("Last")
+            .AddDateTime("BirthDate")
+            .AddInt32("Quantity")
+            .AddDecimal("Price")
+            .Schema;
 
-            using var reader = ReadCsv.FromString(Sample, delimiter: ';', hasHeaders: true, schema: schema);
+        using var reader = ReadCsv.FromString(Sample, delimiter: ';', hasHeaders: true, schema: schema);
 
-            Assert.True(reader.Read());
-            Assert.Equal(new DateTime(1960, 7, 26), reader.GetDateTime(reader.GetOrdinal("BirthDate")));
-            Assert.Equal(3.99m, reader.GetDecimal(reader.GetOrdinal("Price")));
+        Assert.True(reader.Read());
+        Assert.Equal(new DateTime(1960, 7, 26), reader.GetDateTime(reader.GetOrdinal("BirthDate")));
+        Assert.Equal(3.99m, reader.GetDecimal(reader.GetOrdinal("Price")));
 
-            Assert.True(reader.Read());
-            Assert.Equal(new DateTime(1975, 3, 14), reader.GetDateTime(reader.GetOrdinal("BirthDate")));
-            Assert.Equal(8.95m, reader.GetDecimal(reader.GetOrdinal("Price")));
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable(ParserEnvVar, original);
-        }
+        Assert.True(reader.Read());
+        Assert.Equal(new DateTime(1975, 3, 14), reader.GetDateTime(reader.GetOrdinal("BirthDate")));
+        Assert.Equal(8.95m, reader.GetDecimal(reader.GetOrdinal("Price")));
     }
 
     [Fact]
@@ -312,19 +301,19 @@ public class ParserV2RegressionTests
         Assert.Equal("c,d\n3\n", ex.RawData);
     }
 
-    // Differential check: the V2 parser must produce the same lines as the legacy (V1) parser
-    // for random inputs that mix quotes, escapes, delimiters, whitespace, comments and line
-    // endings, and that are long enough to cross BufferedCharReader refills.
-    private static (List<string[]> Lines, string Error) ParseWith(bool legacy, string input, Net.Code.Csv.Impl.CsvLayout layout, Net.Code.Csv.Impl.CsvBehaviour behaviour)
+    // Golden-output checks for random inputs that mix quotes, escapes, delimiters, whitespace,
+    // comments and line endings, long enough to cross BufferedCharReader refills. The expected
+    // results were recorded from the original (V1) parser before it was removed (see
+    // ParserV2Golden.txt). Each entry holds the line count, the error (if any) and a hash of
+    // the parsed fields.
+    private static (List<string[]> Lines, string Error) Parse(string input, Net.Code.Csv.Impl.CsvLayout layout, Net.Code.Csv.Impl.CsvBehaviour behaviour)
     {
         var lines = new List<string[]>();
         try
         {
             var text = new StringReader(input);
             var buffered = new Net.Code.Csv.Impl.BufferedCharReader(text);
-            Net.Code.Csv.Impl.ICsvParser parser = legacy
-                ? new Net.Code.Csv.Impl.Legacy.CsvParser(text, buffered, layout, behaviour)
-                : new Net.Code.Csv.Impl.CsvParser(text, buffered, layout, behaviour);
+            var parser = new Net.Code.Csv.Impl.CsvParser(text, buffered, layout, behaviour);
             lines.Add(parser.Header.Fields);
             var enumerator = parser.GetEnumerator();
             while (enumerator.MoveNext())
@@ -338,6 +327,39 @@ public class ParserV2RegressionTests
         {
             return (lines, $"{ex.GetType().Name} {ex.LineNumber},{ex.FieldNumber},{ex.ColumnNumber}");
         }
+    }
+
+    private static string Fingerprint((List<string[]> Lines, string Error) result)
+    {
+        var sb = new StringBuilder();
+        foreach (var line in result.Lines)
+        {
+            sb.Append(line is null ? "<null>" : string.Join("\u001F", line)).Append('\u001E');
+        }
+        var hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString()));
+        return $"{result.Lines.Count}\t{result.Error}\t{Convert.ToHexString(hash, 0, 8)}";
+    }
+
+    private static readonly Lazy<Dictionary<string, string>> Golden = new(() =>
+    {
+        using var stream = typeof(ParserV2RegressionTests).Assembly
+            .GetManifestResourceStream("Net.Code.Csv.Tests.Unit.Csv.ParserV2Golden.txt");
+        using var reader = new StreamReader(stream);
+        var golden = new Dictionary<string, string>();
+        string line;
+        while ((line = reader.ReadLine()) != null)
+        {
+            if (line.Length == 0) continue;
+            var tab = line.IndexOf('\t');
+            golden.Add(line[..tab], line[(tab + 1)..]);
+        }
+        return golden;
+    });
+
+    private static void AssertMatchesGolden(string key, (List<string[]> Lines, string Error) actual)
+    {
+        Assert.True(Golden.Value.TryGetValue(key, out var expected), $"No golden entry for '{key}'");
+        Assert.Equal(expected, Fingerprint(actual));
     }
 
     private static string RandomCsv(Random random, int length, char[] alphabet)
@@ -365,9 +387,7 @@ public class ParserV2RegressionTests
         return data;
     }
 
-    [Theory]
-    [MemberData(nameof(FuzzSeeds))]
-    public void RandomInput_V2MatchesLegacyParser(int seed)
+    private static (string Input, Net.Code.Csv.Impl.CsvLayout Layout, Net.Code.Csv.Impl.CsvBehaviour Behaviour) FuzzCase(int seed)
     {
         var random = new Random(seed);
         var escape = random.Next(2) == 0 ? '"' : '\\';
@@ -379,36 +399,37 @@ public class ParserV2RegressionTests
         var quotesAction = (QuotesInsideQuotedFieldAction)random.Next(3);
         var layout = new Net.Code.Csv.Impl.CsvLayout(Quote: '"', Delimiter: ',', Escape: escape, Comment: '#', HasHeaders: random.Next(2) == 0);
         var behaviour = new Net.Code.Csv.Impl.CsvBehaviour(trimming, MissingFieldAction.ReplaceByEmpty, EmptyLineAction.Skip, quotesAction);
-
-        var expected = ParseWith(true, input, layout, behaviour);
-        var actual = ParseWith(false, input, layout, behaviour);
-
-        Assert.Equal(expected.Error, actual.Error);
-        Assert.Equal(expected.Lines.Count, actual.Lines.Count);
-        for (var i = 0; i < expected.Lines.Count; i++)
-        {
-            Assert.Equal(expected.Lines[i], actual.Lines[i]);
-        }
+        return (input, layout, behaviour);
     }
 
-    public static TheoryData<int, string, ValueTrimmingOptions> QuotedFieldsAtBoundary()
+    [Theory]
+    [MemberData(nameof(FuzzSeeds))]
+    public void RandomInput_MatchesGolden(int seed)
     {
-        var data = new TheoryData<int, string, ValueTrimmingOptions>();
-        string[] fields =
-        [
-            "\"  quoted value  \"",
-            "\"ab\"\"cd\"",
-            "\"\"\"\"",
-            "\"\"",
-            "\"multi\nline;\r\nvalue\"",
-            "  \"padded\"  ",
-            "\"x\" trailing\"",
-            "\"" + new string('q', 100) + "\"\"" + new string('r', 100) + "\"",
-        ];
-        int[] offsets = [-120, -12, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3];
-        foreach (var field in fields)
+        var (input, layout, behaviour) = FuzzCase(seed);
+        AssertMatchesGolden($"fuzz:{seed}", Parse(input, layout, behaviour));
+    }
+
+    private static readonly string[] BoundaryFields =
+    [
+        "\"  quoted value  \"",
+        "\"ab\"\"cd\"",
+        "\"\"\"\"",
+        "\"\"",
+        "\"multi\nline;\r\nvalue\"",
+        "  \"padded\"  ",
+        "\"x\" trailing\"",
+        "\"" + new string('q', 100) + "\"\"" + new string('r', 100) + "\"",
+    ];
+
+    private static readonly int[] QuotedFieldOffsets = [-120, -12, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3];
+
+    public static TheoryData<int, int, ValueTrimmingOptions> QuotedFieldsAtBoundary()
+    {
+        var data = new TheoryData<int, int, ValueTrimmingOptions>();
+        for (var field = 0; field < BoundaryFields.Length; field++)
         {
-            foreach (var offset in offsets)
+            foreach (var offset in QuotedFieldOffsets)
             {
                 foreach (ValueTrimmingOptions trimming in Enum.GetValues(typeof(ValueTrimmingOptions)))
                 {
@@ -419,26 +440,25 @@ public class ParserV2RegressionTests
         return data;
     }
 
-    [Theory]
-    [MemberData(nameof(QuotedFieldsAtBoundary))]
-    public void QuotedFieldNearBufferBoundary_MatchesLegacyParser(int offset, string field, ValueTrimmingOptions trimming)
+    private static (string Input, Net.Code.Csv.Impl.CsvLayout Layout, Net.Code.Csv.Impl.CsvBehaviour Behaviour) BoundaryCase(int offset, int field, ValueTrimmingOptions trimming)
     {
         // Place the field so that it starts `offset` chars from the first buffer refill.
         var prefixLength = ReaderBufferSize + offset - 2;
-        var input = Filler(prefixLength, 2).Replace(',', ';') + "a;" + field + "\nb;\"next\"\n";
+        var input = Filler(prefixLength, 2).Replace(',', ';') + "a;" + BoundaryFields[field] + "\nb;\"next\"\n";
         var layout = new Net.Code.Csv.Impl.CsvLayout(Quote: '"', Delimiter: ';', Escape: '"', Comment: '#', HasHeaders: false);
         var behaviour = new Net.Code.Csv.Impl.CsvBehaviour(trimming, MissingFieldAction.ReplaceByEmpty, EmptyLineAction.Skip, QuotesInsideQuotedFieldAction.Ignore);
+        return (input, layout, behaviour);
+    }
 
-        var expected = ParseWith(true, input, layout, behaviour);
-        var actual = ParseWith(false, input, layout, behaviour);
+    [Theory]
+    [MemberData(nameof(QuotedFieldsAtBoundary))]
+    public void QuotedFieldNearBufferBoundary_MatchesGolden(int offset, int field, ValueTrimmingOptions trimming)
+    {
+        var (input, layout, behaviour) = BoundaryCase(offset, field, trimming);
+        var actual = Parse(input, layout, behaviour);
 
-        Assert.Null(expected.Error);
         Assert.Null(actual.Error);
-        Assert.Equal(expected.Lines.Count, actual.Lines.Count);
-        for (var i = 0; i < expected.Lines.Count; i++)
-        {
-            Assert.Equal(expected.Lines[i], actual.Lines[i]);
-        }
+        AssertMatchesGolden($"boundary:{offset}:{field}:{trimming}", actual);
     }
 
     [Theory]
